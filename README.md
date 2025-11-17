@@ -1,4 +1,3 @@
-````markdown
 # Paulownia Game — Backend (Strapi)
 
 Este repositorio contenía el backend del juego **Paulownia**, desarrollado con **Strapi**, un CMS headless que ofrecía una API flexible para gestionar contenido del proyecto (usuarios, progreso, datos del juego, etc.).
