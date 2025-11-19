@@ -1,0 +1,78 @@
+{
+  "kind": "collectionType",
+  "collectionName": "achievements",
+  "info": {
+    "singularName": "achievement",
+    "pluralName": "achievements",
+    "displayName": "Achievements"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "quantity": {
+      "type": "biginteger"
+    },
+    "goalAmount": {
+      "type": "integer"
+    },
+    "targetType": {
+      "type": "enumeration",
+      "enum": [
+        "gamesWon",
+        "dailyLogin",
+        "xp",
+        "score",
+        "time"
+      ]
+    },
+    "rewardAmount": {
+      "type": "integer"
+    },
+    "visibleToUser": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "isActive": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "rewardType": {
+      "type": "enumeration",
+      "enum": [
+        "coins",
+        "tickets"
+      ]
+    },
+    "user_achievements": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-achievement.user-achievement",
+      "mappedBy": "achievement"
+    }
+  }
+}

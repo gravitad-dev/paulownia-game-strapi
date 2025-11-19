@@ -1,0 +1,46 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_game_histories",
+  "info": {
+    "singularName": "user-game-history",
+    "pluralName": "user-game-histories",
+    "displayName": "UserGameHistory"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "user_game_histories"
+    },
+    "level": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::level.level",
+      "inversedBy": "user_game_histories"
+    },
+    "score": {
+      "type": "integer"
+    },
+    "duration": {
+      "type": "integer"
+    },
+    "completedAt": {
+      "type": "datetime"
+    },
+    "coinsEarned": {
+      "type": "integer"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

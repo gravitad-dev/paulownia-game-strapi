@@ -1,0 +1,30 @@
+{
+  "kind": "singleType",
+  "collectionName": "currency_infos",
+  "info": {
+    "singularName": "currency-info",
+    "pluralName": "currency-infos",
+    "displayName": "CurrencyInfo"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "exchangeRate": {
+      "type": "float"
+    },
+    "maxAmount": {
+      "type": "integer"
+    },
+    "minAmount": {
+      "type": "integer"
+    }
+  }
+}

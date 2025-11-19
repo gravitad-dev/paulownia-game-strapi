@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "log_histories",
+  "info": {
+    "singularName": "log-history",
+    "pluralName": "log-histories",
+    "displayName": "LogHistory"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "datetime"
+    },
+    "module": {
+      "type": "string"
+    },
+    "eventType": {
+      "type": "string"
+    },
+    "level": {
+      "type": "enumeration",
+      "enum": [
+        "info",
+        "warn",
+        "error"
+      ]
+    },
+    "statusCode": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "json"
+    }
+  }
+}

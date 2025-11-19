@@ -1,0 +1,33 @@
+{
+  "kind": "singleType",
+  "collectionName": "token_infos",
+  "info": {
+    "singularName": "token-info",
+    "pluralName": "token-infos",
+    "displayName": "TokenInfo"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "chainID": {
+      "type": "string"
+    },
+    "exchangeRate": {
+      "type": "decimal"
+    },
+    "maxAmount": {
+      "type": "integer"
+    },
+    "minAmount": {
+      "type": "integer"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "daily_rewards",
+  "info": {
+    "singularName": "daily-reward",
+    "pluralName": "daily-rewards",
+    "displayName": "DailyReward"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "day": {
+      "type": "integer"
+    },
+    "rewardType": {
+      "type": "enumeration",
+      "enum": [
+        "coins",
+        "tickets"
+      ]
+    },
+    "rewardAmount": {
+      "type": "integer"
+    },
+    "isActive": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "user_daily_rewards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-daily-reward.user-daily-reward",
+      "mappedBy": "daily_reward"
+    }
+  }
+}

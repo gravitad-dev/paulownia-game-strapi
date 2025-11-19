@@ -1,0 +1,151 @@
+{
+  "kind": "collectionType",
+  "collectionName": "up_users",
+  "info": {
+    "name": "user",
+    "description": "",
+    "singularName": "user",
+    "pluralName": "users",
+    "displayName": "User"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "username": {
+      "type": "string",
+      "minLength": 3,
+      "unique": true,
+      "configurable": false,
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "minLength": 6,
+      "configurable": false,
+      "required": true
+    },
+    "provider": {
+      "type": "string",
+      "configurable": false
+    },
+    "password": {
+      "type": "password",
+      "minLength": 6,
+      "configurable": false,
+      "private": true,
+      "searchable": false
+    },
+    "resetPasswordToken": {
+      "type": "string",
+      "configurable": false,
+      "private": true,
+      "searchable": false
+    },
+    "confirmationToken": {
+      "type": "string",
+      "configurable": false,
+      "private": true,
+      "searchable": false
+    },
+    "confirmed": {
+      "type": "boolean",
+      "default": false,
+      "configurable": false
+    },
+    "blocked": {
+      "type": "boolean",
+      "default": false,
+      "configurable": false
+    },
+    "role": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.role",
+      "inversedBy": "users",
+      "configurable": false
+    },
+    "avatar": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "lastname": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "zipcode": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "player_stat": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::player-stat.player-stat",
+      "mappedBy": "users_permissions_user"
+    },
+    "age": {
+      "type": "date"
+    },
+    "Guardians": {
+      "type": "component",
+      "component": "shared.guardians",
+      "repeatable": true
+    },
+    "user_daily_rewards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-daily-reward.user-daily-reward",
+      "mappedBy": "users_permissions_user"
+    },
+    "user_achievements": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-achievement.user-achievement",
+      "mappedBy": "users_permissions_user"
+    },
+    "user_rewards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-reward.user-reward",
+      "mappedBy": "users_permissions_user"
+    },
+    "user_game_histories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-game-history.user-game-history",
+      "mappedBy": "users_permissions_user"
+    },
+    "user_transaction_histories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-transaction-history.user-transaction-history",
+      "mappedBy": "users_permissions_user"
+    },
+    "roulette_histories": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::roulette-history.roulette-history",
+      "mappedBy": "users_permissions_user"
+    }
+  }
+}

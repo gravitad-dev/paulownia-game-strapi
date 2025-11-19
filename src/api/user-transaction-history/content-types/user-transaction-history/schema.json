@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_transaction_histories",
+  "info": {
+    "singularName": "user-transaction-history",
+    "pluralName": "user-transaction-histories",
+    "displayName": "UserTransactionHistory"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "user_transaction_histories"
+    },
+    "transactionType": {
+      "type": "enumeration",
+      "enum": [
+        "coins_to_tickets",
+        "coins_to_tokens"
+      ]
+    },
+    "statusTransaction": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "coinsExchanged": {
+      "type": "integer"
+    },
+    "amountDelivered": {
+      "type": "integer"
+    },
+    "executedAt": {
+      "type": "datetime"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "kind": "collectionType",
+  "collectionName": "player_stats",
+  "info": {
+    "singularName": "player-stat",
+    "pluralName": "player-stats",
+    "displayName": "PlayerStats"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "score": {
+      "type": "integer",
+      "default": 0
+    },
+    "highestScore": {
+      "type": "integer",
+      "default": 0
+    },
+    "xp": {
+      "type": "integer",
+      "default": 0
+    },
+    "gamesPlayed": {
+      "type": "integer"
+    },
+    "gamesWon": {
+      "type": "integer"
+    },
+    "gamesLost": {
+      "type": "integer"
+    },
+    "winRate": {
+      "type": "float"
+    },
+    "totalPlayTime": {
+      "type": "float",
+      "private": true
+    },
+    "averageSessionTime": {
+      "type": "float",
+      "private": true
+    },
+    "sessions": {
+      "type": "integer",
+      "private": true
+    },
+    "lastLoginAt": {
+      "type": "datetime",
+      "private": true
+    },
+    "coinsEarned": {
+      "type": "integer"
+    },
+    "coinsSpent": {
+      "type": "integer"
+    },
+    "coins": {
+      "type": "integer"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "player_stat"
+    }
+  }
+}

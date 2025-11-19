@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_rewards",
+  "info": {
+    "singularName": "user-reward",
+    "pluralName": "user-rewards",
+    "displayName": "UserReward"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "user_rewards"
+    },
+    "reward": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::reward.reward",
+      "inversedBy": "user_rewards"
+    },
+    "rewardStatus": {
+      "type": "enumeration",
+      "enum": [
+        "notAvailable",
+        "available",
+        "claimed",
+        "expired",
+        "blocked",
+        "pending"
+      ]
+    },
+    "quantity": {
+      "type": "integer"
+    },
+    "obtainedAt": {
+      "type": "datetime"
+    },
+    "claimed": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "claimedAt": {
+      "type": "datetime"
+    }
+  }
+}

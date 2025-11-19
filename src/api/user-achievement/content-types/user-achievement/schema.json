@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_achievements",
+  "info": {
+    "singularName": "user-achievement",
+    "pluralName": "user-achievements",
+    "displayName": "UserAchievement"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "user_achievements"
+    },
+    "achievement": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::achievement.achievement",
+      "inversedBy": "user_achievements"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "currentProgress": {
+      "type": "integer"
+    },
+    "obtainedAt": {
+      "type": "datetime"
+    },
+    "claimed": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "claimedAt": {
+      "type": "datetime"
+    }
+  }
+}

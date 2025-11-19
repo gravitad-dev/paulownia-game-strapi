@@ -1,0 +1,20 @@
+{
+  "kind": "singleType",
+  "collectionName": "settings",
+  "info": {
+    "singularName": "setting",
+    "pluralName": "settings",
+    "displayName": "Settings"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "rouletteIsActive": {
+      "type": "boolean",
+      "private": true,
+      "default": true
+    }
+  }
+}

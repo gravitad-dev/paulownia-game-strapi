@@ -1,0 +1,81 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rewards",
+  "info": {
+    "singularName": "reward",
+    "pluralName": "rewards",
+    "displayName": "Rewards"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "typeReward": {
+      "type": "enumeration",
+      "enum": [
+        "currency",
+        "consumable",
+        "cosmetic"
+      ]
+    },
+    "quantity": {
+      "type": "integer"
+    },
+    "value": {
+      "type": "integer"
+    },
+    "probability": {
+      "type": "float"
+    },
+    "isUnique": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "visibleToUser": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "isActive": {
+      "type": "boolean",
+      "private": true,
+      "required": true,
+      "default": false
+    },
+    "user_rewards": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-reward.user-reward",
+      "mappedBy": "reward"
+    },
+    "roulette_history": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::roulette-history.roulette-history",
+      "inversedBy": "rewards"
+    }
+  }
+}

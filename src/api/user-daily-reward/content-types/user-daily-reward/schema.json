@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_daily_rewards",
+  "info": {
+    "singularName": "user-daily-reward",
+    "pluralName": "user-daily-rewards",
+    "displayName": "UserDailyReward"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "user_daily_rewards"
+    },
+    "daily_reward": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::daily-reward.daily-reward",
+      "inversedBy": "user_daily_rewards"
+    },
+    "claimed": {
+      "type": "boolean",
+      "default": false
+    },
+    "claimedAt": {
+      "type": "datetime"
+    }
+  }
+}
