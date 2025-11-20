@@ -1,0 +1,3436 @@
+{
+	"info": {
+		"_postman_id": "b92ae50c-5934-418f-820f-17206f40d633",
+		"name": "STRAPI-PAULOWNIA-GAME-API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43592215"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.jwt) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.jwt);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"identifier\": \"synergiart.websupp@gmail.com\",\n  \"password\": \"Password1\"\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"local"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"user\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local/register",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"local",
+								"register"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get Me",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/me?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"me"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							]
+						},
+						"description": "Obtiene el usuario autenticado.\nOpciones: populate para relaciones (ej: player_stat, user_rewards, etc.)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users?populate=*&start=0&limit=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones."
+								},
+								{
+									"key": "start",
+									"value": "0",
+									"description": "Paginación: inicio."
+								},
+								{
+									"key": "limit",
+									"value": "25",
+									"description": "Paginación: límite."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden."
+								},
+								{
+									"key": "filters[username][$contains]",
+									"value": "user",
+									"description": "Filtro por username.",
+									"disabled": true
+								},
+								{
+									"key": "filters[email][$contains]",
+									"value": "example",
+									"description": "Filtro por email.",
+									"disabled": true
+								},
+								{
+									"key": "filters[blocked][$eq]",
+									"value": "false",
+									"description": "Filtro por estado de bloqueo.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de usuarios.\nSoporta filtrado, ordenamiento y paginación estándar de Strapi."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Obtiene un usuario específico por ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"new_username\",\n  \"email\": \"new_email@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Actualiza un usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Elimina un usuario por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Achievements",
+			"item": [
+				{
+					"name": "List Achievements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[targetType][$eq]",
+									"value": "gamesWon",
+									"description": "Filtra por targetType (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[rewardType][$eq]",
+									"value": "coins",
+									"description": "Filtra por rewardType (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[isActive][$eq]",
+									"value": "true",
+									"description": "Solo activos (boolean).",
+									"disabled": true
+								},
+								{
+									"key": "filters[visibleToUser][$eq]",
+									"value": "true",
+									"description": "Visible al usuario.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de achievements.\n\nOpciones de query:\n- populate: nombres de relaciones y medios (ej: image, user_achievements) o '*'\n- pagination[page], pagination[pageSize]\n- sort: campo:orden (ej: createdAt:desc)\n- filters: ej. filters[rewardType][$eq]=coins, filters[isActive][$eq]=true\n- publicationState: live | preview (draft/publish activo)\n\nEnums:\n- targetType: gamesWon | dailyLogin | xp | score | time\n- rewardType: coins | tickets"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Achievement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id?populate=*&publicationState=live",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								},
+								{
+									"key": "publicationState",
+									"value": "live"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de un achievement por ID.\n\nOpciones de query:\n- populate: image, user_achievements o '*'\n- publicationState: live | preview"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Achievement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"title\": \"Gana 10 partidas\",\n    \"targetType\": \"gamesWon\",\n    \"goalAmount\": 10,\n    \"rewardType\": \"coins\",\n    \"rewardAmount\": 100\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements"
+							]
+						},
+						"description": "Crea un achievement.\n\nCampos clave: title, description, quantity, goalAmount, targetType (enum), rewardAmount, rewardType (enum), image (media).\n\nEjemplo mínimo:\n{\n  \"data\": {\n    \"title\": \"Gana 10 partidas\",\n    \"targetType\": \"gamesWon\",\n    \"goalAmount\": 10,\n    \"rewardType\": \"coins\",\n    \"rewardAmount\": 100\n  }\n}"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Achievement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"title\": \"Nuevo título\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Actualiza un achievement por ID. Usa estructura { data: { ... } }."
+					},
+					"response": []
+				},
+				{
+					"name": "Patch Achievement",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Actualiza parcialmente un achievement."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Achievement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Daily Rewards",
+			"item": [
+				{
+					"name": "List DailyRewards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[rewardType][$eq]",
+									"value": "coins",
+									"description": "Filtra por rewardType (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[day][$eq]",
+									"value": "1",
+									"description": "Filtra por día específico (entero).",
+									"disabled": true
+								},
+								{
+									"key": "filters[isActive][$eq]",
+									"value": "true",
+									"description": "Solo activos (boolean).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de daily rewards. Opciones: populate (image, user_daily_rewards), pagination, sort, filtros. Enums: rewardType: coins | tickets"
+					},
+					"response": []
+				},
+				{
+					"name": "Get DailyReward by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de un daily reward. populate: image, user_daily_rewards"
+					},
+					"response": []
+				},
+				{
+					"name": "Create DailyReward",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"Día 1\",\n    \"day\": 1,\n    \"rewardType\": \"coins\",\n    \"rewardAmount\": 50\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards"
+							]
+						},
+						"description": "Crea un daily reward (rewardType enum)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update DailyReward",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"rewardAmount\": 100\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch DailyReward",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete DailyReward",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Levels",
+			"item": [
+				{
+					"name": "List Levels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[difficulty][$eq]",
+									"value": "easy",
+									"description": "Filtra por dificultad (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[name][$contains]",
+									"value": "Nivel",
+									"description": "Nombre que contiene texto.",
+									"disabled": true
+								},
+								{
+									"key": "filters[description][$contains]",
+									"value": "Intro",
+									"description": "Descripción que contiene texto.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de niveles. populate: cover, puzzleImage, user_game_histories. Enums: difficulty: easy | easy2 | medium | medium2 | hard | hard2"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de nivel. populate: cover, puzzleImage, user_game_histories."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Level",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"Nivel 1\",\n    \"description\": \"Intro\",\n    \"difficulty\": \"easy\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels"
+							]
+						},
+						"description": "Crea nivel con name, description, difficulty (enum)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Level",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"difficulty\": \"medium\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch Level",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"Actualizado\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Level",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Log Histories",
+			"item": [
+				{
+					"name": "List LogHistories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories?populate=*&pagination[page]=1&pagination[pageSize]=25",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "timestamp:desc",
+									"description": "Orden por campo:orden (ej: timestamp:desc).",
+									"disabled": true
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[level][$eq]",
+									"value": "info",
+									"description": "Nivel de log (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[timestamp][$gte]",
+									"value": "2024-01-01T00:00:00.000Z",
+									"description": "Desde fecha/hora (ISO).",
+									"disabled": true
+								},
+								{
+									"key": "filters[module][$contains]",
+									"value": "auth",
+									"description": "Módulo que contiene texto.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de logs. Enums: level: info | warn | error. Filtros recomendados: filters[level][$eq]=error."
+					},
+					"response": []
+				},
+				{
+					"name": "Get LogHistory by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create LogHistory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"title\": \"Evento\",\n    \"level\": \"info\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories"
+							]
+						},
+						"description": "Crea log (level enum)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update LogHistory",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"level\": \"error\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch LogHistory",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"description\": \"Detalles\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete LogHistory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"log-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rewards",
+			"item": [
+				{
+					"name": "List Rewards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[typeReward][$eq]",
+									"value": "currency",
+									"description": "Tipo de premio (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[isActive][$eq]",
+									"value": "true",
+									"description": "Solo activos (boolean).",
+									"disabled": true
+								},
+								{
+									"key": "filters[visibleToUser][$eq]",
+									"value": "true",
+									"description": "Visible al usuario.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista de premios. populate: image, user_rewards, roulette_history. Enums: typeReward: currency | consumable | cosmetic."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Reward by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de premio. populate: image, user_rewards, roulette_history."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Reward",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"Monedas\",\n    \"typeReward\": \"currency\",\n    \"quantity\": 100\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards"
+							]
+						},
+						"description": "Crea premio. typeReward enum."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Reward",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"visibleToUser\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch Reward",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Reward",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Roulette Histories",
+			"item": [
+				{
+					"name": "List RouletteHistories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=timestamp:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "timestamp:desc",
+									"description": "Orden por campo:orden (ej: timestamp:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario asociado.",
+									"disabled": true
+								},
+								{
+									"key": "filters[timestamp][$gte]",
+									"value": "2024-01-01T00:00:00.000Z",
+									"description": "Desde fecha/hora (ISO).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Historial de ruleta. populate: users_permissions_user, rewards."
+					},
+					"response": []
+				},
+				{
+					"name": "Get RouletteHistory by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de ruleta. populate: users_permissions_user, rewards."
+					},
+					"response": []
+				},
+				{
+					"name": "Create RouletteHistory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"timestamp\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories"
+							]
+						},
+						"description": "Crea registro de ruleta."
+					},
+					"response": []
+				},
+				{
+					"name": "Update RouletteHistory",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"timestamp\": \"2024-02-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch RouletteHistory",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"timestamp\": \"2024-03-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete RouletteHistory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"roulette-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Achievements",
+			"item": [
+				{
+					"name": "List UserAchievements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[achievement][id][$eq]",
+									"value": "1",
+									"description": "ID del achievement.",
+									"disabled": true
+								},
+								{
+									"key": "filters[completed][$eq]",
+									"value": "true",
+									"description": "Completado (boolean).",
+									"disabled": true
+								},
+								{
+									"key": "filters[claimed][$eq]",
+									"value": "true",
+									"description": "Reclamado (boolean).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Logros de usuario. populate: users_permissions_user, achievement."
+					},
+					"response": []
+				},
+				{
+					"name": "Get UserAchievement by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle logro usuario. populate: users_permissions_user, achievement."
+					},
+					"response": []
+				},
+				{
+					"name": "Create UserAchievement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"completed\": false\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements"
+							]
+						},
+						"description": "Crea registro de logro de usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Update UserAchievement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"completed\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch UserAchievement",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete UserAchievement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-achievements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Daily Rewards",
+			"item": [
+				{
+					"name": "List UserDailyRewards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[daily_reward][id][$eq]",
+									"value": "1",
+									"description": "ID del daily reward.",
+									"disabled": true
+								},
+								{
+									"key": "filters[claimed][$eq]",
+									"value": "true",
+									"description": "Reclamado (boolean).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Recompensas diarias de usuario. populate: users_permissions_user, daily_reward."
+					},
+					"response": []
+				},
+				{
+					"name": "Get UserDailyReward by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle recompensa diaria usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Create UserDailyReward",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimed\": false\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update UserDailyReward",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch UserDailyReward",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete UserDailyReward",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-daily-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Game Histories",
+			"item": [
+				{
+					"name": "List UserGameHistories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=completedAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "completedAt:desc",
+									"description": "Orden por campo:orden (ej: completedAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[level][id][$eq]",
+									"value": "1",
+									"description": "ID de nivel.",
+									"disabled": true
+								},
+								{
+									"key": "filters[completed][$eq]",
+									"value": "true",
+									"description": "Completado (boolean).",
+									"disabled": true
+								},
+								{
+									"key": "filters[score][$gte]",
+									"value": "50",
+									"description": "Puntaje mínimo.",
+									"disabled": true
+								},
+								{
+									"key": "filters[duration][$lte]",
+									"value": "120",
+									"description": "Duración máxima (seg).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Historial de juego del usuario. populate: users_permissions_user, level."
+					},
+					"response": []
+				},
+				{
+					"name": "Get UserGameHistory by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle de un juego."
+					},
+					"response": []
+				},
+				{
+					"name": "Create UserGameHistory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"score\": 100,\n    \"completed\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update UserGameHistory",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"duration\": 120\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch UserGameHistory",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"coinsEarned\": 10\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete UserGameHistory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-game-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Rewards",
+			"item": [
+				{
+					"name": "List UserRewards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc",
+									"description": "Orden por campo:orden (ej: createdAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[reward][id][$eq]",
+									"value": "1",
+									"description": "ID de premio.",
+									"disabled": true
+								},
+								{
+									"key": "filters[rewardStatus][$eq]",
+									"value": "available",
+									"description": "Estado de recompensa (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[claimed][$eq]",
+									"value": "true",
+									"description": "Reclamado (boolean).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Recompensas por usuario. populate: users_permissions_user, reward. Enums: rewardStatus: notAvailable | available | claimed | expired | blocked | pending."
+					},
+					"response": []
+				},
+				{
+					"name": "Get UserReward by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						},
+						"description": "Detalle recompensa usuario."
+					},
+					"response": []
+				},
+				{
+					"name": "Create UserReward",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"rewardStatus\": \"available\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards"
+							]
+						},
+						"description": "Crea registro de recompensa (rewardStatus enum)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update UserReward",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch UserReward",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"claimedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete UserReward",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-rewards",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Transaction Histories",
+			"item": [
+				{
+					"name": "List UserTransactionHistories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=executedAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "executedAt:desc",
+									"description": "Orden por campo:orden (ej: executedAt:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[transactionType][$eq]",
+									"value": "coins_to_tickets",
+									"description": "Tipo de transacción (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[statusTransaction][$eq]",
+									"value": "pending",
+									"description": "Estado de transacción (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[executedAt][$gte]",
+									"value": "2024-01-01T00:00:00.000Z",
+									"description": "Desde fecha/hora (ISO).",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Historial de transacciones del usuario. Enums: transactionType: coins_to_tickets | coins_to_tokens; statusTransaction: pending | in_progress | completed | cancelled."
+					},
+					"response": []
+				},
+				{
+					"name": "Get UserTransactionHistory by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create UserTransactionHistory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"transactionType\": \"coins_to_tickets\",\n    \"statusTransaction\": \"pending\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories"
+							]
+						},
+						"description": "Crea transacción (transactionType, statusTransaction enums)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update UserTransactionHistory",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"statusTransaction\": \"completed\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch UserTransactionHistory",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"executedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete UserTransactionHistory",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"user-transaction-histories",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Player Stats",
+			"item": [
+				{
+					"name": "List PlayerStats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=score:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "score:desc",
+									"description": "Orden por campo:orden (ej: score:desc)."
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								},
+								{
+									"key": "filters[users_permissions_user][id][$eq]",
+									"value": "1",
+									"description": "ID de usuario.",
+									"disabled": true
+								},
+								{
+									"key": "filters[score][$gte]",
+									"value": "100",
+									"description": "Puntaje mínimo.",
+									"disabled": true
+								},
+								{
+									"key": "filters[xp][$gte]",
+									"value": "1000",
+									"description": "XP mínimo.",
+									"disabled": true
+								},
+								{
+									"key": "filters[coins][$gte]",
+									"value": "10",
+									"description": "Monedas mínimas.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Estadísticas de jugador. populate: users_permissions_user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get PlayerStat by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create PlayerStat",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"score\": 0,\n    \"xp\": 0\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update PlayerStat",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"score\": 100\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Patch PlayerStat",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"coins\": 10\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete PlayerStat",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"player-stats",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Single Types",
+			"item": [
+				{
+					"name": "Global",
+					"item": [
+						{
+							"name": "Get Global",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/global?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"global"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									]
+								},
+								"description": "Configuración global. populate: favicon, defaultSeo."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Global",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"siteName\": \"Juego\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/global",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"global"
+									]
+								},
+								"description": "Actualiza configuración global."
+							},
+							"response": []
+						},
+						{
+							"name": "Patch Global",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"siteDescription\": \"Descripción\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/global",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"global"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Token Info",
+					"item": [
+						{
+							"name": "Get TokenInfo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/token-info?populate=*&publicationState=live",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"token-info"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										},
+										{
+											"key": "publicationState",
+											"value": "live"
+										}
+									]
+								},
+								"description": "Información de token."
+							},
+							"response": []
+						},
+						{
+							"name": "Update TokenInfo",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"exchangeRate\": 1.5\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/token-info",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"token-info"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Patch TokenInfo",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"symbol\": \"TKN\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/token-info",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"token-info"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Currency Info",
+					"item": [
+						{
+							"name": "Get CurrencyInfo",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/currency-info?populate=*&publicationState=live",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"currency-info"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										},
+										{
+											"key": "publicationState",
+											"value": "live"
+										}
+									]
+								},
+								"description": "Información de moneda."
+							},
+							"response": []
+						},
+						{
+							"name": "Update CurrencyInfo",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"exchangeRate\": 3.2\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/currency-info",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"currency-info"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Patch CurrencyInfo",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"symbol\": \"CUR\"\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/currency-info",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"currency-info"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Settings",
+					"item": [
+						{
+							"name": "Get Settings",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/setting?populate=*&publicationState=live",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"setting"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										},
+										{
+											"key": "publicationState",
+											"value": "live"
+										}
+									]
+								},
+								"description": "Configuraciones del sistema."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Settings",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"rouletteIsActive\": true\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/setting",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"setting"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Patch Settings",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": {\n    \"rouletteIsActive\": false\n  }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/setting",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"setting"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "List Files",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/upload/files?filters[name][$contains]=logo&filters[ext][$eq]=.png&filters[size][$lt]=100000",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"files"
+							],
+							"query": [
+								{
+									"key": "filters[name][$contains]",
+									"value": "logo",
+									"description": "Nombre que contiene texto."
+								},
+								{
+									"key": "filters[ext][$eq]",
+									"value": ".png",
+									"description": "Extensión exacta (ej: .png)."
+								},
+								{
+									"key": "filters[size][$lt]",
+									"value": "100000",
+									"description": "Tamaño menor a bytes."
+								}
+							]
+						},
+						"description": "Lista archivos subidos (plugin upload)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get File by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/upload/files/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"files",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/absolute/path/to/file.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/upload",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"upload"
+							]
+						},
+						"description": "Sube un archivo usando form-data. Campo \"files\" tipo file."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete File",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/upload/files/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"files",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "STRAPI_URL_LOCAL",
+			"value": "http://localhost:1337",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
