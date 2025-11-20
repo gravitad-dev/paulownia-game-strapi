@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "guardiands",
+  "info": {
+    "singularName": "guardiand",
+    "pluralName": "guardiands",
+    "displayName": "Guardiands"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "DNI": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "email": {
+      "type": "email"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "zipcode": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "guardiands"
+    }
+  }
+}

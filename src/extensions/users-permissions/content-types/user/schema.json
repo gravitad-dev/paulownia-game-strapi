@@ -106,11 +106,6 @@
     "age": {
       "type": "date"
     },
-    "Guardians": {
-      "type": "component",
-      "component": "shared.guardians",
-      "repeatable": true
-    },
     "user_daily_rewards": {
       "type": "relation",
       "relation": "oneToMany",
@@ -146,6 +141,12 @@
       "relation": "oneToMany",
       "target": "api::roulette-history.roulette-history",
       "mappedBy": "users_permissions_user"
+    },
+    "guardiands": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::guardiand.guardiand",
+      "mappedBy": "user"
     }
   }
 }
