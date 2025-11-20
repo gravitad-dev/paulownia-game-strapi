@@ -1,7 +1,7 @@
-/**
- * log-history controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::log-history.log-history', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::log-history.log-history'),
+}));
 
-export default factories.createCoreController('api::log-history.log-history');

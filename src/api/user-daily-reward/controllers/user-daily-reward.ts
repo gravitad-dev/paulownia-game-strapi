@@ -1,7 +1,7 @@
-/**
- * user-daily-reward controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::user-daily-reward.user-daily-reward', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::user-daily-reward.user-daily-reward'),
+}));
 
-export default factories.createCoreController('api::user-daily-reward.user-daily-reward');

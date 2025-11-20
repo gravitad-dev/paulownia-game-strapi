@@ -1,7 +1,7 @@
-/**
- * roulette-history controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::roulette-history.roulette-history', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::roulette-history.roulette-history'),
+}));
 
-export default factories.createCoreController('api::roulette-history.roulette-history');

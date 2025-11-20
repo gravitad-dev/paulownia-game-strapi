@@ -1,7 +1,7 @@
-/**
- * level controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::level.level', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::level.level'),
+}));
 
-export default factories.createCoreController('api::level.level');

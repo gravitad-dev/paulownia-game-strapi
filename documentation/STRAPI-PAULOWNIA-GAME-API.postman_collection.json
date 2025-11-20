@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "b92ae50c-5934-418f-820f-17206f40d633",
+		"_postman_id": "e727c931-4e46-4d69-a3be-3ffaf7e4949f",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -97,7 +97,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/users/me?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/me?populate=*&&&",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
@@ -110,7 +110,10 @@
 								{
 									"key": "populate",
 									"value": "*"
-								}
+								},
+								{},
+								{},
+								{}
 							]
 						},
 						"description": "Obtiene el usuario autenticado.\nOpciones: populate para relaciones (ej: player_stat, user_rewards, etc.)"
@@ -123,7 +126,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/users?populate=*&start=0&limit=25&sort=createdAt:desc",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users?populate=*&start=0&limit=25&sort=createdAt:desc&&&",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
@@ -169,7 +172,10 @@
 									"value": "false",
 									"description": "Filtro por estado de bloqueo.",
 									"disabled": true
-								}
+								},
+								{},
+								{},
+								{}
 							]
 						},
 						"description": "Lista de usuarios.\nSoporta filtrado, ordenamiento y paginación estándar de Strapi."
@@ -201,6 +207,15 @@
 								{
 									"key": "id",
 									"value": ""
+								},
+								{
+									"key": "98fb5bdb-9deb-4898-b649-142e07f0e720"
+								},
+								{
+									"key": "fdf9bd27-0294-4ba7-885a-14d11373eebb"
+								},
+								{
+									"key": "4c9adbac-7c5b-4c65-bc18-ca1fb0a8fa26"
 								}
 							]
 						},
@@ -235,7 +250,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": ""
+									"value": "1"
 								}
 							]
 						},
@@ -262,6 +277,15 @@
 								{
 									"key": "id",
 									"value": ""
+								},
+								{
+									"key": "a5226f00-094d-4c05-b314-7989693ec848"
+								},
+								{
+									"key": "3db78138-f657-4a03-9f10-c6a2593d2ee3"
+								},
+								{
+									"key": "0f9c609b-9ef6-45b1-a73f-5b0f040b0b06"
 								}
 							]
 						},
@@ -274,6 +298,107 @@
 		{
 			"name": "Achievements",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get Achievements by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"achievements",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "WnxL3KNjWbJs9l2X5F0fdEa7"
+										}
+									]
+								},
+								"description": "Obtiene un player stat por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Achievements by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"score\": 100\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"achievements",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un player stat por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Achievements by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"achievements",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un player stat por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List Achievements",
 					"request": {
@@ -373,6 +498,15 @@
 							"variable": [
 								{
 									"key": "id"
+								},
+								{
+									"key": "09d64e42-1684-4751-a6d7-1735249bb846"
+								},
+								{
+									"key": "255aa6d9-8d31-4217-b496-672840a38289"
+								},
+								{
+									"key": "e94268b9-4fee-4e26-903c-d7deadd338bc"
 								}
 							]
 						},
@@ -435,6 +569,15 @@
 							"variable": [
 								{
 									"key": "id"
+								},
+								{
+									"key": "3e43eee5-99a4-4d88-aa04-32f9cb988d94"
+								},
+								{
+									"key": "1ef0b890-d168-4179-a616-5ab421b60ec9"
+								},
+								{
+									"key": "ef2f735c-579d-4f58-a032-4e6e1ad0fb76"
 								}
 							]
 						},
@@ -469,6 +612,15 @@
 							"variable": [
 								{
 									"key": "id"
+								},
+								{
+									"key": "99347698-de39-4d6f-9ff2-ed74e9b533cd"
+								},
+								{
+									"key": "f8b590ba-c026-4472-ac71-d033c7831682"
+								},
+								{
+									"key": "cf4b6fd1-53fe-48da-9af7-aeee8cdaeff8"
 								}
 							]
 						},
@@ -505,6 +657,107 @@
 		{
 			"name": "Daily Rewards",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get DailyReward by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "LmBagl2lmC5Kd64tGwPmyuBP"
+										}
+									]
+								},
+								"description": "Obtiene un dailyreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update DailyReward by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un dailyreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete DailyReward by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un dailyreward por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List DailyRewards",
 					"request": {
@@ -725,6 +978,107 @@
 			"name": "Levels",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get Level by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"levels",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "mEJppNDOhZZ6yKorKORt3MF7"
+										}
+									]
+								},
+								"description": "Obtiene un level por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Level by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"levels",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un level por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Level by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"levels",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un level por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List Levels",
 					"request": {
 						"method": "GET",
@@ -944,6 +1298,107 @@
 			"name": "Log Histories",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get LogHistory by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"log-histories",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "Pvem20RFC9k533W3q2byQA4U"
+										}
+									]
+								},
+								"description": "Obtiene un loghistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update LogHistory by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"description\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"log-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un loghistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete LogHistory by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"log-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un loghistory por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List LogHistories",
 					"request": {
 						"method": "GET",
@@ -1156,6 +1611,107 @@
 		{
 			"name": "Rewards",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get Reward by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"rewards",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "dVr6hQR026SxQYv82GxMNisP"
+										}
+									]
+								},
+								"description": "Obtiene un reward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Reward by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un reward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Reward by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un reward por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List Rewards",
 					"request": {
@@ -1376,6 +1932,108 @@
 			"name": "Roulette Histories",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get RouletteHistory by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"roulette-histories",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "Ih5fdrpYNVzbf52EGqhTIy0X"
+										}
+									]
+								},
+								"description": "Obtiene un roulettehistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update RouletteHistory by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"result\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"roulette-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un roulettehistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete RouletteHistory by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"roulette-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un roulettehistory por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List RouletteHistories",
 					"request": {
 						"method": "GET",
@@ -1588,6 +2246,107 @@
 		{
 			"name": "User Achievements",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get UserAchievement by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-achievements",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "B8fyypTqLa5QbbASZOq9VGl6"
+										}
+									]
+								},
+								"description": "Obtiene un userachievement por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update UserAchievement by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"progress\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-achievements",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un userachievement por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete UserAchievement by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-achievements",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un userachievement por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List UserAchievements",
 					"request": {
@@ -1814,6 +2573,107 @@
 			"name": "User Daily Rewards",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get UserDailyReward by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "MdFuRqpU9EymRwqeu0g8vUFL"
+										}
+									]
+								},
+								"description": "Obtiene un userdailyreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update UserDailyReward by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"claimed\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un userdailyreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete UserDailyReward by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-daily-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un userdailyreward por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List UserDailyRewards",
 					"request": {
 						"method": "GET",
@@ -2031,6 +2891,107 @@
 		{
 			"name": "User Game Histories",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get UserGameHistory by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-game-histories",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "F58ooDXgKnAXgmiQ4n1AEfVi"
+										}
+									]
+								},
+								"description": "Obtiene un usergamehistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update UserGameHistory by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"score\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-game-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un usergamehistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete UserGameHistory by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-game-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un usergamehistory por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List UserGameHistories",
 					"request": {
@@ -2262,6 +3223,107 @@
 			"name": "User Rewards",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get UserReward by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-rewards",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "qT3fbPwkJW1BOQkSOZOvoW29"
+										}
+									]
+								},
+								"description": "Obtiene un userreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update UserReward by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"claimed\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un userreward por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete UserReward by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-rewards",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un userreward por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List UserRewards",
 					"request": {
 						"method": "GET",
@@ -2487,6 +3549,107 @@
 			"name": "User Transaction Histories",
 			"item": [
 				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get UserTransactionHistory by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-transaction-histories",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "iBRryfe6AW52Cqz6inWwCKrb"
+										}
+									]
+								},
+								"description": "Obtiene un usertransactionhistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update UserTransactionHistory by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"amount\": \"Updated\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-transaction-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un usertransactionhistory por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete UserTransactionHistory by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"user-transaction-histories",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un usertransactionhistory por UUID."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "List UserTransactionHistories",
 					"request": {
 						"method": "GET",
@@ -2710,6 +3873,107 @@
 		{
 			"name": "Player Stats",
 			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get PlayerStat by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"player-stats",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "risT9nA3Yfgr25N8nHmynAlq"
+										}
+									]
+								},
+								"description": "Obtiene un player stat por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Update PlayerStat by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"totalGamesWon\": 100\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"player-stats",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Actualiza un player stat por UUID."
+							},
+							"response": []
+						},
+						{
+							"name": "Delete PlayerStat by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"player-stats",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Elimina un player stat por UUID."
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "List PlayerStats",
 					"request": {

@@ -1,7 +1,7 @@
-/**
- * user-achievement controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::user-achievement.user-achievement', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::user-achievement.user-achievement'),
+}));
 
-export default factories.createCoreController('api::user-achievement.user-achievement');
