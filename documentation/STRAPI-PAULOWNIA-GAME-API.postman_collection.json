@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e727c931-4e46-4d69-a3be-3ffaf7e4949f",
+		"_postman_id": "39bdf524-df9d-4252-81c5-3701748bcfb2",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -126,7 +126,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/users?populate=*&start=0&limit=25&sort=createdAt:desc&&&",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users?populate=*&start=0&limit=25&sort=createdAt:desc",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
@@ -172,10 +172,7 @@
 									"value": "false",
 									"description": "Filtro por estado de bloqueo.",
 									"disabled": true
-								},
-								{},
-								{},
-								{}
+								}
 							]
 						},
 						"description": "Lista de usuarios.\nSoporta filtrado, ordenamiento y paginación estándar de Strapi."
@@ -4714,6 +4711,52 @@
 								}
 							]
 						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ranking",
+			"item": [
+				{
+					"name": "Get Ranking",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rankings?pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"rankings"
+							],
+							"query": [
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "PAGE-BASED: Número de página (>=1). NO mezclar con limit/start."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "PAGE-BASED: Cantidad de resultados por página. NO mezclar con limit/start."
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc"
+								},
+								{
+									"key": "filters[timestamp][$gte]",
+									"value": "2025-01-01",
+									"description": "Filtrar por fecha mayor o igual.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Obtiene el último ranking generado. \n\nEl objeto `topPlayers` incluye:\n- rank\n- username\n- score\n- xp\n- gamesWon\n- winRate (porcentaje de victorias: gamesWon/gamesPlayed * 100)\n- coins\n- tickets\n- country\n- avatar (url)\n\nEl objeto `stats` incluye estadísticas globales:\n- totalPlayers\n- averageScore\n- mostWins { username, count }\n- mostGamesPlayed { username, count }\n- highestWinRate { username, rate } (porcentaje)\n- top10Week [ { username, score, date } ]\n- top10Month [ { username, score, date } ]\n\nPaginación (NO mezclar ambos modos):\n\nMODO 1 - Offset-based:\n- pagination[limit]: Cantidad de resultados\n- pagination[start]: Desde qué registro (0-indexed)\n\nMODO 2 - Page-based:\n- pagination[page]: Número de página (>=1)\n- pagination[pageSize]: Resultados por página"
 					},
 					"response": []
 				}

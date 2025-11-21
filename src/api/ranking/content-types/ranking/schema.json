@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "rankings",
+  "info": {
+    "singularName": "ranking",
+    "pluralName": "rankings",
+    "displayName": "Ranking",
+    "description": "Historical record of player rankings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "timestamp": {
+      "type": "datetime",
+      "required": true
+    },
+    "topPlayers": {
+      "type": "json",
+      "required": true
+    },
+    "stats": {
+      "type": "json"
+    }
+  }
+}

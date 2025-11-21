@@ -76,3 +76,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **All Tests Passing**: 22/22 tests passed successfully (1.836s runtime)
   - **Dependencies**: Installed and configured Jest for TypeScript testing
 
+#### Added - Ranking System
+- **New Content Type**: `Ranking` for storing historical player rankings
+  - Fields: `timestamp` (datetime), `topPlayers` (JSON), `stats` (JSON)
+  - Stores top 100 players with enriched data and global statistics
+- **Automated Ranking Generation**:
+  - **Cron Job**: Configurable ranking generation in `config/cron-tasks.ts`
+    - Default schedule: Every 6 hours (`0 */6 * * *`)
+    - Configurable via `CRON_RANKING_SCHEDULE` environment variable:
+      - `test`: Runs every minute for testing
+      - Numeric value (e.g., `6`): Runs every X hours
+      - Custom cron expression (e.g., `"0 0 * * *"`): Uses provided expression
+  - **Data Retention Policy**: Automatic cleanup of rankings older than 1 year (365 days)
+- **Enriched Ranking Data**:
+  - **Top Players** (top 100): rank, username, score, xp, gamesWon, winRate, coins, tickets, country, avatar
+  - **Global Statistics**:
+    - `totalPlayers`: Total number of players
+    - `averageScore`: Average score across all players
+    - `mostWins`: Player with most victories
+    - `mostGamesPlayed`: Most active player
+    - `highestWinRate`: Player with best win percentage
+    - `top10Week`: Top 10 players of the current week (highest score in a single game)
+    - `top10Month`: Top 10 players of the current month (highest score in a single game)
+- **API Endpoint**: `GET /api/rankings`
+  - Supports standard Strapi pagination (offset-based and page-based)
+  - Sorting and filtering capabilities
+- **Postman Collection**: Updated with Ranking endpoint documentation
+  - Detailed parameter descriptions
+  - Pagination examples (both modes)
+  - Complete response schema documentation
+
+#### Added - Seeder System
+- **Standalone TypeScript Seeder**: `scripts/seed.ts`
+  - Populates database with test data for all content types
+  - Preserves `gravitad` admin user during cleanup
+  - Generates consistent and realistic test data
+- **NPM Scripts**:
+  - `npm run seed`: Populate database with test data
+  - `npm run seed:clean`: Clean database (except gravitad) and repopulate
+- **Dependencies**: Installed `ts-node` for TypeScript script execution
+- **Data Consistency**:
+  - Fixed `PlayerStats` generation to ensure `gamesWon <= gamesPlayed`
+  - Automatic calculation of `gamesLost = gamesPlayed - gamesWon`
+  - Prevents invalid winRate calculations (>100%)
+
+#### Fixed
+- **WinRate Calculation**: Fixed null handling in ranking generation
+  - Calculates winRate on-the-fly if stored value is null: `(gamesWon / gamesPlayed) * 100`
+  - Prevents division by zero when `gamesPlayed = 0`
+  - Rounds to 2 decimal places for better readability
+- **Seeder Data Integrity**: Corrected random data generation to maintain logical consistency between game statistics
+

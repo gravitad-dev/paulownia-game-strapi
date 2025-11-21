@@ -710,6 +710,37 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiRankingRanking extends Struct.CollectionTypeSchema {
+  collectionName: 'rankings';
+  info: {
+    description: 'Historical record of player rankings';
+    displayName: 'Ranking';
+    pluralName: 'rankings';
+    singularName: 'ranking';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ranking.ranking'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    stats: Schema.Attribute.JSON;
+    timestamp: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    topPlayers: Schema.Attribute.JSON & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiRewardReward extends Struct.CollectionTypeSchema {
   collectionName: 'rewards';
   info: {
@@ -1626,6 +1657,7 @@ declare module '@strapi/strapi' {
       'api::level.level': ApiLevelLevel;
       'api::log-history.log-history': ApiLogHistoryLogHistory;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
+      'api::ranking.ranking': ApiRankingRanking;
       'api::reward.reward': ApiRewardReward;
       'api::roulette-history.roulette-history': ApiRouletteHistoryRouletteHistory;
       'api::setting.setting': ApiSettingSetting;
