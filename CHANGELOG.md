@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Player Stats Integration**: Added `tickets`, `ticketsEarned`, `ticketsSpent` to `PlayerStat`.
   - **Transaction History**: Added `daily_reward` type and `currency` field to `UserTransactionHistory`.
   - **Cron Job**: Monthly reset task configured in `config/cron-tasks.ts`.
+    - Configurable via environment variables: `CRON_RESET_DAY` (1-31 or 'test') and `CRON_RESET_HOUR` (0-23)
+    - Automatic UTC offset calculation for Europe/Madrid timezone
+    - Test mode available: `CRON_RESET_DAY='test'` runs reset every minute for testing
   - **Custom Endpoints**:
     - `GET /api/daily-rewards/my-status`: Check reward status.
     - `POST /api/daily-rewards/claim`: Claim next reward.
@@ -53,4 +56,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 - **Permission Issue**: Resolved 403 Forbidden error for custom routes by programmatically inserting missing permissions into the database for the Authenticated role.
+- **Null Pointer Exceptions**: Fixed crashes in `myStatus` and `claim` endpoints caused by corrupted `UserDailyReward` records with null `daily_reward` relations. Added global filtering to handle orphaned records gracefully.
+- **Reward Logic**: Updated seeding to correctly assign coins for days 1-6 and tickets for day 7.
+- **API Response Enhancement**: Both endpoints now return comprehensive 7-day reward status with player stats.
+
+#### Testing
+- **Comprehensive Jest Test Suite**: Created exhaustive test coverage for Daily Rewards feature (`tests/daily-reward/daily-reward.controller.test.ts`)
+  - **22 test cases** covering all scenarios:
+    - Authentication and authorization (unauthorized access)
+    - First-time user flow (no claims)
+    - Daily claim mechanics (same-day blocking, 24h cooldown)
+    - Reward progression (sequential days 1-7)
+    - Cycle completion and reset
+    - Corrupted data handling (null relations, orphaned records)
+    - Player stats updates (coins and tickets)
+    - Transaction logging
+    - Edge cases (gaps in claims, rollback on transaction failure)
+  - **Test Infrastructure**: Custom mocks and factories for Strapi entities
+  - **All Tests Passing**: 22/22 tests passed successfully (1.836s runtime)
+  - **Dependencies**: Installed and configured Jest for TypeScript testing
 
