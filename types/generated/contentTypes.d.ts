@@ -693,6 +693,9 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
+    tickets: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    ticketsEarned: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    ticketsSpent: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1043,6 +1046,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    currency: Schema.Attribute.Enumeration<['coins', 'tickets']>;
     executedAt: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1055,7 +1059,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
       ['pending', 'in_progress', 'completed', 'cancelled']
     >;
     transactionType: Schema.Attribute.Enumeration<
-      ['coins_to_tickets', 'coins_to_tokens']
+      ['coins_to_tickets', 'coins_to_tokens', 'daily_reward']
     >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

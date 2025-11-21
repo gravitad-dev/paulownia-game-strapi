@@ -63,6 +63,18 @@
     "coins": {
       "type": "integer"
     },
+    "tickets": {
+      "type": "integer",
+      "default": 0
+    },
+    "ticketsEarned": {
+      "type": "integer",
+      "default": 0
+    },
+    "ticketsSpent": {
+      "type": "integer",
+      "default": 0
+    },
     "users_permissions_user": {
       "type": "relation",
       "relation": "oneToOne",

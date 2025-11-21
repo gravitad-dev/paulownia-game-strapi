@@ -658,6 +658,51 @@
 			"name": "Daily Rewards",
 			"item": [
 				{
+					"name": "Custom",
+					"item": [
+						{
+							"name": "My Status",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/my-status",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"daily-rewards",
+										"my-status"
+									]
+								},
+								"description": "Obtiene el estado actual de los premios diarios para el usuario autenticado."
+							},
+							"response": []
+						},
+						{
+							"name": "Claim Reward",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/claim",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"daily-rewards",
+										"claim"
+									]
+								},
+								"description": "Reclama el siguiente premio diario disponible."
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "By UUID",
 					"item": [
 						{

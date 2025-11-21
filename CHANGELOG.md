@@ -37,3 +37,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Architecture**: Modular and reusable pattern using shared helpers
 - **UUID Format**: 24 alphanumeric characters (e.g., `WnxL3KNjWbJs9l2X5F0fdEa7`)
 
+### 2025-11-21
+
+#### Added
+- **Daily Rewards System**:
+  - **7-Day Cycle**: Incremental rewards (Coins/Tickets) with automatic reset on day 1 of each month.
+  - **New Content Types**: `DailyReward` (definitions) and `UserDailyReward` (tracking).
+  - **Player Stats Integration**: Added `tickets`, `ticketsEarned`, `ticketsSpent` to `PlayerStat`.
+  - **Transaction History**: Added `daily_reward` type and `currency` field to `UserTransactionHistory`.
+  - **Cron Job**: Monthly reset task configured in `config/cron-tasks.ts`.
+  - **Custom Endpoints**:
+    - `GET /api/daily-rewards/my-status`: Check reward status.
+    - `POST /api/daily-rewards/claim`: Claim next reward.
+  - **Automatic Seeding**: Bootstrap logic to create initial 7 rewards if missing.
+
+#### Fixed
+- **Permission Issue**: Resolved 403 Forbidden error for custom routes by programmatically inserting missing permissions into the database for the Authenticated role.
+
