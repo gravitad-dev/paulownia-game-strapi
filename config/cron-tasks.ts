@@ -34,6 +34,144 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
     }
   };
 
+  const generateRanking = async ({ strapi }: { strapi: any }) => {
+    console.log("Running ranking generation...");
+    try {
+      const players = await strapi.entityService.findMany("api::player-stat.player-stat", {
+        sort: { highestScore: "desc" },
+        limit: 100,
+        populate: {
+          users_permissions_user: {
+            populate: {
+              avatar: true,
+            },
+          },
+        },
+      });
+
+      const topPlayers = players.map((p: any, index: number) => {
+        const user = p.users_permissions_user;
+        return {
+          rank: index + 1,
+          username: user?.username || "Unknown",
+          score: p.highestScore,
+          xp: p.xp,
+          gamesWon: p.gamesWon,
+          winRate: p.winRate,
+          coins: p.coins,
+          tickets: p.tickets,
+          country: user?.country || null,
+          avatar: user?.avatar?.url || null,
+        };
+      });
+
+      // Calcular estadísticas globales
+      const totalPlayers = players.length;
+      const averageScore = players.reduce((acc: number, p: any) => acc + (p.highestScore || 0), 0) / (totalPlayers || 1);
+      
+      const mostWinsPlayer = [...players].sort((a: any, b: any) => (b.gamesWon || 0) - (a.gamesWon || 0))[0];
+      const mostGamesPlayer = [...players].sort((a: any, b: any) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0))[0];
+      
+      // Calcular winRate en tiempo real si es null o undefined
+      const playersWithWinRate = players.map((p: any) => {
+        const winRate = (p.winRate !== null && p.winRate !== undefined) 
+          ? p.winRate 
+          : (p.gamesPlayed > 0 ? (p.gamesWon / p.gamesPlayed) * 100 : 0);
+        
+        return {
+          ...p,
+          calculatedWinRate: winRate
+        };
+      });
+      const highestWinRatePlayer = [...playersWithWinRate].sort((a: any, b: any) => (b.calculatedWinRate || 0) - (a.calculatedWinRate || 0))[0];
+
+      // Calcular fechas de inicio para semana y mes
+      const now = new Date();
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      // Helper para obtener top 10 de un periodo
+      const getTop10ByPeriod = async (startDate: Date) => {
+        const histories = await strapi.entityService.findMany("api::user-game-history.user-game-history", {
+          filters: {
+            completedAt: { $gte: startDate },
+          },
+          populate: { users_permissions_user: true },
+          sort: { score: "desc" },
+          limit: 1000, // Traemos suficientes para filtrar por usuario único
+        });
+
+        const uniqueUsers = new Map();
+        histories.forEach((h: any) => {
+          const userId = h.users_permissions_user?.id;
+          if (userId && !uniqueUsers.has(userId)) {
+             uniqueUsers.set(userId, {
+               username: h.users_permissions_user.username,
+               score: h.score,
+               date: h.completedAt
+             });
+          }
+        });
+
+        return Array.from(uniqueUsers.values())
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 10);
+      };
+
+      const top10Week = await getTop10ByPeriod(startOfWeek);
+      const top10Month = await getTop10ByPeriod(startOfMonth);
+
+      const stats = {
+        totalPlayers,
+        averageScore: Math.round(averageScore),
+        mostWins: mostWinsPlayer ? {
+          username: mostWinsPlayer.users_permissions_user?.username,
+          count: mostWinsPlayer.gamesWon
+        } : null,
+        mostGamesPlayed: mostGamesPlayer ? {
+          username: mostGamesPlayer.users_permissions_user?.username,
+          count: mostGamesPlayer.gamesPlayed
+        } : null,
+        highestWinRate: highestWinRatePlayer ? {
+          username: highestWinRatePlayer.users_permissions_user?.username,
+          rate: Math.round(highestWinRatePlayer.calculatedWinRate * 100) / 100
+        } : null,
+        top10Week,
+        top10Month,
+        generatedAt: new Date()
+      };
+
+      await strapi.entityService.create("api::ranking.ranking", {
+        data: {
+          timestamp: new Date(),
+          topPlayers,
+          stats,
+        },
+      });
+      
+      // Política de Retención: Mantener historial de 1 año (365 días)
+      // Eliminamos registros antiguos para evitar crecimiento infinito de la DB
+      const retentionDate = new Date();
+      retentionDate.setDate(retentionDate.getDate() - 365);
+      
+      const deleted = await strapi.db.query("api::ranking.ranking").deleteMany({
+        where: {
+          timestamp: {
+            $lt: retentionDate,
+          },
+        },
+      });
+      
+      if (deleted.count > 0) {
+        console.log(`Ranking cleanup: Deleted ${deleted.count} records older than 1 year.`);
+      }
+
+      console.log("Ranking generation completed.");
+    } catch (error) {
+      console.error("Error in ranking generation:", error);
+    }
+  };
+
   const tasks: Record<string, any> = {};
 
   if (dayStr === "test") {
@@ -57,5 +195,22 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   const utcHour = ((validHourMadrid - offsetHours) % 24 + 24) % 24;
   const expr = `0 ${utcHour} ${validDay} * *`;
   tasks[expr] = resetTask;
+
+  const rankingConfig = env("CRON_RANKING_SCHEDULE", "6");
+  let rankingExpr = "0 */6 * * *";
+
+  if (rankingConfig === "test") {
+    rankingExpr = "* * * * *"; // Every minute for testing
+    console.log("Ranking Cron running in TEST mode (every minute)");
+  } else if (!isNaN(parseInt(rankingConfig)) && !rankingConfig.includes("*") && !rankingConfig.includes(" ")) {
+    rankingExpr = `0 */${rankingConfig} * * *`; // Every X hours
+    console.log(`Ranking Cron running every ${rankingConfig} hours`);
+  } else {
+    rankingExpr = rankingConfig; // Custom cron expression
+    console.log(`Ranking Cron running with custom schedule: ${rankingExpr}`);
+  }
+
+  tasks[rankingExpr] = generateRanking;
+  
   return tasks;
 };
