@@ -7,7 +7,7 @@
     "displayName": "LogHistory"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {

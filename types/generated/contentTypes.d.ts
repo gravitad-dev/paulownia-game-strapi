@@ -631,7 +631,7 @@ export interface ApiLogHistoryLogHistory extends Struct.CollectionTypeSchema {
     singularName: 'log-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -807,7 +807,7 @@ export interface ApiRouletteHistoryRouletteHistory
     singularName: 'roulette-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -905,7 +905,7 @@ export interface ApiUserAchievementUserAchievement
     singularName: 'user-achievement';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     achievement: Schema.Attribute.Relation<
@@ -949,7 +949,7 @@ export interface ApiUserDailyRewardUserDailyReward
     singularName: 'user-daily-reward';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     claimed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
@@ -988,7 +988,7 @@ export interface ApiUserGameHistoryUserGameHistory
     singularName: 'user-game-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     coinsEarned: Schema.Attribute.Integer;
@@ -1026,7 +1026,7 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
     singularName: 'user-reward';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     claimed: Schema.Attribute.Boolean &
@@ -1069,7 +1069,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
     singularName: 'user-transaction-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     amountDelivered: Schema.Attribute.Integer;

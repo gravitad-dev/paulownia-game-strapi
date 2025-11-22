@@ -127,3 +127,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rounds to 2 decimal places for better readability
 - **Seeder Data Integrity**: Corrected random data generation to maintain logical consistency between game statistics
 
+### 2025-11-22
+
+#### Added - Achievement System
+- **Complete Achievement System Implementation**:
+  - **TDD Approach**: Implemented using Test-Driven Development with **31 comprehensive tests** covering all scenarios.
+  - **Endpoints**:
+    - `GET /api/achievements/my-achievements`: Lists all active achievements with user progress.
+      - Supports **Filtering**: `status` (locked, completed, claimed), `targetType`, `rewardType`.
+      - Supports **Sorting**: `sort` by any field (e.g., `goalAmount:asc`).
+      - Supports **Pagination**: `page` and `pageSize`.
+      - Returns calculated status (`locked`, `completed`, `claimed`) based on user progress.
+    - `POST /api/achievements/claim`: Allows users to claim rewards for completed achievements.
+      - Validates achievement existence and completion status.
+      - Prevents double claiming.
+      - **Transactional**: Updates `player-stat` (coins/tickets) and logs transaction in `user-transaction-history`.
+      - **Rollback Mechanism**: Reverts changes if any part of the transaction fails.
+  - **Seeder Updates**:
+    - Updated `scripts/seed.ts` to create `user-achievements` for all available achievements.
+    - Implemented **Sparse Data** simulation (Option A): Regular users have ~30% of achievements initiated to simulate realistic usage.
+    - **Gravitad User**: Configured with all achievements created, and "Logro 1" completed/ready to claim for testing.
+  - **Documentation**:
+    - Updated Postman collection with new endpoints and query parameters.
+
+#### Fixed
+- **Achievement Duplication**: Resolved issue where `user-achievements` were linked to duplicate achievement records by enforcing UUID-based lookups.
+- **Seeder Logic**: Fixed seeder to create `user-achievement` records for *all* achievements instead of just the first one.

@@ -306,7 +306,7 @@ async function seedDatabase(strapi: any) {
           coinsEarned: Math.floor(Math.random() * 100),
           duration: Math.floor(Math.random() * 300),
           completedAt: new Date(),
-          publishedAt: new Date(),
+
         },
       });
     }
@@ -322,21 +322,31 @@ async function seedDatabase(strapi: any) {
           currency: "coins",
           statusTransaction: "completed",
           executedAt: new Date(),
-          publishedAt: new Date(),
+
+
         },
       });
     }
 
-    // User Achievements
-    if (achievements.length > 0) {
+    // User Achievements - Crear uno para cada achievement (Simulando Option A: Sparse Data)
+    for (let j = 0; j < achievements.length; j++) {
+      // Solo crear el registro con 30% de probabilidad para simular que no todos tienen todos los achievements iniciados
+      if (Math.random() > 0.3) continue;
+
+      const achievement = achievements[j];
+      // Variar el estado de completado: algunos completados, otros en progreso
+      const isCompleted = Math.random() > 0.8; 
+      const currentProgress = isCompleted ? achievement.goalAmount : Math.floor(Math.random() * achievement.goalAmount * 0.8);
+      
       await strapi.entityService.create("api::user-achievement.user-achievement", {
         data: {
           users_permissions_user: user.documentId,
-          achievement: achievements[0].documentId,
-          obtainedAt: new Date(),
-          completed: true,
+          achievement: achievement.documentId,
+          completed: isCompleted,
           claimed: false,
-          publishedAt: new Date(),
+          currentProgress,
+          obtainedAt: isCompleted ? new Date() : null,
+
         },
       });
     }
@@ -349,7 +359,7 @@ async function seedDatabase(strapi: any) {
           daily_reward: dailyRewards[0].documentId,
           claimed: true,
           claimedAt: new Date(),
-          publishedAt: new Date(),
+
         },
       });
     }
@@ -368,7 +378,7 @@ async function seedDatabase(strapi: any) {
           rewardStatus: "available",
           claimed: false,
           quantity: 1,
-          publishedAt: new Date(),
+
         },
       });
     }
@@ -380,7 +390,7 @@ async function seedDatabase(strapi: any) {
       data: {
         users_permissions_user: user.documentId,
         timestamp: new Date(),
-        publishedAt: new Date(),
+
       },
     });
 
@@ -401,9 +411,39 @@ async function seedDatabase(strapi: any) {
         timestamp: new Date(),
         module: "auth",
         eventType: "login",
-        publishedAt: new Date(),
+
       },
     });
+  }
+
+  // 9. Crear User Achievements para el usuario gravitad
+  console.log("👤 Creando achievements para usuario gravitad...");
+  const gravitadUser = await strapi.db.query("plugin::users-permissions.user").findOne({
+    where: { email: "synergiart.websupp@gmail.com" },
+  });
+
+  if (gravitadUser && achievements.length > 0) {
+    // Crear user-achievements para gravitad
+    for (let j = 0; j < achievements.length; j++) {
+      const achievement = achievements[j];
+      // Primer achievement completado y listo para reclamar, resto en progreso
+      const isCompleted = j === 0;
+      const currentProgress = isCompleted ? achievement.goalAmount : Math.floor(Math.random() * achievement.goalAmount * 0.5);
+      
+      await strapi.entityService.create("api::user-achievement.user-achievement", {
+        data: {
+          users_permissions_user: gravitadUser.documentId,
+          achievement: achievement.documentId,
+          completed: isCompleted,
+          claimed: false,
+          currentProgress,
+          obtainedAt: isCompleted ? new Date() : null,
+        },
+      });
+    }
+    console.log(`✅ Creados ${achievements.length} user-achievements para gravitad`);
+  } else if (!gravitadUser) {
+    console.log("⚠️ Usuario gravitad no encontrado, no se crearon achievements");
   }
 
   console.log("✅ Seeder completado exitosamente.");

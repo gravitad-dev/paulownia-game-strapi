@@ -7,7 +7,7 @@
     "displayName": "UserTransactionHistory"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
