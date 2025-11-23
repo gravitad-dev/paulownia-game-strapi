@@ -40,18 +40,21 @@ export default factories.createCoreController(
         nextDay = lastRewardDay + 1;
         lastClaimedDate = new Date(lastReward.claimedAt);
 
-        // Check if claimed today
-        const today = new Date();
-        const isClaimedToday =
-          lastClaimedDate.getDate() === today.getDate() &&
-          lastClaimedDate.getMonth() === today.getMonth() &&
-          lastClaimedDate.getFullYear() === today.getFullYear();
-
-        if (isClaimedToday) {
+        // Check if 24h have passed
+        const now = new Date();
+        const cooldownTime = 24 * 60 * 60 * 1000; // 24 hours in ms
+        const timeSinceLastClaim = now.getTime() - lastClaimedDate.getTime();
+        
+        if (timeSinceLastClaim < cooldownTime) {
           canClaim = false;
-          const d = new Date(lastClaimedDate);
-          nextClaimDate = new Date(new Date(d).setHours(24, 0, 0, 0));
+          nextClaimDate = new Date(lastClaimedDate.getTime() + cooldownTime);
+        } else {
+          // If cooldown passed, next claim date is effectively "now"
+          nextClaimDate = now;
         }
+      } else {
+        // No claims yet, available immediately
+        nextClaimDate = new Date();
       }
 
       // Get all daily rewards
@@ -77,7 +80,10 @@ export default factories.createCoreController(
         canClaim = false;
         nextClaimDate = null;
       } else if (maxDay > 0 && nextDay > maxDay) {
-        nextDay = 1;
+        // Cycle complete, wait for reset
+        nextDay = null;
+        canClaim = false;
+        nextClaimDate = null;
       }
 
       // Map rewards with status
@@ -109,10 +115,6 @@ export default factories.createCoreController(
         .findOne({
           where: { users_permissions_user: user.id },
         });
-
-      if (canClaim && !nextClaimDate) {
-        nextClaimDate = new Date();
-      }
 
       return {
         nextDay,
@@ -146,6 +148,8 @@ export default factories.createCoreController(
       );
 
       let nextDay = 1;
+      let lastClaimedDate: Date | null = null;
+
       if (claimedRewards && claimedRewards.length > 0) {
         // Filter out any potential corrupted records where daily_reward might be null
         const validClaimedRewards = claimedRewards.filter(
@@ -156,23 +160,11 @@ export default factories.createCoreController(
           const lastReward = validClaimedRewards[0] as any; // Cast to any to avoid TS error with populated fields
           const lastRewardDay = lastReward.daily_reward.day;
           nextDay = lastRewardDay + 1;
-
-          const lastClaimedDate = new Date(lastReward.claimedAt);
-          const today = new Date();
-          const isClaimedToday =
-            lastClaimedDate.getDate() === today.getDate() &&
-            lastClaimedDate.getMonth() === today.getMonth() &&
-            lastClaimedDate.getFullYear() === today.getFullYear();
-
-          if (isClaimedToday) {
-            return ctx.badRequest("Daily reward already claimed today", {
-              reason: "already_claimed_today",
-            });
-          }
+          lastClaimedDate = new Date(lastReward.claimedAt);
         }
       }
 
-      // 2. Find the reward for nextDay
+      // 2. Find the reward for nextDay (Check existence BEFORE cooldown)
       const rewards = await strapi.entityService.findMany(
         "api::daily-reward.daily-reward",
         {
@@ -189,7 +181,22 @@ export default factories.createCoreController(
       }
       const rewardToClaim = rewards[0] as any;
 
-      // 3. Create UserDailyReward entry
+      // 3. Check Cooldown (Only if reward exists)
+      if (lastClaimedDate) {
+        const now = new Date();
+        const cooldownTime = 24 * 60 * 60 * 1000; // 24 hours in ms
+        const timeSinceLastClaim = now.getTime() - lastClaimedDate.getTime();
+
+        if (timeSinceLastClaim < cooldownTime) {
+           const nextClaimDate = new Date(lastClaimedDate.getTime() + cooldownTime);
+           return ctx.badRequest("Daily reward already claimed today", {
+            reason: "already_claimed_today",
+            nextClaimDate: nextClaimDate,
+          });
+        }
+      }
+
+      // 4. Create UserDailyReward entry
       const newClaim = await strapi.entityService.create(
         "api::user-daily-reward.user-daily-reward",
         {
@@ -327,7 +334,9 @@ export default factories.createCoreController(
 
       // We know we just claimed 'nextDay', so nextDay is now nextDay + 1
       const newNextDay = nextDay + 1;
-      const newCanClaim = false; // Just claimed, so cannot claim again today
+      const newCanClaim = false; // Just claimed, so cannot claim again immediately
+      const claimedAt = newClaim.claimedAt ? new Date(newClaim.claimedAt) : new Date();
+      const nextClaimDate = new Date(claimedAt.getTime() + 24 * 60 * 60 * 1000);
 
       const rewardsList = allRewardsList.map((reward: any) => {
         let status = "locked";
@@ -363,7 +372,7 @@ export default factories.createCoreController(
         status: {
           nextDay: newNextDay,
           canClaim: newCanClaim,
-          nextClaimDate: new Date(new Date().setHours(24, 0, 0, 0)),
+          nextClaimDate: nextClaimDate,
         },
       };
     },

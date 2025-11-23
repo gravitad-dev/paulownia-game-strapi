@@ -77,12 +77,13 @@ describe("Daily Reward Controller", () => {
       expect(res.message).toMatch(/unauthorized/i);
     });
 
-    test("canClaim=false cuando el último reclamo fue hoy", async () => {
-      const today = new Date();
+    test("canClaim=false cuando el último reclamo fue hace menos de 24h", async () => {
+      const now = new Date();
+      const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000);
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       strapi.entityService.findMany.mockImplementation((uid: string) => {
         if (uid === "api::user-daily-reward.user-daily-reward")
-          return [makeUserDailyReward(user.id, rewardDay1, today)];
+          return [makeUserDailyReward(user.id, rewardDay1, twentyThreeHoursAgo)];
         if (uid === "api::daily-reward.daily-reward")
           return [
             rewardDay1,
@@ -97,14 +98,38 @@ describe("Daily Reward Controller", () => {
       expect(res.canClaim).toBe(false);
       const available = res.rewards.find((r: any) => r.status === "available");
       expect(available).toBeUndefined();
-      const expectedMidnight = new Date(new Date(today).setHours(24, 0, 0, 0));
-      expect(new Date(res.nextClaimDate).getTime()).toBe(
-        expectedMidnight.getTime(),
-      );
+      
+      // nextClaimDate should be 24h after last claim
+      const expectedNextClaim = new Date(twentyThreeHoursAgo.getTime() + 24 * 60 * 60 * 1000);
+      expect(new Date(res.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
+    });
+
+    test("canClaim=true cuando el último reclamo fue hace más de 24h", async () => {
+      const now = new Date();
+      const twentyFiveHoursAgo = new Date(now.getTime() - 25 * 60 * 60 * 1000);
+      const rewardDay1 = makeDailyReward(1, "coins", 100);
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::user-daily-reward.user-daily-reward")
+          return [makeUserDailyReward(user.id, rewardDay1, twentyFiveHoursAgo)];
+        if (uid === "api::daily-reward.daily-reward")
+          return [
+            rewardDay1,
+            makeDailyReward(2, "tickets", 200),
+            makeDailyReward(3, "coins", 300),
+          ];
+        return [];
+      });
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 0, 0, 0, 0));
+      const res = await controller.myStatus(mockCtx(user));
+      expect(res.canClaim).toBe(true);
+      // nextClaimDate should be roughly now (or exactly now per logic)
+      // The logic sets it to 'now' if available
+      expect(new Date(res.nextClaimDate).getTime()).toBeCloseTo(now.getTime(), -3); // within 1s
     });
 
     test("ignora registros corruptos sin daily_reward y calcula nextDay", async () => {
-      const past = new Date(Date.now() - 24 * 3600 * 1000);
+      const past = new Date(Date.now() - 48 * 3600 * 1000); // 48h ago
       const rewardDay3 = makeDailyReward(3, "coins", 300);
       const corrupted: any = {
         users_permissions_user: user.id,
@@ -126,9 +151,9 @@ describe("Daily Reward Controller", () => {
       const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
       psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 0, 0, 0, 0));
       const res = await controller.myStatus(mockCtx(user));
-      expect(res.nextDay).toBe(1);
+      expect(res.nextDay).toBeNull();
       const available2 = res.rewards.find((r: any) => r.status === "available");
-      expect(available2.day).toBe(1);
+      expect(available2).toBeUndefined();
     });
 
     test("incluye claimedAt en rewards reclamados", async () => {
@@ -210,12 +235,17 @@ describe("Daily Reward Controller", () => {
       expect(res.playerStats.coins).toBe(100);
       expect(res.status.canClaim).toBe(false);
       expect(res.status.nextDay).toBe(2);
+      
+      // Check nextClaimDate is 24h from now
+      const expectedNextClaim = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      expect(new Date(res.status.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
     });
 
-    test("rechaza doble reclamo en el mismo día con 400", async () => {
-      const today = new Date();
+    test("rechaza doble reclamo en menos de 24h con 400 y devuelve nextClaimDate", async () => {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
       const rewardDay1 = makeDailyReward(1, "coins", 100);
-      const claimed = makeUserDailyReward(user.id, rewardDay1, today);
+      const claimed = makeUserDailyReward(user.id, rewardDay1, oneHourAgo);
       strapi.entityService.findMany.mockImplementation((uid: string) => {
         if (uid === "api::user-daily-reward.user-daily-reward")
           return [claimed];
@@ -226,13 +256,18 @@ describe("Daily Reward Controller", () => {
       expect(res.status).toBe(400);
       expect(res.message).toMatch(/already claimed today/i);
       expect(res.data?.reason).toBe("already_claimed_today");
+      
+      // Verify nextClaimDate in error details
+      expect(res.data?.nextClaimDate).toBeDefined();
+      const expectedNextClaim = new Date(oneHourAgo.getTime() + 24 * 60 * 60 * 1000);
+      expect(new Date(res.data.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
     });
 
     test("entrega recompensa del día 2 tras 24h y actualiza tickets", async () => {
-      const yesterday = new Date(Date.now() - 24 * 3600 * 1000);
+      const twentyFiveHoursAgo = new Date(Date.now() - 25 * 3600 * 1000);
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       const rewardDay2 = makeDailyReward(2, "tickets", 200);
-      const claimed = makeUserDailyReward(user.id, rewardDay1, yesterday);
+      const claimed = makeUserDailyReward(user.id, rewardDay1, twentyFiveHoursAgo);
       strapi.entityService.findMany.mockImplementation(
         (uid: string, opts?: any) => {
           if (uid === "api::user-daily-reward.user-daily-reward")
@@ -252,9 +287,10 @@ describe("Daily Reward Controller", () => {
       const afterStat = makePlayerStat(user.id, 100, 200, 100, 200);
       psQuery3.findOne.mockResolvedValueOnce(afterStat);
       // Mock create para devolver un objeto con claimedAt
+      const now = new Date();
       strapi.entityService.create.mockResolvedValueOnce({
         id: 999,
-        claimedAt: new Date(),
+        claimedAt: now,
       });
       const res = await controller.claim(mockCtx(user));
       expect(res.claimedReward.day).toBe(2);
@@ -295,6 +331,37 @@ describe("Daily Reward Controller", () => {
       expect(res.status).toBe(400);
       expect(res.data?.reason).toBe("cycle_complete");
       expect(res.message).toMatch(/No reward available/i);
+    });
+
+    test("retorna cycle_complete (no already_claimed_today) si se reclama inmediatamente después del último día", async () => {
+      const now = new Date();
+      const lastReward = makeDailyReward(7, "coins", 700);
+      const claimed = makeUserDailyReward(user.id, lastReward, now); // Claimed just now
+      strapi.entityService.findMany.mockImplementation(
+        (uid: string, opts?: any) => {
+          if (uid === "api::user-daily-reward.user-daily-reward")
+            return [claimed];
+          if (uid === "api::daily-reward.daily-reward") {
+            // Day 8 does not exist
+            if (opts && opts.filters && typeof opts.filters.day === "number" && opts.filters.day === 8)
+              return [];
+            return Array.from({ length: 7 }, (_, i) =>
+              makeDailyReward(
+                i + 1,
+                i % 2 === 0 ? "coins" : "tickets",
+                (i + 1) * 100,
+              ),
+            );
+          }
+          return [];
+        },
+      );
+      const res = await controller.claim(mockCtx(user));
+      expect(res.status).toBe(400);
+      expect(res.data?.reason).toBe("cycle_complete");
+      expect(res.message).toMatch(/No reward available/i);
+      // Should NOT be already_claimed_today
+      expect(res.data?.reason).not.toBe("already_claimed_today");
     });
 
     test("registra transacción con datos correctos para coins", async () => {
@@ -340,17 +407,13 @@ describe("Daily Reward Controller", () => {
     });
   });
   test.each([
-    { gapDays: 5, lastDay: 2, expectedNextDay: 3 },
-    { gapDays: 2, lastDay: 1, expectedNextDay: 2 },
-    { gapDays: 3, lastDay: 3, expectedNextDay: 4 },
-    { gapDays: 10, lastDay: 6, expectedNextDay: 7 },
-    { gapDays: 32, lastDay: 2, expectedNextDay: 3 },
-    { gapDays: 45, lastDay: 6, expectedNextDay: 7 },
-    { gapDays: 90, lastDay: 1, expectedNextDay: 2 },
+    { gapHours: 25, lastDay: 2, expectedNextDay: 3 },
+    { gapHours: 24.1, lastDay: 1, expectedNextDay: 2 },
+    { gapHours: 48, lastDay: 3, expectedNextDay: 4 },
   ])(
-    "myStatus: calcula nextDay correcto con brecha de %s días",
-    async ({ gapDays, lastDay, expectedNextDay }) => {
-      const past = new Date(Date.now() - gapDays * 24 * 3600 * 1000);
+    "myStatus: calcula nextDay correcto con brecha de %s horas",
+    async ({ gapHours, lastDay, expectedNextDay }) => {
+      const past = new Date(Date.now() - gapHours * 3600 * 1000);
       const rewards = setAllRewards(7);
       const lastReward = rewards.find((r) => r.day === lastDay)!;
       const claimed = makeUserDailyReward(user.id, lastReward, past);
@@ -369,8 +432,8 @@ describe("Daily Reward Controller", () => {
     },
   );
 
-  test("myStatus: con lastDay=7 y gap 1, nextDay=1 y available en día 1", async () => {
-    const past = new Date(Date.now() - 1 * 24 * 3600 * 1000);
+  test("myStatus: con lastDay=7 y gap 24h, nextDay=null y canClaim=false (fin de ciclo)", async () => {
+    const past = new Date(Date.now() - 24.1 * 3600 * 1000);
     const rewards = setAllRewards(7);
     const lastReward = rewards.find((r) => r.day === 7)!;
     const claimed = makeUserDailyReward(user.id, lastReward, past);
@@ -382,9 +445,10 @@ describe("Daily Reward Controller", () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
     psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 0, 0, 0, 0));
     const res = await controller.myStatus(mockCtx(user));
-    expect(res.nextDay).toBe(1);
+    expect(res.nextDay).toBeNull();
+    expect(res.canClaim).toBe(false);
     const available = res.rewards.find((r: any) => r.status === "available");
-    expect(available.day).toBe(1);
+    expect(available).toBeUndefined();
   });
 
   test("devuelve 400 si no existe recompensa para nextDay", async () => {

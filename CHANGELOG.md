@@ -153,3 +153,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 - **Achievement Duplication**: Resolved issue where `user-achievements` were linked to duplicate achievement records by enforcing UUID-based lookups.
 - **Seeder Logic**: Fixed seeder to create `user-achievement` records for *all* achievements instead of just the first one.
+
+#### Changed - Daily Rewards
+- **24-Hour Cooldown**: Changed claim logic from midnight reset to a strict 24-hour cooldown.
+  - `nextClaimDate` is now calculated as `lastClaimedDate + 24 hours`.
+- **Cycle Logic**: Disabled automatic cycle restart.
+  - After claiming the last day (Day 7), the cycle stops (`nextDay: null`, `canClaim: false`) until the monthly reset.
+- **Error Handling**: Added `nextClaimDate` to the `400 Bad Request` response when claiming too early.
+  - Fixed edge case: claiming immediately after cycle end returns `cycle_complete` instead of `already_claimed_today`.
+
