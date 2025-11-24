@@ -99,7 +99,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/users/me?populate=*&&&",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/users/me?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
@@ -112,10 +112,7 @@
 								{
 									"key": "populate",
 									"value": "*"
-								},
-								{},
-								{},
-								{}
+								}
 							]
 						},
 						"description": "Obtiene el usuario autenticado.\nOpciones: populate para relaciones (ej: player_stat, user_rewards, etc.)"
@@ -457,14 +454,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"guardiands",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -474,8 +471,8 @@
 							],
 							"variable": [
 								{
-									"key": "id",
-									"value": ""
+									"key": "documentId",
+									"value": "lhvve4fi9613n92x5rg2lhdj"
 								}
 							]
 						},
@@ -498,18 +495,18 @@
 							"raw": "{\n  \"data\": {\n    \"name\": \"Updated Name\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"guardiands",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "documentId",
 									"value": ""
 								}
 							]
@@ -524,18 +521,18 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"guardiands",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id",
+									"key": "documentId",
 									"value": ""
 								}
 							]
@@ -727,14 +724,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id?populate=*&publicationState=live",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"achievements",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -743,21 +740,14 @@
 								},
 								{
 									"key": "publicationState",
-									"value": "live"
+									"value": "live",
+									"disabled": true
 								}
 							],
 							"variable": [
 								{
-									"key": "id"
-								},
-								{
-									"key": "09d64e42-1684-4751-a6d7-1735249bb846"
-								},
-								{
-									"key": "255aa6d9-8d31-4217-b496-672840a38289"
-								},
-								{
-									"key": "e94268b9-4fee-4e26-903c-d7deadd338bc"
+									"key": "documentId",
+									"value": "z8xr4r11adwl28vgm1gtzg1e"
 								}
 							]
 						},
@@ -808,27 +798,19 @@
 							"raw": "{\n  \"data\": {\n    \"title\": \"Nuevo título\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
-								},
-								{
-									"key": "3e43eee5-99a4-4d88-aa04-32f9cb988d94"
-								},
-								{
-									"key": "1ef0b890-d168-4179-a616-5ab421b60ec9"
-								},
-								{
-									"key": "ef2f735c-579d-4f58-a032-4e6e1ad0fb76"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -851,27 +833,19 @@
 							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
-								},
-								{
-									"key": "99347698-de39-4d6f-9ff2-ed74e9b533cd"
-								},
-								{
-									"key": "f8b590ba-c026-4472-ac71-d033c7831682"
-								},
-								{
-									"key": "cf4b6fd1-53fe-48da-9af7-aeee8cdaeff8"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -885,18 +859,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1080,14 +1055,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"daily-rewards",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -1097,7 +1072,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": "fw7u9i28jofsen09y9px1pgo"
 								}
 							]
 						},
@@ -1148,18 +1124,19 @@
 							"raw": "{\n  \"data\": {\n    \"rewardAmount\": 100\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1181,18 +1158,19 @@
 							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1205,18 +1183,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1400,14 +1379,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"levels",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -1417,7 +1396,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": "x22at5nyczqraj0v6z9wrz47"
 								}
 							]
 						},
@@ -1468,18 +1448,19 @@
 							"raw": "{\n  \"data\": {\n    \"difficulty\": \"medium\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"levels",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1501,18 +1482,19 @@
 							"raw": "{\n  \"data\": {\n    \"name\": \"Actualizado\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"levels",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1525,18 +1507,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"levels",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1721,18 +1704,19 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"log-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1782,18 +1766,19 @@
 							"raw": "{\n  \"data\": {\n    \"level\": \"error\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"log-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1815,18 +1800,19 @@
 							"raw": "{\n  \"data\": {\n    \"description\": \"Detalles\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"log-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -1839,18 +1825,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/log-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"log-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2034,14 +2021,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"rewards",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -2051,7 +2038,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -2102,18 +2090,19 @@
 							"raw": "{\n  \"data\": {\n    \"visibleToUser\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2135,18 +2124,19 @@
 							"raw": "{\n  \"data\": {\n    \"isActive\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2159,18 +2149,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2349,14 +2340,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"roulette-histories",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -2366,7 +2357,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -2417,18 +2409,19 @@
 							"raw": "{\n  \"data\": {\n    \"timestamp\": \"2024-02-01T00:00:00.000Z\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"roulette-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2450,18 +2443,19 @@
 							"raw": "{\n  \"data\": {\n    \"timestamp\": \"2024-03-01T00:00:00.000Z\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"roulette-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2474,18 +2468,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/roulette-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"roulette-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2740,18 +2735,19 @@
 							"raw": "{\n  \"data\": {\n    \"completed\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2773,18 +2769,19 @@
 							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2797,18 +2794,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-achievements",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -2992,14 +2990,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-daily-rewards",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -3009,7 +3007,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -3059,18 +3058,19 @@
 							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3092,18 +3092,19 @@
 							"raw": "{\n  \"data\": {\n    \"claimedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3116,18 +3117,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-daily-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-daily-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3323,14 +3325,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-game-histories",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -3340,7 +3342,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -3390,18 +3393,19 @@
 							"raw": "{\n  \"data\": {\n    \"duration\": 120\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-game-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3423,18 +3427,19 @@
 							"raw": "{\n  \"data\": {\n    \"coinsEarned\": 10\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-game-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3447,18 +3452,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-game-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-game-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3648,14 +3654,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-rewards",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -3665,7 +3671,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						},
@@ -3716,18 +3723,19 @@
 							"raw": "{\n  \"data\": {\n    \"claimed\": true\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3749,18 +3757,19 @@
 							"raw": "{\n  \"data\": {\n    \"claimedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3773,18 +3782,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-rewards/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-rewards",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -3974,14 +3984,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-transaction-histories",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -3991,7 +4001,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4041,18 +4052,19 @@
 							"raw": "{\n  \"data\": {\n    \"statusTransaction\": \"completed\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-transaction-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4074,18 +4086,19 @@
 							"raw": "{\n  \"data\": {\n    \"executedAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-transaction-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4098,18 +4111,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-transaction-histories/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"user-transaction-histories",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4299,14 +4313,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id?populate=*",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:documentId?populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"player-stats",
-								":id"
+								":documentId"
 							],
 							"query": [
 								{
@@ -4316,7 +4330,8 @@
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4365,18 +4380,19 @@
 							"raw": "{\n  \"data\": {\n    \"score\": 100\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"player-stats",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4398,18 +4414,19 @@
 							"raw": "{\n  \"data\": {\n    \"coins\": 10\n  }\n}"
 						},
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"player-stats",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
@@ -4422,18 +4439,19 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:id",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:documentId",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
 							"path": [
 								"api",
 								"player-stats",
-								":id"
+								":documentId"
 							],
 							"variable": [
 								{
-									"key": "id"
+									"key": "documentId",
+									"value": ""
 								}
 							]
 						}
