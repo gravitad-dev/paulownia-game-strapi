@@ -674,7 +674,7 @@ export interface ApiLogHistoryLogHistory extends Struct.CollectionTypeSchema {
     singularName: 'log-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -736,6 +736,9 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
+    tickets: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    ticketsEarned: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    ticketsSpent: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -747,6 +750,37 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     uuid: Schema.Attribute.UID;
     winRate: Schema.Attribute.Float;
     xp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+  };
+}
+
+export interface ApiRankingRanking extends Struct.CollectionTypeSchema {
+  collectionName: 'rankings';
+  info: {
+    description: 'Historical record of player rankings';
+    displayName: 'Ranking';
+    pluralName: 'rankings';
+    singularName: 'ranking';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::ranking.ranking'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    stats: Schema.Attribute.JSON;
+    timestamp: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    topPlayers: Schema.Attribute.JSON & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -816,7 +850,7 @@ export interface ApiRouletteHistoryRouletteHistory
     singularName: 'roulette-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
@@ -914,7 +948,7 @@ export interface ApiUserAchievementUserAchievement
     singularName: 'user-achievement';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     achievement: Schema.Attribute.Relation<
@@ -958,7 +992,7 @@ export interface ApiUserDailyRewardUserDailyReward
     singularName: 'user-daily-reward';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     claimed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
@@ -997,7 +1031,7 @@ export interface ApiUserGameHistoryUserGameHistory
     singularName: 'user-game-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     coinsEarned: Schema.Attribute.Integer;
@@ -1035,7 +1069,7 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
     singularName: 'user-reward';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     claimed: Schema.Attribute.Boolean &
@@ -1078,7 +1112,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
     singularName: 'user-transaction-history';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     amountDelivered: Schema.Attribute.Integer;
@@ -1086,6 +1120,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    currency: Schema.Attribute.Enumeration<['coins', 'tickets']>;
     executedAt: Schema.Attribute.DateTime;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1098,7 +1133,7 @@ export interface ApiUserTransactionHistoryUserTransactionHistory
       ['pending', 'in_progress', 'completed', 'cancelled']
     >;
     transactionType: Schema.Attribute.Enumeration<
-      ['coins_to_tickets', 'coins_to_tokens']
+      ['coins_to_tickets', 'coins_to_tokens', 'daily_reward']
     >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1669,6 +1704,7 @@ declare module '@strapi/strapi' {
       'api::level.level': ApiLevelLevel;
       'api::log-history.log-history': ApiLogHistoryLogHistory;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
+      'api::ranking.ranking': ApiRankingRanking;
       'api::reward.reward': ApiRewardReward;
       'api::roulette-history.roulette-history': ApiRouletteHistoryRouletteHistory;
       'api::setting.setting': ApiSettingSetting;

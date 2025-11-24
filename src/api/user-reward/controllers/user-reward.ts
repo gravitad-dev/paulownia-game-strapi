@@ -1,7 +1,7 @@
-/**
- * user-reward controller
- */
+import { factories } from '@strapi/strapi';
+import { getUuidControllerMethods } from '../../../helpers/uuidApi';
 
-import { factories } from '@strapi/strapi'
+export default factories.createCoreController('api::user-reward.user-reward', ({ strapi }) => ({
+  ...getUuidControllerMethods('api::user-reward.user-reward'),
+}));
 
-export default factories.createCoreController('api::user-reward.user-reward');
