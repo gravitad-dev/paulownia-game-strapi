@@ -6,6 +6,7 @@ export default [
   'strapi::poweredBy',
   'strapi::query',
   'strapi::body',
+  'global::ownership-guard',
   'strapi::session',
   'strapi::favicon',
   'strapi::public',

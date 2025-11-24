@@ -1,7 +1,9 @@
-import { factories } from '@strapi/strapi';
-import { getUuidControllerMethods } from '../../../helpers/uuidApi';
+import { factories } from "@strapi/strapi";
+import { getUuidControllerMethods } from "../../../helpers/uuidApi";
 
-export default factories.createCoreController('api::player-stat.player-stat', ({ strapi }) => ({
-  ...getUuidControllerMethods('api::player-stat.player-stat'),
-}));
-
+export default factories.createCoreController(
+  "api::player-stat.player-stat",
+  ({ strapi }) => ({
+    ...getUuidControllerMethods("api::player-stat.player-stat"),
+  }),
+);
