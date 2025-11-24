@@ -202,16 +202,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": ""
-								},
-								{
-									"key": "98fb5bdb-9deb-4898-b649-142e07f0e720"
-								},
-								{
-									"key": "fdf9bd27-0294-4ba7-885a-14d11373eebb"
-								},
-								{
-									"key": "4c9adbac-7c5b-4c65-bc18-ca1fb0a8fa26"
+									"value": "120"
 								}
 							]
 						},
@@ -231,7 +222,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"new_username\",\n  \"email\": \"new_email@example.com\"\n}"
+							"raw": "{\n  \"username\": \"user5\"\n//   \"email\": \"new_email@example.com\"\n}"
 						},
 						"url": {
 							"raw": "{{STRAPI_URL_LOCAL}}/api/users/:id",
@@ -246,7 +237,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": "1"
+									"value": "120"
 								}
 							]
 						},
@@ -272,16 +263,7 @@
 							"variable": [
 								{
 									"key": "id",
-									"value": ""
-								},
-								{
-									"key": "a5226f00-094d-4c05-b314-7989693ec848"
-								},
-								{
-									"key": "3db78138-f657-4a03-9f10-c6a2593d2ee3"
-								},
-								{
-									"key": "0f9c609b-9ef6-45b1-a73f-5b0f040b0b06"
+									"value": "120"
 								}
 							]
 						},
@@ -322,7 +304,7 @@
 									"variable": [
 										{
 											"key": "uuid",
-											"value": "UjujHml8m0L9CFx8MpJ6bvI2"
+											"value": "vHXVTVYQaSlnfaWOhOdvbgmd"
 										}
 									]
 								},
@@ -2039,7 +2021,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "mni4qdpp5xt15p6i9rm6bpg8"
 								}
 							]
 						},
@@ -2684,7 +2666,7 @@
 							"variable": [
 								{
 									"key": "documentID",
-									"value": "ll199ma9mh80g4xyvl96jm84"
+									"value": "xo11h2qon2l0diqk0waof73p"
 								}
 							]
 						},
@@ -2747,7 +2729,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "xo11h2qon2l0diqk0waof73p"
 								}
 							]
 						}
@@ -2781,7 +2763,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "xo11h2qon2l0diqk0waof73p"
 								}
 							]
 						}
@@ -2806,7 +2788,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "xo11h2qon2l0diqk0waof73p"
 								}
 							]
 						}
@@ -4331,7 +4313,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "zdbmshiilwaw9bs15lenrccj"
 								}
 							]
 						}
@@ -4392,41 +4374,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Patch PlayerStat",
-					"request": {
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"data\": {\n    \"coins\": 10\n  }\n}"
-						},
-						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/player-stats/:documentId",
-							"host": [
-								"{{STRAPI_URL_LOCAL}}"
-							],
-							"path": [
-								"api",
-								"player-stats",
-								":documentId"
-							],
-							"variable": [
-								{
-									"key": "documentId",
-									"value": ""
+									"value": "fxa4ck7mlpeb4nvfk9pwddqm"
 								}
 							]
 						}
@@ -4451,7 +4399,7 @@
 							"variable": [
 								{
 									"key": "documentId",
-									"value": ""
+									"value": "zdbmshiilwaw9bs15lenrccj"
 								}
 							]
 						}
@@ -5137,16 +5085,38 @@
 			}
 		]
 	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
 	"variable": [
 		{
 			"key": "STRAPI_URL_LOCAL",
-			"value": "http://localhost:1337",
-			"type": "string"
+			"value": "http://localhost:1337"
 		},
 		{
 			"key": "token",
-			"value": "",
-			"type": "string"
+			"value": ""
 		}
 	]
 }
