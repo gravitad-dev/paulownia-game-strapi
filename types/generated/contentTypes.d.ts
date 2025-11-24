@@ -585,6 +585,49 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiGuardiandGuardiand extends Struct.CollectionTypeSchema {
+  collectionName: 'guardiands';
+  info: {
+    displayName: 'Guardiands';
+    pluralName: 'guardiands';
+    singularName: 'guardiand';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    address: Schema.Attribute.String;
+    city: Schema.Attribute.String;
+    country: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    DNI: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    email: Schema.Attribute.Email;
+    lastName: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guardiand.guardiand'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String;
+    phone: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    uuid: Schema.Attribute.UID;
+    zipcode: Schema.Attribute.String;
+  };
+}
+
 export interface ApiLevelLevel extends Struct.CollectionTypeSchema {
   collectionName: 'levels';
   info: {
@@ -1576,7 +1619,10 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
-    Guardians: Schema.Attribute.Component<'shared.guardians', true>;
+    guardiands: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::guardiand.guardiand'
+    >;
     lastname: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1654,6 +1700,7 @@ declare module '@strapi/strapi' {
       'api::currency-info.currency-info': ApiCurrencyInfoCurrencyInfo;
       'api::daily-reward.daily-reward': ApiDailyRewardDailyReward;
       'api::global.global': ApiGlobalGlobal;
+      'api::guardiand.guardiand': ApiGuardiandGuardiand;
       'api::level.level': ApiLevelLevel;
       'api::log-history.log-history': ApiLogHistoryLogHistory;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
