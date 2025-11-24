@@ -32,6 +32,7 @@ async function cleanDatabase(strapi: any) {
     "api::daily-reward.daily-reward",
     "api::achievement.achievement",
     "api::level.level",
+    "api::guardiand.guardiand",
   ];
 
   for (const uid of types) {
@@ -61,25 +62,25 @@ async function cleanDatabase(strapi: any) {
 async function seedDatabase(strapi: any) {
   console.log("🚀 Iniciando seeder...");
 
-  // 1. Obtener Rol Gamer
-  console.log("🔍 Buscando rol 'Gamer'...");
-  let gamerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
-    where: { type: "gamer" },
+  // 1. Obtener Rol Player
+  console.log("🔍 Buscando rol 'Player'...");
+  let playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
+    where: { type: "player" },
   });
 
-  if (!gamerRole) {
-    gamerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
-      where: { name: "Gamer" },
+  if (!playerRole) {
+    playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
+      where: { name: "Player" },
     });
   }
 
-  if (!gamerRole) {
-    gamerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
+  if (!playerRole) {
+    playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
       where: { type: "authenticated" },
     });
   }
 
-  console.log(`✅ Usando rol: ${gamerRole.name} (ID: ${gamerRole.id})`);
+  console.log(`✅ Usando rol: ${playerRole.name} (ID: ${playerRole.id})`);
 
   // 2. Crear Usuarios y PlayerStats
   console.log(`👤 Creando ${COUNTS.USERS} usuarios...`);
@@ -98,9 +99,10 @@ async function seedDatabase(strapi: any) {
         data: {
           username,
           email,
-          password: "Password123!",
+          password: "Password1",
           confirmed: true,
-          role: gamerRole.id,
+          role: playerRole.id,
+          provider: "local",
         },
       });
     } else {
@@ -414,6 +416,33 @@ async function seedDatabase(strapi: any) {
 
       },
     });
+  }
+
+  // 10. Crear Guardiands
+  console.log("🛡️ Creando Guardiands...");
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+    // Crear 1 o 2 guardianes por usuario
+    const guardianCount = Math.floor(Math.random() * 2) + 1;
+    
+    for (let j = 0; j < guardianCount; j++) {
+      const uniqueSuffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      await strapi.entityService.create("api::guardiand.guardiand", {
+        data: {
+          name: `Guardian ${j + 1} of ${user.username}`,
+          lastName: `Doe`,
+          DNI: `DNI-${uniqueSuffix}`, // Unique DNI
+          email: `guardian${uniqueSuffix}@example.com`,
+          phone: `555-${Math.floor(Math.random() * 10000)}`,
+          address: `Calle Falsa ${Math.floor(Math.random() * 123)}`,
+          zipcode: `12345`,
+          city: `Ciudad Gótica`,
+          country: `País de las Maravillas`,
+          user: user.documentId,
+          publishedAt: new Date(),
+        },
+      });
+    }
   }
 
   // 9. Crear User Achievements para el usuario gravitad

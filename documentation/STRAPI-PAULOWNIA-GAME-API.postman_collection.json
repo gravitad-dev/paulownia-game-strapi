@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "dd69f85b-2d65-4401-9401-d58bac2d12f9",
+		"_postman_id": "623079cf-e74b-4fc1-bc91-5d589f3b5570",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -21,7 +21,9 @@
 									"    pm.collectionVariables.set(\"token\", jsonData.jwt);",
 									"}"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
@@ -38,7 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"identifier\": \"synergiart.websupp@gmail.com\",\n  \"password\": \"Password1\"\n}"
+							"raw": "{\n  \"identifier\": \"user1@example.com\",\n  \"password\": \"Password1\"\n}"
 						},
 						"url": {
 							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
@@ -287,6 +289,258 @@
 							]
 						},
 						"description": "Elimina un usuario por ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Guardiands",
+			"item": [
+				{
+					"name": "By UUID",
+					"item": [
+						{
+							"name": "Get Guardiand by UUID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/uuid/:uuid?populate=*",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"guardiands",
+										"uuid",
+										":uuid"
+									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": "UjujHml8m0L9CFx8MpJ6bvI2"
+										}
+									]
+								},
+								"description": "Get a guardiand by UUID"
+							},
+							"response": []
+						},
+						{
+							"name": "Update Guardiand by UUID",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Updated Name via UUID\"\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"guardiands",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Update a guardiand by UUID"
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Guardiand by UUID",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/uuid/:uuid",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"guardiands",
+										"uuid",
+										":uuid"
+									],
+									"variable": [
+										{
+											"key": "uuid",
+											"value": ""
+										}
+									]
+								},
+								"description": "Delete a guardiand by UUID"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "List Guardiands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"guardiands"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							]
+						},
+						"description": "List all guardiands"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Guardiand",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"John\",\n    \"lastName\": \"Doe\",\n    \"DNI\": \"12345678A\",\n    \"email\": \"john.doe@example.com\",\n    \"phone\": \"555-1234\",\n    \"address\": \"123 Main St\",\n    \"zipcode\": \"12345\",\n    \"city\": \"City\",\n    \"country\": \"Country\",\n    \"user\": 1\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"guardiands"
+							]
+						},
+						"description": "Create a new guardiand"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Guardiand by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id?populate=*",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"guardiands",
+								":id"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get a guardiand by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Guardiand",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"name\": \"Updated Name\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"guardiands",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update a guardiand by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Guardiand",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/guardiands/:id",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"guardiands",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete a guardiand by ID"
 					},
 					"response": []
 				}
