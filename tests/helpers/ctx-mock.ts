@@ -4,6 +4,7 @@ export type Ctx = {
   badRequest: (msg: string, data?: any) => any
   unauthorized: (msg: string, data?: any) => any
   notFound: (msg: string, data?: any) => any
+  notImplemented: (msg: string, data?: any) => any
   request?: any
   query?: any
 }
@@ -14,6 +15,7 @@ export function mockCtx(user?: any): Ctx {
     send: (body: any) => body,
     badRequest: (msg: string, data?: any) => ({ status: 400, message: msg, data }),
     unauthorized: (msg: string, data?: any) => ({ status: 401, message: msg, data }),
-    notFound: (msg: string, data?: any) => ({ status: 404, message: msg, data })
+    notFound: (msg: string, data?: any) => ({ status: 404, message: msg, data }),
+    notImplemented: (msg: string, data?: any) => ({ status: 501, message: msg, data })
   }
 }

@@ -70,12 +70,6 @@
       "relation": "oneToMany",
       "target": "api::user-reward.user-reward",
       "mappedBy": "reward"
-    },
-    "roulette_history": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::roulette-history.roulette-history",
-      "inversedBy": "rewards"
     }
   }
 }
