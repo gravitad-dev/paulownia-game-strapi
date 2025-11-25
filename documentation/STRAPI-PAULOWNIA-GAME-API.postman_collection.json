@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "623079cf-e74b-4fc1-bc91-5d589f3b5570",
+		"_postman_id": "bbd3aac8-994c-470b-8f06-1500ccf9771b",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -5067,6 +5067,31 @@
 									]
 								},
 								"description": "Reclama la recompensa de un achievement completado.\n\nBody requerido:\n- uuid: UUID del achievement a reclamar\n\nRespuesta incluye:\n- Información del achievement reclamado\n- Stats actualizadas del jugador\n\nErrores posibles:\n- 401: Usuario no autenticado\n- 400: UUID faltante, achievement no completado, o ya reclamado\n- 404: Achievement no encontrado"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Roulette",
+					"item": [
+						{
+							"name": "Roulette Spin",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/rewards/spin",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"rewards",
+										"spin"
+									]
+								},
+								"description": "Gira la ruleta de premios y obtiene un reward aleatorio basado en probabilidades.\n\nRequisitos:\n- Usuario autenticado\n- Al menos 1 ticket disponible\n\nCosto: 1 ticket por giro\n\nRespuesta incluye:\n- reward: Información del premio ganado (uuid, name, description, image, typeReward, value, quantity)\n- userReward: Registro del premio para el usuario (uuid, rewardStatus, claimed, obtainedAt, claimedAt, quantity)\n- playerStats: Stats actualizadas (coins, tickets)\n\nTipos de reward:\n- currency: Se aplica inmediatamente a coins/tickets (rewardStatus: 'claimed')\n- consumable: Requiere reclamar con administración (rewardStatus: 'available')\n- cosmetic: No implementado aún (retorna 501)\n\nErrores posibles:\n- 401: Usuario no autenticado\n- 400: Tickets insuficientes, no hay rewards disponibles, o todos los rewards únicos ya obtenidos\n- 501: Reward de tipo cosmetic (no implementado)"
 							},
 							"response": []
 						}
