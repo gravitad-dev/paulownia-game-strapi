@@ -17,6 +17,25 @@ jest.mock("../../src/helpers/uuidApi", () => ({
   getUuidControllerMethods: () => ({}),
 }));
 
+jest.mock("../../src/helpers/dailyResetHelper", () => ({
+  getNext5AMMadrid: jest.fn(() => {
+    // Return tomorrow at 5 AM for predictable testing
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(5, 0, 0, 0);
+    return tomorrow;
+  }),
+  wasClaimedAfterLast5AM: jest.fn((claimDate: Date) => {
+    // For testing: claims in the last 12 hours are considered "today"
+    const now = new Date();
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+    return claimDate >= twelveHoursAgo;
+  }),
+  isSameDayMadrid: jest.fn((date1: Date, date2: Date) => {
+    return date1.toDateString() === date2.toDateString();
+  }),
+}));
+
 describe("Daily Reward Controller", () => {
   let controller: any;
   let strapi: ReturnType<typeof createStrapiMock>;
@@ -77,13 +96,13 @@ describe("Daily Reward Controller", () => {
       expect(res.message).toMatch(/unauthorized/i);
     });
 
-    test("canClaim=false cuando el último reclamo fue hace menos de 24h", async () => {
+    test("canClaim=false cuando ya reclamó hoy (después de las 5 AM)", async () => {
       const now = new Date();
-      const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000);
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000); // Claimed 2h ago (today)
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       strapi.entityService.findMany.mockImplementation((uid: string) => {
         if (uid === "api::user-daily-reward.user-daily-reward")
-          return [makeUserDailyReward(user.id, rewardDay1, twentyThreeHoursAgo)];
+          return [makeUserDailyReward(user.id, rewardDay1, twoHoursAgo)];
         if (uid === "api::daily-reward.daily-reward")
           return [
             rewardDay1,
@@ -99,18 +118,20 @@ describe("Daily Reward Controller", () => {
       const available = res.rewards.find((r: any) => r.status === "available");
       expect(available).toBeUndefined();
       
-      // nextClaimDate should be 24h after last claim
-      const expectedNextClaim = new Date(twentyThreeHoursAgo.getTime() + 24 * 60 * 60 * 1000);
-      expect(new Date(res.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
+      // nextClaimDate should be tomorrow at 5 AM
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(5, 0, 0, 0);
+      expect(new Date(res.nextClaimDate).getTime()).toBe(tomorrow.getTime());
     });
 
-    test("canClaim=true cuando el último reclamo fue hace más de 24h", async () => {
+    test("canClaim=true cuando el último reclamo fue antes de las 5 AM de hoy", async () => {
       const now = new Date();
-      const twentyFiveHoursAgo = new Date(now.getTime() - 25 * 60 * 60 * 1000);
+      const yesterday = new Date(now.getTime() - 20 * 60 * 60 * 1000); // 20h ago (yesterday)
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       strapi.entityService.findMany.mockImplementation((uid: string) => {
         if (uid === "api::user-daily-reward.user-daily-reward")
-          return [makeUserDailyReward(user.id, rewardDay1, twentyFiveHoursAgo)];
+          return [makeUserDailyReward(user.id, rewardDay1, yesterday)];
         if (uid === "api::daily-reward.daily-reward")
           return [
             rewardDay1,
@@ -123,8 +144,7 @@ describe("Daily Reward Controller", () => {
       psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 0, 0, 0, 0));
       const res = await controller.myStatus(mockCtx(user));
       expect(res.canClaim).toBe(true);
-      // nextClaimDate should be roughly now (or exactly now per logic)
-      // The logic sets it to 'now' if available
+      // nextClaimDate should be now (available immediately)
       expect(new Date(res.nextClaimDate).getTime()).toBeCloseTo(now.getTime(), -3); // within 1s
     });
 
@@ -236,12 +256,14 @@ describe("Daily Reward Controller", () => {
       expect(res.status.canClaim).toBe(false);
       expect(res.status.nextDay).toBe(2);
       
-      // Check nextClaimDate is 24h from now
-      const expectedNextClaim = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      expect(new Date(res.status.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
+      // Check nextClaimDate is tomorrow at 5 AM
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(5, 0, 0, 0);
+      expect(new Date(res.status.nextClaimDate).getTime()).toBe(tomorrow.getTime());
     });
 
-    test("rechaza doble reclamo en menos de 24h con 400 y devuelve nextClaimDate", async () => {
+    test("rechaza doble reclamo el mismo día con 400 y devuelve nextClaimDate", async () => {
       const now = new Date();
       const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
       const rewardDay1 = makeDailyReward(1, "coins", 100);
@@ -257,17 +279,19 @@ describe("Daily Reward Controller", () => {
       expect(res.message).toMatch(/already claimed today/i);
       expect(res.data?.reason).toBe("already_claimed_today");
       
-      // Verify nextClaimDate in error details
+      // Verify nextClaimDate is tomorrow at 5 AM
       expect(res.data?.nextClaimDate).toBeDefined();
-      const expectedNextClaim = new Date(oneHourAgo.getTime() + 24 * 60 * 60 * 1000);
-      expect(new Date(res.data.nextClaimDate).getTime()).toBe(expectedNextClaim.getTime());
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(5, 0, 0, 0);
+      expect(new Date(res.data.nextClaimDate).getTime()).toBe(tomorrow.getTime());
     });
 
-    test("entrega recompensa del día 2 tras 24h y actualiza tickets", async () => {
-      const twentyFiveHoursAgo = new Date(Date.now() - 25 * 3600 * 1000);
+    test("entrega recompensa del día 2 al día siguiente y actualiza tickets", async () => {
+      const yesterday = new Date(Date.now() - 20 * 3600 * 1000); // 20h ago
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       const rewardDay2 = makeDailyReward(2, "tickets", 200);
-      const claimed = makeUserDailyReward(user.id, rewardDay1, twentyFiveHoursAgo);
+      const claimed = makeUserDailyReward(user.id, rewardDay1, yesterday);
       strapi.entityService.findMany.mockImplementation(
         (uid: string, opts?: any) => {
           if (uid === "api::user-daily-reward.user-daily-reward")

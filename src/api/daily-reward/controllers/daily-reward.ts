@@ -40,17 +40,17 @@ export default factories.createCoreController(
         nextDay = lastRewardDay + 1;
         lastClaimedDate = new Date(lastReward.claimedAt);
 
-        // Check if 24h have passed
-        const now = new Date();
-        const cooldownTime = 24 * 60 * 60 * 1000; // 24 hours in ms
-        const timeSinceLastClaim = now.getTime() - lastClaimedDate.getTime();
+        // Check if user already claimed after last 5 AM cutoff
+        const { wasClaimedAfterLast5AM, getNext5AMMadrid } = await import('../../../helpers/dailyResetHelper');
         
-        if (timeSinceLastClaim < cooldownTime) {
+        if (wasClaimedAfterLast5AM(lastClaimedDate)) {
+          // Already claimed today (after last 5 AM), cannot claim again
           canClaim = false;
-          nextClaimDate = new Date(lastClaimedDate.getTime() + cooldownTime);
+          nextClaimDate = getNext5AMMadrid();
         } else {
-          // If cooldown passed, next claim date is effectively "now"
-          nextClaimDate = now;
+          // Last claim was before today's 5 AM cutoff, can claim now
+          canClaim = true;
+          nextClaimDate = new Date(); // Available now
         }
       } else {
         // No claims yet, available immediately
@@ -181,15 +181,13 @@ export default factories.createCoreController(
       }
       const rewardToClaim = rewards[0] as any;
 
-      // 3. Check Cooldown (Only if reward exists)
+      // 3. Check if already claimed today (after last 5 AM cutoff)
       if (lastClaimedDate) {
-        const now = new Date();
-        const cooldownTime = 24 * 60 * 60 * 1000; // 24 hours in ms
-        const timeSinceLastClaim = now.getTime() - lastClaimedDate.getTime();
-
-        if (timeSinceLastClaim < cooldownTime) {
-           const nextClaimDate = new Date(lastClaimedDate.getTime() + cooldownTime);
-           return ctx.badRequest("Daily reward already claimed today", {
+        const { wasClaimedAfterLast5AM, getNext5AMMadrid } = await import('../../../helpers/dailyResetHelper');
+        
+        if (wasClaimedAfterLast5AM(lastClaimedDate)) {
+          const nextClaimDate = getNext5AMMadrid();
+          return ctx.badRequest("Daily reward already claimed today", {
             reason: "already_claimed_today",
             nextClaimDate: nextClaimDate,
           });
@@ -335,8 +333,10 @@ export default factories.createCoreController(
       // We know we just claimed 'nextDay', so nextDay is now nextDay + 1
       const newNextDay = nextDay + 1;
       const newCanClaim = false; // Just claimed, so cannot claim again immediately
-      const claimedAt = newClaim.claimedAt ? new Date(newClaim.claimedAt) : new Date();
-      const nextClaimDate = new Date(claimedAt.getTime() + 24 * 60 * 60 * 1000);
+      
+      // Calculate next claim date as next 5 AM Madrid
+      const { getNext5AMMadrid } = await import('../../../helpers/dailyResetHelper');
+      const nextClaimDate = getNext5AMMadrid();
 
       const rewardsList = allRewardsList.map((reward: any) => {
         let status = "locked";
