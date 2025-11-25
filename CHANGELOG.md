@@ -7,6 +7,112 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 2025-11-25
+
+#### Added - Roulette Reward System
+
+- **Probability-Based Roulette System**: Complete implementation of a ticket-based reward system with weighted random selection
+  - **Cost**: 1 ticket per spin (no cooldown, limited only by available tickets)
+  - **Weighted Probability Algorithm**: Created reusable helper (`src/helpers/probabilityHelper.ts`)
+    - Generic `weightedRandomSelection<T>()` function for probability-based item selection
+    - Uses cumulative weight distribution for accurate probability matching
+  - **Custom Endpoint**: `POST /api/rewards/spin`
+    - **Authentication Required**: JWT token validation
+    - **Ticket Validation**: Checks user has at least 1 ticket before spinning
+    - **Stock Management**: Automatically decrements reward `quantity` after selection
+    - **Unique Rewards Logic**: Filters out unique rewards already obtained by user
+    - **Comprehensive Error Handling**: 
+      - 401: Unauthorized (no authentication)
+      - 400: Insufficient tickets, no rewards available, all unique rewards obtained, probability selection failed
+      - 501: Cosmetic rewards not yet implemented
+  - **Reward Type Handling**:
+    - **Currency** (`coins`/`tickets`): Applied immediately to `player-stat`, creates `user-reward` with `rewardStatus: 'claimed'`
+    - **Consumable** (gift cards): Creates `user-reward` with `rewardStatus: 'pending'` for admin approval
+    - **Cosmetic** (avatars, themes): Creates `user-reward` with `rewardStatus: 'available'`, returns 501 (future implementation)
+  - **Complete Tracking**:
+    - `user-reward` entries created for ALL reward types (consistent with daily-reward pattern)
+    - `roulette-history` entry created for every spin
+    - `ticketsSpent` incremented on each spin
+    - `ticketsEarned` incremented when winning ticket rewards
+  - **Response Structure**: Returns `reward` details, `userReward` entry, and updated `playerStats`
+
+#### Changed - Schema Updates
+
+- **roulette-history**: Changed `rewards` relation from `oneToMany` to `manyToOne` (single reward per spin)
+- **reward**: Removed inverse `roulette_history` relation (simplified schema)
+- **user-reward**: Now uses semantic status values:
+  - `claimed`: Currency rewards (automatic)
+  - `pending`: Consumables awaiting admin approval
+  - `available`: Cosmetics ready to use (future)
+
+#### Added - Seeder Updates
+
+- **Varied Test Rewards**: Updated seeder with 9 realistic rewards for testing (`scripts/seed.ts`)
+  - **Currency Rewards (Coins)**: 100 (40%), 500 (25%), 1000 (15%)
+  - **Currency Rewards (Tickets)**: 5 (10%), 10 (5%)
+  - **Consumables**: Gift Card $10 (3%), Gift Card $50 (1%)
+  - **Cosmetics**: Avatar Dorado (0.8%, unique), Tema Oscuro Premium (0.2%, unique)
+- **Test User Setup**: `user1` configured with 50 tickets for comprehensive testing
+
+#### Added - Comprehensive Test Suite
+
+- **Jest Unit Tests**: Created extensive test coverage (`tests/reward/reward.controller.test.ts`)
+  - **36 test cases** covering all scenarios:
+    - Authentication & Validation (6 tests)
+    - Currency Rewards - coins and tickets (2 tests)
+    - Consumable Rewards (1 test)
+    - Cosmetic Rewards - 501 handling (1 test)
+    - Unique Rewards Logic (2 tests)
+    - Stock Management (2 tests)
+    - Probability Selection (2 tests)
+  - **Test Infrastructure**: 
+    - Added `notImplemented` method to `ctx-mock.ts` for 501 responses
+    - Mocked `weightedRandomSelection` for deterministic testing
+  - **All Tests Passing**: 36/36 tests passed successfully
+  - **Coverage**: Authentication, validation, all reward types, stock updates, probability selection, unique rewards filtering
+
+#### Added - Documentation
+
+- **Postman Collection**: Added "Custom Endpoints" section with "Roulette Spin" request
+  - Complete endpoint documentation with requirements, cost, response structure
+  - Detailed error code descriptions
+  - Reward type explanations
+- **Implementation Walkthrough**: Created comprehensive documentation (`walkthrough.md`)
+  - Schema modifications explained
+  - Weighted random selection algorithm details
+  - Complete endpoint logic flow (10 steps)
+  - Design decisions and rationale
+  - Testing instructions and future enhancements
+
+#### Fixed
+
+- **Player Stats Tracking**: Added `ticketsSpent` increment when deducting ticket for spin
+  - Ensures complete tracking of ticket economy (earned vs spent)
+  - Consistent with `coinsEarned`/`coinsSpent` pattern
+
+#### Changed - Daily Rewards Reset System
+
+- **Daily Reset at 5:00 AM Madrid Time**: Changed from 24-hour cooldown to daily reset at fixed time
+  - **Previous Behavior**: Claim Day 1 at 14:00 → Day 2 available at 14:00 next day (24h later)
+  - **New Behavior**: Claim Day 1 at any time → Day 2 available at 5:00 AM next day
+  - **Benefits**:
+    - More intuitive: "one day = one calendar day"
+    - Consistent with industry standards (mobile games)
+    - Incentivizes daily login at consistent times
+    - Aligns with monthly reset cron job timezone
+  - **Implementation**:
+    - Created `dailyResetHelper.ts` with timezone-aware functions:
+      - `getNext5AMMadrid()`: Calculates next 5 AM in Madrid timezone
+      - `wasClaimedAfterLast5AM()`: Checks if claim was after last 5 AM cutoff
+      - `isSameDayMadrid()`: Compares dates in Madrid timezone
+    - Updated `myStatus` endpoint to check same-day claims instead of 24h cooldown
+    - Updated `claim` endpoint to validate against 5 AM cutoff
+    - `nextClaimDate` now returns next 5 AM Madrid time
+  - **Test Updates**: All 20 daily-reward tests updated and passing
+    - Mocked `dailyResetHelper` for predictable testing
+    - Changed time-based assertions from 24h to same-day logic
+    - Updated `nextClaimDate` expectations to 5 AM
+
 ### 2025-11-24
 
 #### Added - Ownership Guard Middleware

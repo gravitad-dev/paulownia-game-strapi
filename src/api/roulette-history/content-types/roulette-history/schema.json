@@ -20,11 +20,10 @@
       "target": "plugin::users-permissions.user",
       "inversedBy": "roulette_histories"
     },
-    "rewards": {
+    "reward": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::reward.reward",
-      "mappedBy": "roulette_history"
+      "relation": "manyToOne",
+      "target": "api::reward.reward"
     },
     "timestamp": {
       "type": "datetime"

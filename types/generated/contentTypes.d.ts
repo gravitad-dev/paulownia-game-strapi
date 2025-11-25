@@ -818,10 +818,6 @@ export interface ApiRewardReward extends Struct.CollectionTypeSchema {
     probability: Schema.Attribute.Float;
     publishedAt: Schema.Attribute.DateTime;
     quantity: Schema.Attribute.Integer;
-    roulette_history: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::roulette-history.roulette-history'
-    >;
     typeReward: Schema.Attribute.Enumeration<
       ['currency', 'consumable', 'cosmetic']
     >;
@@ -863,7 +859,7 @@ export interface ApiRouletteHistoryRouletteHistory
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    rewards: Schema.Attribute.Relation<'oneToMany', 'api::reward.reward'>;
+    reward: Schema.Attribute.Relation<'manyToOne', 'api::reward.reward'>;
     timestamp: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

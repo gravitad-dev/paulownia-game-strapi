@@ -119,13 +119,16 @@ async function seedDatabase(strapi: any) {
       const gamesWon = Math.floor(Math.random() * gamesPlayed); // Siempre <= gamesPlayed
       const gamesLost = gamesPlayed - gamesWon;
       
+      // Dar más tickets a user1 para testing de ruleta
+      const ticketsAmount = i === 1 ? 50 : Math.floor(Math.random() * 100);
+      
       await strapi.entityService.create("api::player-stat.player-stat", {
         data: {
           users_permissions_user: user.documentId,
           score: Math.floor(Math.random() * 10000),
           highestScore: Math.floor(Math.random() * 10000),
           coins: Math.floor(Math.random() * 5000),
-          tickets: Math.floor(Math.random() * 100),
+          tickets: ticketsAmount,
           xp: Math.floor(Math.random() * 500),
           gamesPlayed,
           gamesWon,
@@ -133,6 +136,7 @@ async function seedDatabase(strapi: any) {
           publishedAt: new Date(),
         },
       });
+      console.log(`✅ Usuario ${username}: ${ticketsAmount} tickets`);
     }
   }
 
@@ -264,25 +268,39 @@ async function seedDatabase(strapi: any) {
     }
   }
 
-  // 7. Crear Rewards (Ruleta)
-  console.log(`🎁 Creando ${COUNTS.REWARDS} premios de ruleta...`);
+  // 7. Crear Rewards (Ruleta) - Variados para testing
+  console.log(`🎁 Creando premios de ruleta variados...`);
   const rewards = [];
-  for (let i = 1; i <= COUNTS.REWARDS; i++) {
+  
+  const rewardConfigs = [
+    // Currency rewards (coins) - Más comunes
+    { name: "100 Coins", description: "Una pequeña cantidad de monedas", typeReward: "currency", value: 100, probability: 40, quantity: 50, isUnique: false },
+    { name: "500 Coins", description: "Una cantidad moderada de monedas", typeReward: "currency", value: 500, probability: 25, quantity: 30, isUnique: false },
+    { name: "1000 Coins", description: "¡Muchas monedas!", typeReward: "currency", value: 1000, probability: 15, quantity: 20, isUnique: false },
+    
+    // Currency rewards (tickets) - Menos comunes
+    { name: "5 Tickets", description: "Algunos tickets para más giros", typeReward: "currency", value: 5, probability: 10, quantity: 25, isUnique: false },
+    { name: "10 Tickets", description: "¡Muchos tickets!", typeReward: "currency", value: 10, probability: 5, quantity: 15, isUnique: false },
+    
+    // Consumable rewards - Raros
+    { name: "Gift Card $10", description: "Tarjeta de regalo de $10 (reclamar con admin)", typeReward: "consumable", value: 10, probability: 3, quantity: 5, isUnique: false },
+    { name: "Gift Card $50", description: "Tarjeta de regalo de $50 (reclamar con admin)", typeReward: "consumable", value: 50, probability: 1, quantity: 2, isUnique: false },
+    
+    // Cosmetic rewards - Muy raros (no implementado aún)
+    { name: "Avatar Dorado", description: "Avatar especial dorado", typeReward: "cosmetic", value: 0, probability: 0.8, quantity: 3, isUnique: true },
+    { name: "Tema Oscuro Premium", description: "Tema oscuro exclusivo", typeReward: "cosmetic", value: 0, probability: 0.2, quantity: 1, isUnique: true },
+  ];
+
+  for (const config of rewardConfigs) {
     const existing = await strapi.db.query("api::reward.reward").findOne({ 
-      where: { name: `Premio ${i}` } 
+      where: { name: config.name } 
     });
     if (!existing) {
       const reward = await strapi.entityService.create("api::reward.reward", {
         data: {
-          name: `Premio ${i}`,
-          description: `Descripción del premio ${i}`,
-          typeReward: "currency",
-          value: i * 100,
-          probability: 100 / COUNTS.REWARDS,
-          quantity: 1,
+          ...config,
           isActive: true,
           visibleToUser: true,
-          isUnique: false,
           publishedAt: new Date(),
         },
       });
@@ -291,6 +309,7 @@ async function seedDatabase(strapi: any) {
       rewards.push(existing);
     }
   }
+  console.log(`✅ Creados ${rewards.length} premios de ruleta`);
 
   // 8. Crear Historiales y Relaciones
   console.log("🔗 Generando historial y relaciones...");
@@ -354,13 +373,18 @@ async function seedDatabase(strapi: any) {
     }
 
     // User Daily Rewards (Progreso)
+    // Crear reclamo del día 1 con fecha de ayer para que puedan reclamar día 2 hoy
     if (dailyRewards.length > 0) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(10, 0, 0, 0); // 10 AM de ayer
+      
       await strapi.entityService.create("api::user-daily-reward.user-daily-reward", {
         data: {
           users_permissions_user: user.documentId,
           daily_reward: dailyRewards[0].documentId,
           claimed: true,
-          claimedAt: new Date(),
+          claimedAt: yesterday,
 
         },
       });
