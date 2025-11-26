@@ -716,9 +716,31 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
   };
   attributes: {
     averageSessionTime: Schema.Attribute.Float & Schema.Attribute.Private;
-    coins: Schema.Attribute.Integer;
-    coinsEarned: Schema.Attribute.Integer;
-    coinsSpent: Schema.Attribute.Integer;
+    coins: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    coinsEarned: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    coinsSpent: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -736,9 +758,31 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
-    tickets: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    ticketsEarned: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    ticketsSpent: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    tickets: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ticketsEarned: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ticketsSpent: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &

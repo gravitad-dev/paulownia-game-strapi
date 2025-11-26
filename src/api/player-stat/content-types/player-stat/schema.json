@@ -55,24 +55,35 @@
       "private": true
     },
     "coinsEarned": {
-      "type": "integer"
+      "type": "integer",
+      "min": 0,
+      "default": 0
     },
     "coinsSpent": {
-      "type": "integer"
+      "type": "integer",
+      "min": 0,
+      "default": 0
     },
     "coins": {
-      "type": "integer"
+      "type": "integer",
+      "min": 0,
+      "default": 0,
+      "required": true
     },
     "tickets": {
       "type": "integer",
-      "default": 0
+      "min": 0,
+      "default": 0,
+      "required": true
     },
     "ticketsEarned": {
       "type": "integer",
+      "min": 0,
       "default": 0
     },
     "ticketsSpent": {
       "type": "integer",
+      "min": 0,
       "default": 0
     },
     "users_permissions_user": {

@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+### 2025-11-26
+
+#### Security
+- **High Severity Fixes**:
+  - **IDOR Prevention**: Restricted access to `user-transaction-history` endpoints. Users can now only access their own transaction history. Admin access remains unrestricted.
+  - **Input Validation**: Implemented strict username validation in `users-permissions` extension:
+    - Max length: 50 characters.
+    - Min length: 3 characters.
+    - Allowed characters: Alphanumeric, hyphens, underscores.
+    - XSS Prevention: Explicitly rejects dangerous characters (`<`, `>`, `"`, `'`, `&`, etc.) and script patterns.
+  - **Business Logic**: Enforced non-negative values for currency fields (`coins`, `tickets`, etc.) in `player-stat` schema and lifecycle hooks.
+- **Low Severity Fixes**:
+  - **Information Disclosure**: Disabled `X-Powered-By` header to hide server version.
 
 ### 2025-11-25
 
@@ -21,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Ticket Validation**: Checks user has at least 1 ticket before spinning
     - **Stock Management**: Automatically decrements reward `quantity` after selection
     - **Unique Rewards Logic**: Filters out unique rewards already obtained by user
-    - **Comprehensive Error Handling**: 
+    - **Comprehensive Error Handling**:
       - 401: Unauthorized (no authentication)
       - 400: Insufficient tickets, no rewards available, all unique rewards obtained, probability selection failed
       - 501: Cosmetic rewards not yet implemented
@@ -65,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Unique Rewards Logic (2 tests)
     - Stock Management (2 tests)
     - Probability Selection (2 tests)
-  - **Test Infrastructure**: 
+  - **Test Infrastructure**:
     - Added `notImplemented` method to `ctx-mock.ts` for 501 responses
     - Mocked `weightedRandomSelection` for deterministic testing
   - **All Tests Passing**: 36/36 tests passed successfully
@@ -77,12 +89,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete endpoint documentation with requirements, cost, response structure
   - Detailed error code descriptions
   - Reward type explanations
-- **Implementation Walkthrough**: Created comprehensive documentation (`walkthrough.md`)
-  - Schema modifications explained
-  - Weighted random selection algorithm details
-  - Complete endpoint logic flow (10 steps)
-  - Design decisions and rationale
-  - Testing instructions and future enhancements
 
 #### Fixed
 

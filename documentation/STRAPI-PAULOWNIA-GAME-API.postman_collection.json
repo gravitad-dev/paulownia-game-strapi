@@ -2581,7 +2581,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements?populate=*&filters[users_permissions_user][id][$eq]=20&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+							"raw": "{{STRAPI_URL_LOCAL}}/api/user-achievements?pagination[pageSize]=25&pagination[page]=1&sort=createdAt:desc&populate=*",
 							"host": [
 								"{{STRAPI_URL_LOCAL}}"
 							],
@@ -2590,6 +2590,18 @@
 								"user-achievements"
 							],
 							"query": [
+								{
+									"key": "pagination[pageSize]",
+									"value": "25"
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt:desc"
+								},
 								{
 									"key": "populate",
 									"value": "*",
@@ -2604,7 +2616,8 @@
 								{
 									"key": "filters[users_permissions_user][id][$eq]",
 									"value": "20",
-									"description": "ID de usuario."
+									"description": "ID de usuario.",
+									"disabled": true
 								},
 								{
 									"key": "filters[achievement][id][$eq]",
@@ -2623,18 +2636,6 @@
 									"value": "true",
 									"description": "Reclamado (boolean).",
 									"disabled": true
-								},
-								{
-									"key": "pagination[page]",
-									"value": "1"
-								},
-								{
-									"key": "pagination[pageSize]",
-									"value": "25"
-								},
-								{
-									"key": "sort",
-									"value": "createdAt:desc"
 								}
 							]
 						},
@@ -5053,7 +5054,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"uuid\": \"eIE78I8bdLmWvUML68Urrbu9\"\n}"
+									"raw": "{\n  \"uuid\": \"t7YjVPROYJGZ1OYEItBtCmRl\"\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/achievements/claim",

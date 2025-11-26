@@ -80,6 +80,7 @@ export default (_config: any, { strapi }: { strapi: any }) => {
     }
 
     const model = strapi.getModel(uid);
+
     if (!model) {
       return next();
     }
@@ -92,8 +93,16 @@ export default (_config: any, { strapi }: { strapi: any }) => {
     const method = ctx.method.toUpperCase();
     let docIdParam =
       (ctx.params as any)?.id || (ctx.params as any)?.documentId || null;
-    const uuidParam = (ctx.params as any)?.uuid || null;
+    let uuidParam = (ctx.params as any)?.uuid || null;
     const openRead = isOpenRead(uid);
+
+    // Fallback: extract UUID from path if not in params
+    if (!uuidParam && path.includes('/uuid/')) {
+      const parts = path.split('/uuid/');
+      if (parts.length > 1) {
+        uuidParam = parts[1].split('/')[0]; // Get the segment after /uuid/
+      }
+    }
 
     if (!docIdParam && !uuidParam) {
       const parts = path.split("/");
@@ -233,7 +242,6 @@ function isOpenRead(uid: string | null): boolean {
     "api::user-achievement.user-achievement",
     "api::user-daily-reward.user-daily-reward",
     "api::user-reward.user-reward",
-    "api::user-transaction-history.user-transaction-history",
   ];
   return OPEN.includes(uid);
 }
