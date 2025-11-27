@@ -8,31 +8,17 @@
  * @param fromDate - Reference date (defaults to now)
  * @returns Date object representing next 5:00 AM Madrid time
  */
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
+import { addDays } from "date-fns";
+
+const MADRID_TZ = "Europe/Madrid";
+
 export function getNext5AMMadrid(fromDate: Date = new Date()): Date {
-  // Convert to Madrid timezone
-  const madridTimeStr = fromDate.toLocaleString('en-US', { 
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-  
-  const madridTime = new Date(madridTimeStr);
-  
-  // Set to 5:00 AM
-  madridTime.setHours(5, 0, 0, 0);
-  
-  // If we're past 5 AM today in Madrid, move to tomorrow
-  const nowMadrid = new Date(fromDate.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
-  if (nowMadrid.getHours() >= 5) {
-    madridTime.setDate(madridTime.getDate() + 1);
-  }
-  
-  return madridTime;
+  const zonedNow = utcToZonedTime(fromDate, MADRID_TZ);
+  const base = zonedNow.getHours() >= 5 ? addDays(zonedNow, 1) : zonedNow;
+  const candidate = new Date(base);
+  candidate.setHours(5, 0, 0, 0);
+  return zonedTimeToUtc(candidate, MADRID_TZ);
 }
 
 /**
@@ -42,20 +28,20 @@ export function getNext5AMMadrid(fromDate: Date = new Date()): Date {
  * @returns true if both dates are the same day in Madrid timezone
  */
 export function isSameDayMadrid(date1: Date, date2: Date): boolean {
-  const d1Str = date1.toLocaleString('en-US', { 
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+  const d1Str = date1.toLocaleString("en-US", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
-  
-  const d2Str = date2.toLocaleString('en-US', { 
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+
+  const d2Str = date2.toLocaleString("en-US", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
-  
+
   return d1Str === d2Str;
 }
 
@@ -67,29 +53,10 @@ export function isSameDayMadrid(date1: Date, date2: Date): boolean {
  */
 export function wasClaimedAfterLast5AM(claimDate: Date): boolean {
   const now = new Date();
-  const nowMadridStr = now.toLocaleString('en-US', { 
-    timeZone: 'Europe/Madrid',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-  
-  const nowMadrid = new Date(nowMadridStr);
-  const currentHour = nowMadrid.getHours();
-  
-  // Calculate last 5 AM cutoff
-  const last5AM = new Date(nowMadrid);
-  last5AM.setHours(5, 0, 0, 0);
-  
-  // If current time is before 5 AM, last cutoff was yesterday at 5 AM
-  if (currentHour < 5) {
-    last5AM.setDate(last5AM.getDate() - 1);
-  }
-  
-  // Check if claim was after the last 5 AM cutoff
-  return claimDate >= last5AM;
+  const zonedNow = utcToZonedTime(now, MADRID_TZ);
+  const base = zonedNow.getHours() < 5 ? addDays(zonedNow, -1) : zonedNow;
+  const cutoffZoned = new Date(base);
+  cutoffZoned.setHours(5, 0, 0, 0);
+  const cutoffUtc = zonedTimeToUtc(cutoffZoned, MADRID_TZ);
+  return claimDate.getTime() >= cutoffUtc.getTime();
 }

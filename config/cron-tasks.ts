@@ -86,9 +86,15 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
       const highestWinRatePlayer = [...playersWithWinRate].sort((a: any, b: any) => (b.calculatedWinRate || 0) - (a.calculatedWinRate || 0))[0];
 
       // Calcular fechas de inicio para semana y mes
+      const { utcToZonedTime, zonedTimeToUtc } = await import('date-fns-tz');
+      const { startOfWeek, startOfMonth, addDays } = await import('date-fns');
+      const tz = 'Europe/Madrid';
       const now = new Date();
-      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const zonedNow = utcToZonedTime(now, tz);
+      const startWeekZoned = startOfWeek(zonedNow, { weekStartsOn: 1 });
+      const startMonthZoned = startOfMonth(zonedNow);
+      const startOfWeekUtc = zonedTimeToUtc(startWeekZoned, tz);
+      const startOfMonthUtc = zonedTimeToUtc(startMonthZoned, tz);
 
       // Helper para obtener top 10 de un periodo
       const getTop10ByPeriod = async (startDate: Date) => {
@@ -118,8 +124,8 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
           .slice(0, 10);
       };
 
-      const top10Week = await getTop10ByPeriod(startOfWeek);
-      const top10Month = await getTop10ByPeriod(startOfMonth);
+      const top10Week = await getTop10ByPeriod(startOfWeekUtc);
+      const top10Month = await getTop10ByPeriod(startOfMonthUtc);
 
       const stats = {
         totalPlayers,
@@ -151,8 +157,8 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
       
       // Política de Retención: Mantener historial de 1 año (365 días)
       // Eliminamos registros antiguos para evitar crecimiento infinito de la DB
-      const retentionDate = new Date();
-      retentionDate.setDate(retentionDate.getDate() - 365);
+      const retentionZoned = addDays(zonedNow, -365);
+      const retentionDate = zonedTimeToUtc(retentionZoned, tz);
       
       const deleted = await strapi.db.query("api::ranking.ranking").deleteMany({
         where: {

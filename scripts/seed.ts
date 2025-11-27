@@ -236,26 +236,64 @@ async function seedDatabase(strapi: any) {
   }
 
   // 5. Crear Achievements
-  console.log(`🏆 Creando ${COUNTS.ACHIEVEMENTS} logros...`);
+  console.log(`🏆 Creando logros definidos...`);
+  const achievementConfigs = [
+    {
+      title: "Primera Victoria",
+      description: "Gana tu primera partida",
+      targetType: "gamesWon",
+      goalAmount: 1,
+      rewardType: "coins",
+      rewardAmount: 100,
+    },
+    {
+      title: "5 Victorias",
+      description: "Gana 5 partidas",
+      targetType: "gamesWon",
+      goalAmount: 5,
+      rewardType: "tickets",
+      rewardAmount: 2,
+    },
+    {
+      title: "Maestro del Score",
+      description: "Alcanza 1000 puntos en total",
+      targetType: "score",
+      goalAmount: 1000,
+      rewardType: "coins",
+      rewardAmount: 500,
+    },
+    {
+      title: "Experiencia Acumulada",
+      description: "Obtén 500 puntos de experiencia",
+      targetType: "xp",
+      goalAmount: 500,
+      rewardType: "tickets",
+      rewardAmount: 1,
+    },
+    {
+      title: "Dedicación Total",
+      description: "Juega durante 1 hora (3600 seg)",
+      targetType: "time",
+      goalAmount: 3600,
+      rewardType: "coins",
+      rewardAmount: 200,
+    },
+  ];
+
   const achievements = [];
-  for (let i = 1; i <= COUNTS.ACHIEVEMENTS; i++) {
+  for (const config of achievementConfigs) {
     const existing = await strapi.db
       .query("api::achievement.achievement")
       .findOne({
-        where: { title: `Logro ${i}` },
+        where: { title: config.title },
       });
     if (!existing) {
       const achievement = await strapi.entityService.create(
         "api::achievement.achievement",
         {
           data: {
-            title: `Logro ${i}`,
-            description: `Desbloquea este logro haciendo X cosa ${i}`,
-            rewardAmount: 500,
-            targetType: "score",
-            goalAmount: 1000 * i,
+            ...config,
             quantity: 0,
-            rewardType: "coins",
             isActive: true,
             visibleToUser: true,
             publishedAt: new Date(),
@@ -453,17 +491,102 @@ async function seedDatabase(strapi: any) {
       );
     }
 
-    // User Achievements - Crear uno para cada achievement (Simulando Option A: Sparse Data)
+    // User Achievements - Perfiles determinísticos para testing (user1-user5)
     for (let j = 0; j < achievements.length; j++) {
-      // Solo crear el registro con 30% de probabilidad para simular que no todos tienen todos los achievements iniciados
-      if (Math.random() > 0.3) continue;
-
       const achievement = achievements[j];
-      // Variar el estado de completado: algunos completados, otros en progreso
-      const isCompleted = Math.random() > 0.8;
-      const currentProgress = isCompleted
-        ? achievement.goalAmount
-        : Math.floor(Math.random() * achievement.goalAmount * 0.8);
+
+      let completed = false;
+      let claimed = false;
+      let currentProgress = 0;
+      let obtainedAt = null;
+      let claimedAt = null;
+
+      // Achievement Indices (based on config order):
+      // 0: Primera Victoria (1 win)
+      // 1: 5 Victorias (5 wins)
+      // 2: Maestro del Score (1000 pts)
+      // 3: Experiencia Acumulada (500 xp)
+      // 4: Dedicación Total (3600 sec)
+
+      if (i === 0) {
+        // User 1: Newbie (Casi todo en 0 o poco progreso)
+        // Ideal para ver estados "Locked" o "In Progress" iniciales
+        if (j === 4) {
+          // Time
+          currentProgress = 100; // 100 seconds
+        } else if (j === 2) {
+          // Score
+          currentProgress = 50; // 50 pts
+        }
+      } else if (i === 1) {
+        if (j === 0) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else if (j === 1) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else if (j === 2) {
+          currentProgress = 800;
+        }
+      } else if (i === 2) {
+        // User 3: Claimed (Ya reclamados) & Progress
+        // Ideal para ver estados "Completed" (Reclamado)
+        if (j === 0) {
+          // First Win -> Claimed
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          obtainedAt.setDate(obtainedAt.getDate() - 2);
+          claimedAt = new Date();
+          claimedAt.setDate(claimedAt.getDate() - 1);
+        } else if (j === 1) {
+          // 5 Wins -> Completed, Not Claimed
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        }
+      } else if (i === 3) {
+        if (j === 0) {
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          claimedAt = new Date();
+        } else if (j === 2) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount + 50;
+          obtainedAt = new Date();
+        } else if (j === 3) {
+          currentProgress = Math.floor(achievement.goalAmount * 0.5);
+        } else if (j === 4) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        }
+      } else {
+        if (j === 0) {
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          claimedAt = new Date();
+        } else if (j === 1 || j === 3) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else {
+          currentProgress = Math.floor(achievement.goalAmount * 0.99);
+        }
+      }
 
       await strapi.entityService.create(
         "api::user-achievement.user-achievement",
@@ -471,10 +594,11 @@ async function seedDatabase(strapi: any) {
           data: {
             users_permissions_user: user.documentId,
             achievement: achievement.documentId,
-            completed: isCompleted,
-            claimed: false,
+            completed,
+            claimed,
             currentProgress,
-            obtainedAt: isCompleted ? new Date() : null,
+            obtainedAt,
+            claimedAt,
           },
         },
       );
@@ -632,14 +756,65 @@ async function seedDatabase(strapi: any) {
     });
 
   if (gravitadUser && achievements.length > 0) {
-    // Crear user-achievements para gravitad
+    // Crear user-achievements para gravitad con estados específicos para testing
+    // Orden esperado: 0:FirstWin, 1:5Wins, 2:Score, 3:XP, 4:Time
+
+    const states = [
+      {
+        // 0: Primera Victoria -> Claimed
+        completed: true,
+        claimed: true,
+        progressFactor: 1.0, // 100%
+      },
+      {
+        // 1: 5 Victorias -> Available (Completed, Not Claimed)
+        completed: true,
+        claimed: false,
+        progressFactor: 1.2, // 120%
+      },
+      {
+        // 2: Score -> Locked (In Progress)
+        completed: false,
+        claimed: false,
+        progressFactor: 0.5, // 50%
+      },
+      {
+        // 3: XP -> Locked (Started)
+        completed: false,
+        claimed: false,
+        progressFactor: 0.1, // 10%
+      },
+      {
+        // 4: Time -> Available (Exactly on goal)
+        completed: true,
+        claimed: false,
+        progressFactor: 1.0, // 100%
+      },
+    ];
+
     for (let j = 0; j < achievements.length; j++) {
       const achievement = achievements[j];
-      // Primer achievement completado y listo para reclamar, resto en progreso
-      const isCompleted = j === 0;
-      const currentProgress = isCompleted
-        ? achievement.goalAmount
-        : Math.floor(Math.random() * achievement.goalAmount * 0.5);
+      const state = states[j] || {
+        completed: false,
+        claimed: false,
+        progressFactor: 0,
+      };
+
+      const currentProgress = Math.floor(
+        achievement.goalAmount * state.progressFactor,
+      );
+
+      let obtainedAt = null;
+      let claimedAt = null;
+
+      if (state.completed) {
+        obtainedAt = new Date();
+        obtainedAt.setDate(obtainedAt.getDate() - 2); // Hace 2 días
+      }
+
+      if (state.claimed) {
+        claimedAt = new Date(); // Hoy
+      }
 
       await strapi.entityService.create(
         "api::user-achievement.user-achievement",
@@ -647,16 +822,17 @@ async function seedDatabase(strapi: any) {
           data: {
             users_permissions_user: gravitadUser.documentId,
             achievement: achievement.documentId,
-            completed: isCompleted,
-            claimed: false,
+            completed: state.completed,
+            claimed: state.claimed,
             currentProgress,
-            obtainedAt: isCompleted ? new Date() : null,
+            obtainedAt,
+            claimedAt,
           },
         },
       );
     }
     console.log(
-      `✅ Creados ${achievements.length} user-achievements para gravitad`,
+      `✅ Creados ${achievements.length} user-achievements para gravitad con estados de prueba`,
     );
   } else if (!gravitadUser) {
     console.log(

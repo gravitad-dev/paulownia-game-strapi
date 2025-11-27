@@ -5,9 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-11-27
+
+#### Added
+
+- **Timezone Libraries**: Added `date-fns` and `date-fns-tz` to handle Europe/Madrid conversions precisely.
+
+#### Changed
+
+- **Daily Reward Cutoff (Europe/Madrid)**:
+  - Refactored `dailyResetHelper` to compute 5:00 AM cutoff using `date-fns-tz`.
+  - `getNext5AMMadrid()` and `wasClaimedAfterLast5AM()` now operate in Europe/Madrid and return UTC dates for consistency.
+  - Prevents platform-dependent parsing issues and ensures robust same-day blocking.
+- **Ranking Cron (Europe/Madrid)**:
+  - Weekly (`startOfWeek`) and monthly (`startOfMonth`) periods calculated in Madrid timezone and converted to UTC for DB filters.
+  - Retention window (365 days) computed using Madrid timezone and persisted in UTC.
+- **Seeder Enhancements**:
+  - Updated seed profiles so some users have multiple achievements completed but not yet claimed (ready to test multi-claim UX).
+
 ### 2025-11-26
 
 #### Security
+
 - **High Severity Fixes**:
   - **IDOR Prevention**: Restricted access to `user-transaction-history` endpoints. Users can now only access their own transaction history. Admin access remains unrestricted.
   - **Input Validation**: Implemented strict username validation in `users-permissions` extension:
