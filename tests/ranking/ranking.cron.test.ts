@@ -1,6 +1,6 @@
 import { createStrapiMock } from "../helpers/strapi-mock";
 
-describe("Ranking Cron Task", () => {
+describe("Tarea Cron de Ranking", () => {
   let strapi: ReturnType<typeof createStrapiMock>;
 
   beforeEach(async () => {

@@ -91,14 +91,36 @@ export default factories.createCoreController(
         });
       }
 
-      // 6. Deduct 1 ticket from player
+      // 6. Process reward and apply atomic player-stat update
+      let userReward: any = null;
+      const now = new Date();
+
+      const isCoin =
+        selectedReward.typeReward === "currency" &&
+        selectedReward.name?.toLowerCase().includes("coin");
+
+      const ticketRewardValue =
+        selectedReward.typeReward === "currency" && !isCoin
+          ? selectedReward.value || 0
+          : 0;
+      const coinRewardValue = isCoin ? selectedReward.value || 0 : 0;
+
       await strapi.entityService.update(
         "api::player-stat.player-stat",
         playerStat.id,
         {
           data: {
-            tickets: playerStat.tickets - 1,
+            // Always spend 1 ticket per spin
+            tickets: (playerStat.tickets || 0) - 1 + ticketRewardValue,
             ticketsSpent: (playerStat.ticketsSpent || 0) + 1,
+            ticketsEarned: (playerStat.ticketsEarned || 0) + ticketRewardValue,
+            // Apply coin rewards if applicable
+            ...(coinRewardValue > 0
+              ? {
+                  coins: (playerStat.coins || 0) + coinRewardValue,
+                  coinsEarned: (playerStat.coinsEarned || 0) + coinRewardValue,
+                }
+              : {}),
           },
         },
       );
@@ -114,39 +136,7 @@ export default factories.createCoreController(
         },
       );
 
-      // 8. Process reward based on typeReward
-      let userReward: any = null;
-      const now = new Date();
-
       if (selectedReward.typeReward === "currency") {
-        // Update player stats immediately
-        const updateData: any = {};
-
-        // Assuming 'value' field contains the amount of coins or tickets
-        // and we need another field to distinguish between coins/tickets
-        // For now, let's assume if name contains "coin" it's coins, otherwise tickets
-        const isCoin = selectedReward.name?.toLowerCase().includes("coin");
-
-        if (isCoin) {
-          updateData.coins =
-            (playerStat.coins || 0) + (selectedReward.value || 0);
-          updateData.coinsEarned =
-            (playerStat.coinsEarned || 0) + (selectedReward.value || 0);
-        } else {
-          updateData.tickets =
-            (playerStat.tickets || 0) + (selectedReward.value || 0);
-          updateData.ticketsEarned =
-            (playerStat.ticketsEarned || 0) + (selectedReward.value || 0);
-        }
-
-        await strapi.entityService.update(
-          "api::player-stat.player-stat",
-          playerStat.id,
-          {
-            data: updateData,
-          },
-        );
-
         // Create user-reward with claimed status
         userReward = await strapi.entityService.create(
           "api::user-reward.user-reward",

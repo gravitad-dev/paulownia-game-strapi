@@ -340,7 +340,7 @@ describe("Achievement Controller", () => {
       });
     });
 
-    describe("Filtering and Pagination", () => {
+    describe("Filtrado y Paginación", () => {
       test("filtra achievements por status=completed", async () => {
         const achievements = setupAchievements();
         const now = new Date();

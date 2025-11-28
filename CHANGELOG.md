@@ -57,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Prevents records with `reward: null` in `roulette-history`.
   - Unified `user-reward` creation to persist with consistent `documentId`.
 - Tests: updated to validate history creation without assuming numeric IDs (compatible with `documentId`).
+- Spin Ticket Update: made ticket updates atomic when winning ticket rewards.
+  - Applies `tickets = tickets - 1 + rewardValue` and increments `ticketsSpent`/`ticketsEarned` in a single update.
+  - Avoids inconsistent states caused by multiple sequential updates.
 
 ### 2025-11-27
 
