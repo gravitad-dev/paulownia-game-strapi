@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-11-28
+
+#### Added
+
+- Custom Endpoint: `POST /api/exchangeCoinsToTickets`
+  - Exchange coins for tickets using `Settings.coinsPerTicket` (schema default 1000)
+  - Response includes `playerStats`, `ticketsExchanged`, `coinsSpent`, `stats` (week/month/year/total) and `history` (last 10)
+  - Transaction logging in `api::user-transaction-history.user-transaction-history` with enums:
+    - `transactionType: "coins_to_tickets"`, `currency: "coins"`, `statusTransaction: "completed"`
+    - `coinsExchanged`, `amountDelivered`, `executedAt`
+  - Exchange limit per period configurable via `Settings`: `exchangeLimitEnabled`, `exchangeLimitTickets`, `exchangeLimitPeriod`. Returns 400 `exchange_limit_reached` when reached.
+  - Unlimited option via `Settings.exchangeLimitEnabled=false`. Successful response includes `limit: { unlimited: true }`.
+- Custom Endpoint: `GET /api/exchangeCoinsToTickets/status`
+  - Exchange status (rate, playerStats, limit and last history)
+  - Response:
+    - `status`: `{ canExchange, maxTicketsPossible }`
+    - `rate`: coins per ticket
+    - `playerStats`: `{ coins, tickets }`
+    - `limit`: `{ limitTickets, period, ticketsUsed, ticketsRemaining }` or `{ unlimited: true }`
+    - `history`: last 10 `coins_to_tickets` transactions
+  - Errors: `401 unauthorized`, `400 settings_not_configured` if no published `Settings`
+
+#### Changed
+
+- Postman Collection: added "Exchange Coins→Tickets" request in Player Stats section
+- Postman Collection: added "Exchange Status" (GET) request
+- Tests: new suite `tests/player-stat/player-stat.exchange.controller.test.ts` with success, error, and rollback cases
+  - Added cases for daily/monthly/yearly limits and behavior under the cap
+  - Updated tests to handle timezone-aware date calculations
+- Configuration migrated to Single Type `Settings` for exchanges (no environment variables):
+  - Fields: `coinsPerTicket`, `exchangeLimitEnabled`, `exchangeLimitTickets`, `exchangeLimitPeriod`
+  - Controllers read the latest published entry (`publicationState: 'live'`, `locale: 'all'`) and return `400 settings_not_configured` if missing
+  - Postman and documentation updated to reflect configuration exclusively from `Settings`
+- **Timezone-Aware Exchange Limits**: All exchange limit calculations now use Europe/Madrid timezone
+  - Daily limits reset at 00:00 Madrid time (not UTC)
+  - Monthly limits reset on day 1 at 00:00 Madrid time
+  - Yearly limits reset on January 1 at 00:00 Madrid time
+  - Statistics aggregation (week/month/year) also uses Madrid timezone
+  - Consistent with daily rewards and ranking system timezone handling
+- **Next Reset Date**: Added `nextResetDate` field to exchange responses
+  - Included in successful exchange responses when limits are enabled
+  - Included in error responses when limit is reached
+  - Included in status endpoint (`GET /api/exchangeCoinsToTickets/status`)
+  - Returns ISO 8601 date string in UTC indicating when the limit will reset
+  - Helps frontend display countdown timers or informative messages to users
+
 ### 2025-11-27
 
 #### Added

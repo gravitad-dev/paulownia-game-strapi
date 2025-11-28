@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "bbd3aac8-994c-470b-8f06-1500ccf9771b",
+		"_postman_id": "844d882f-f79c-40f2-a753-1f460e58cbac",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -4717,7 +4717,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"data\": {\n    \"rouletteIsActive\": true\n  }\n}"
+									"raw": "{\n    \"data\": {\n        \"coinsPerTicket\": 100,\n        \"exchangeLimitEnabled\": true, // por defecto true. Si false, no hay límites de tickets en el período\n        \"exchangeLimitTickets\": 10, // Cantidad del límite de tickets en el período. Número entero. Ej: 10\n        \"exchangeLimitPeriod\": \"monthly\" // Período. Opciones: daily | monthly | yearly\n    }\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/setting",
@@ -5093,6 +5093,68 @@
 									]
 								},
 								"description": "Gira la ruleta de premios y obtiene un reward aleatorio basado en probabilidades.\n\nRequisitos:\n- Usuario autenticado\n- Al menos 1 ticket disponible\n\nCosto: 1 ticket por giro\n\nRespuesta incluye:\n- reward: Información del premio ganado (uuid, name, description, image, typeReward, value, quantity)\n- userReward: Registro del premio para el usuario (uuid, rewardStatus, claimed, obtainedAt, claimedAt, quantity)\n- playerStats: Stats actualizadas (coins, tickets)\n\nTipos de reward:\n- currency: Se aplica inmediatamente a coins/tickets (rewardStatus: 'claimed')\n- consumable: Requiere reclamar con administración (rewardStatus: 'available')\n- cosmetic: No implementado aún (retorna 501)\n\nErrores posibles:\n- 401: Usuario no autenticado\n- 400: Tickets insuficientes, no hay rewards disponibles, o todos los rewards únicos ya obtenidos\n- 501: Reward de tipo cosmetic (no implementado)"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Exchange Coins/Tickets",
+					"item": [
+						{
+							"name": "Exchange Coins→Tickets",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"data\": { \"ticketsRequested\": 9 }\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/exchangeCoinsToTickets",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"exchangeCoinsToTickets"
+									]
+								},
+								"description": "Canje de monedas por tickets. Devuelve playerStats, stats (week/month/year/total) e history (últimas 10). Configuración: Single Type Settings (coinsPerTicket, exchangeLimitEnabled, exchangeLimitTickets, exchangeLimitPeriod). Fallback env: COINS_PER_TICKET y COINS_TO_TICKETS_LIMIT (10m/10d/10y; desactivar: none/unlimited/off/disabled). Errores: invalid_request, insufficient_coins, exchange_limit_reached, transaction_log_failed."
+							},
+							"response": []
+						},
+						{
+							"name": "Exchange Status",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{token}}"
+									}
+								],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/exchangeCoinsToTickets/status",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"exchangeCoinsToTickets",
+										"status"
+									]
+								},
+								"description": "Estado de canje: rate (monedas por ticket), playerStats, límite (period/ticketsUsed/ticketsRemaining o unlimited) y últimas 10 transacciones coins_to_tickets. Configuración: Settings (coinsPerTicket, exchangeLimitEnabled, exchangeLimitTickets, exchangeLimitPeriod). Fallback env: COINS_PER_TICKET y COINS_TO_TICKETS_LIMIT."
 							},
 							"response": []
 						}
