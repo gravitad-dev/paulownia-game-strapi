@@ -927,9 +927,31 @@ export interface ApiSettingSetting extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    coinsPerTicket: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<1000>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    exchangeLimitEnabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    exchangeLimitPeriod: Schema.Attribute.Enumeration<
+      ['daily', 'monthly', 'yearly']
+    > &
+      Schema.Attribute.DefaultTo<'monthly'>;
+    exchangeLimitTickets: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<10>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
