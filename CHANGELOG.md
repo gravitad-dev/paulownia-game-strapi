@@ -51,6 +51,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Returns ISO 8601 date string in UTC indicating when the limit will reset
   - Helps frontend display countdown timers or informative messages to users
 
+#### Fixed
+
+- Roulette History: correctly syncs `reward` and `users_permissions_user` using `documentId` when available.
+  - Prevents records with `reward: null` in `roulette-history`.
+  - Unified `user-reward` creation to persist with consistent `documentId`.
+- Tests: updated to validate history creation without assuming numeric IDs (compatible with `documentId`).
+
 ### 2025-11-27
 
 #### Added
