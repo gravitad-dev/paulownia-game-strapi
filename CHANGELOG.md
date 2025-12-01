@@ -5,7 +5,194 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+### 2025-11-28
+
+#### Added
+
+- Custom Endpoint: `POST /api/exchangeCoinsToTickets`
+  - Exchange coins for tickets using `Settings.coinsPerTicket` (schema default 1000)
+  - Response includes `playerStats`, `ticketsExchanged`, `coinsSpent`, `stats` (week/month/year/total) and `history` (last 10)
+  - Transaction logging in `api::user-transaction-history.user-transaction-history` with enums:
+    - `transactionType: "coins_to_tickets"`, `currency: "coins"`, `statusTransaction: "completed"`
+    - `coinsExchanged`, `amountDelivered`, `executedAt`
+  - Exchange limit per period configurable via `Settings`: `exchangeLimitEnabled`, `exchangeLimitTickets`, `exchangeLimitPeriod`. Returns 400 `exchange_limit_reached` when reached.
+  - Unlimited option via `Settings.exchangeLimitEnabled=false`. Successful response includes `limit: { unlimited: true }`.
+- Custom Endpoint: `GET /api/exchangeCoinsToTickets/status`
+  - Exchange status (rate, playerStats, limit and last history)
+  - Response:
+    - `status`: `{ canExchange, maxTicketsPossible }`
+    - `rate`: coins per ticket
+    - `playerStats`: `{ coins, tickets }`
+    - `limit`: `{ limitTickets, period, ticketsUsed, ticketsRemaining }` or `{ unlimited: true }`
+    - `history`: last 10 `coins_to_tickets` transactions
+  - Errors: `401 unauthorized`, `400 settings_not_configured` if no published `Settings`
+
+#### Changed
+
+- Postman Collection: added "Exchange Coins→Tickets" request in Player Stats section
+- Postman Collection: added "Exchange Status" (GET) request
+- Tests: new suite `tests/player-stat/player-stat.exchange.controller.test.ts` with success, error, and rollback cases
+  - Added cases for daily/monthly/yearly limits and behavior under the cap
+  - Updated tests to handle timezone-aware date calculations
+- Configuration migrated to Single Type `Settings` for exchanges (no environment variables):
+  - Fields: `coinsPerTicket`, `exchangeLimitEnabled`, `exchangeLimitTickets`, `exchangeLimitPeriod`
+  - Controllers read the latest published entry (`publicationState: 'live'`, `locale: 'all'`) and return `400 settings_not_configured` if missing
+  - Postman and documentation updated to reflect configuration exclusively from `Settings`
+- **Timezone-Aware Exchange Limits**: All exchange limit calculations now use Europe/Madrid timezone
+  - Daily limits reset at 00:00 Madrid time (not UTC)
+  - Monthly limits reset on day 1 at 00:00 Madrid time
+  - Yearly limits reset on January 1 at 00:00 Madrid time
+  - Statistics aggregation (week/month/year) also uses Madrid timezone
+  - Consistent with daily rewards and ranking system timezone handling
+- **Next Reset Date**: Added `nextResetDate` field to exchange responses
+  - Included in successful exchange responses when limits are enabled
+  - Included in error responses when limit is reached
+  - Included in status endpoint (`GET /api/exchangeCoinsToTickets/status`)
+  - Returns ISO 8601 date string in UTC indicating when the limit will reset
+  - Helps frontend display countdown timers or informative messages to users
+
+#### Fixed
+
+- Roulette History: correctly syncs `reward` and `users_permissions_user` using `documentId` when available.
+  - Prevents records with `reward: null` in `roulette-history`.
+  - Unified `user-reward` creation to persist with consistent `documentId`.
+- Tests: updated to validate history creation without assuming numeric IDs (compatible with `documentId`).
+- Spin Ticket Update: made ticket updates atomic when winning ticket rewards.
+  - Applies `tickets = tickets - 1 + rewardValue` and increments `ticketsSpent`/`ticketsEarned` in a single update.
+  - Avoids inconsistent states caused by multiple sequential updates.
+
+### 2025-11-27
+
+#### Added
+
+- **Timezone Libraries**: Added `date-fns` and `date-fns-tz` to handle Europe/Madrid conversions precisely.
+
+#### Changed
+
+- **Daily Reward Cutoff (Europe/Madrid)**:
+  - Refactored `dailyResetHelper` to compute 5:00 AM cutoff using `date-fns-tz`.
+  - `getNext5AMMadrid()` and `wasClaimedAfterLast5AM()` now operate in Europe/Madrid and return UTC dates for consistency.
+  - Prevents platform-dependent parsing issues and ensures robust same-day blocking.
+- **Ranking Cron (Europe/Madrid)**:
+  - Weekly (`startOfWeek`) and monthly (`startOfMonth`) periods calculated in Madrid timezone and converted to UTC for DB filters.
+  - Retention window (365 days) computed using Madrid timezone and persisted in UTC.
+- **Seeder Enhancements**:
+  - Updated seed profiles so some users have multiple achievements completed but not yet claimed (ready to test multi-claim UX).
+
+### 2025-11-26
+
+#### Security
+
+- **High Severity Fixes**:
+  - **IDOR Prevention**: Restricted access to `user-transaction-history` endpoints. Users can now only access their own transaction history. Admin access remains unrestricted.
+  - **Input Validation**: Implemented strict username validation in `users-permissions` extension:
+    - Max length: 50 characters.
+    - Min length: 3 characters.
+    - Allowed characters: Alphanumeric, hyphens, underscores.
+    - XSS Prevention: Explicitly rejects dangerous characters (`<`, `>`, `"`, `'`, `&`, etc.) and script patterns.
+  - **Business Logic**: Enforced non-negative values for currency fields (`coins`, `tickets`, etc.) in `player-stat` schema and lifecycle hooks.
+- **Low Severity Fixes**:
+  - **Information Disclosure**: Disabled `X-Powered-By` header to hide server version.
+
+### 2025-11-25
+
+#### Added - Roulette Reward System
+
+- **Probability-Based Roulette System**: Complete implementation of a ticket-based reward system with weighted random selection
+  - **Cost**: 1 ticket per spin (no cooldown, limited only by available tickets)
+  - **Weighted Probability Algorithm**: Created reusable helper (`src/helpers/probabilityHelper.ts`)
+    - Generic `weightedRandomSelection<T>()` function for probability-based item selection
+    - Uses cumulative weight distribution for accurate probability matching
+  - **Custom Endpoint**: `POST /api/rewards/spin`
+    - **Authentication Required**: JWT token validation
+    - **Ticket Validation**: Checks user has at least 1 ticket before spinning
+    - **Stock Management**: Automatically decrements reward `quantity` after selection
+    - **Unique Rewards Logic**: Filters out unique rewards already obtained by user
+    - **Comprehensive Error Handling**:
+      - 401: Unauthorized (no authentication)
+      - 400: Insufficient tickets, no rewards available, all unique rewards obtained, probability selection failed
+      - 501: Cosmetic rewards not yet implemented
+  - **Reward Type Handling**:
+    - **Currency** (`coins`/`tickets`): Applied immediately to `player-stat`, creates `user-reward` with `rewardStatus: 'claimed'`
+    - **Consumable** (gift cards): Creates `user-reward` with `rewardStatus: 'pending'` for admin approval
+    - **Cosmetic** (avatars, themes): Creates `user-reward` with `rewardStatus: 'available'`, returns 501 (future implementation)
+  - **Complete Tracking**:
+    - `user-reward` entries created for ALL reward types (consistent with daily-reward pattern)
+    - `roulette-history` entry created for every spin
+    - `ticketsSpent` incremented on each spin
+    - `ticketsEarned` incremented when winning ticket rewards
+  - **Response Structure**: Returns `reward` details, `userReward` entry, and updated `playerStats`
+
+#### Changed - Schema Updates
+
+- **roulette-history**: Changed `rewards` relation from `oneToMany` to `manyToOne` (single reward per spin)
+- **reward**: Removed inverse `roulette_history` relation (simplified schema)
+- **user-reward**: Now uses semantic status values:
+  - `claimed`: Currency rewards (automatic)
+  - `pending`: Consumables awaiting admin approval
+  - `available`: Cosmetics ready to use (future)
+
+#### Added - Seeder Updates
+
+- **Varied Test Rewards**: Updated seeder with 9 realistic rewards for testing (`scripts/seed.ts`)
+  - **Currency Rewards (Coins)**: 100 (40%), 500 (25%), 1000 (15%)
+  - **Currency Rewards (Tickets)**: 5 (10%), 10 (5%)
+  - **Consumables**: Gift Card $10 (3%), Gift Card $50 (1%)
+  - **Cosmetics**: Avatar Dorado (0.8%, unique), Tema Oscuro Premium (0.2%, unique)
+- **Test User Setup**: `user1` configured with 50 tickets for comprehensive testing
+
+#### Added - Comprehensive Test Suite
+
+- **Jest Unit Tests**: Created extensive test coverage (`tests/reward/reward.controller.test.ts`)
+  - **36 test cases** covering all scenarios:
+    - Authentication & Validation (6 tests)
+    - Currency Rewards - coins and tickets (2 tests)
+    - Consumable Rewards (1 test)
+    - Cosmetic Rewards - 501 handling (1 test)
+    - Unique Rewards Logic (2 tests)
+    - Stock Management (2 tests)
+    - Probability Selection (2 tests)
+  - **Test Infrastructure**:
+    - Added `notImplemented` method to `ctx-mock.ts` for 501 responses
+    - Mocked `weightedRandomSelection` for deterministic testing
+  - **All Tests Passing**: 36/36 tests passed successfully
+  - **Coverage**: Authentication, validation, all reward types, stock updates, probability selection, unique rewards filtering
+
+#### Added - Documentation
+
+- **Postman Collection**: Added "Custom Endpoints" section with "Roulette Spin" request
+  - Complete endpoint documentation with requirements, cost, response structure
+  - Detailed error code descriptions
+  - Reward type explanations
+
+#### Fixed
+
+- **Player Stats Tracking**: Added `ticketsSpent` increment when deducting ticket for spin
+  - Ensures complete tracking of ticket economy (earned vs spent)
+  - Consistent with `coinsEarned`/`coinsSpent` pattern
+
+#### Changed - Daily Rewards Reset System
+
+- **Daily Reset at 5:00 AM Madrid Time**: Changed from 24-hour cooldown to daily reset at fixed time
+  - **Previous Behavior**: Claim Day 1 at 14:00 → Day 2 available at 14:00 next day (24h later)
+  - **New Behavior**: Claim Day 1 at any time → Day 2 available at 5:00 AM next day
+  - **Benefits**:
+    - More intuitive: "one day = one calendar day"
+    - Consistent with industry standards (mobile games)
+    - Incentivizes daily login at consistent times
+    - Aligns with monthly reset cron job timezone
+  - **Implementation**:
+    - Created `dailyResetHelper.ts` with timezone-aware functions:
+      - `getNext5AMMadrid()`: Calculates next 5 AM in Madrid timezone
+      - `wasClaimedAfterLast5AM()`: Checks if claim was after last 5 AM cutoff
+      - `isSameDayMadrid()`: Compares dates in Madrid timezone
+    - Updated `myStatus` endpoint to check same-day claims instead of 24h cooldown
+    - Updated `claim` endpoint to validate against 5 AM cutoff
+    - `nextClaimDate` now returns next 5 AM Madrid time
+  - **Test Updates**: All 20 daily-reward tests updated and passing
+    - Mocked `dailyResetHelper` for predictable testing
+    - Changed time-based assertions from 24h to same-day logic
+    - Updated `nextClaimDate` expectations to 5 AM
 
 ### 2025-11-24
 

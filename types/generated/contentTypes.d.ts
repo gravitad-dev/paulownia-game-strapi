@@ -717,9 +717,31 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
   };
   attributes: {
     averageSessionTime: Schema.Attribute.Float & Schema.Attribute.Private;
-    coins: Schema.Attribute.Integer;
-    coinsEarned: Schema.Attribute.Integer;
-    coinsSpent: Schema.Attribute.Integer;
+    coins: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    coinsEarned: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    coinsSpent: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -737,9 +759,31 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
-    tickets: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    ticketsEarned: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    ticketsSpent: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    tickets: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ticketsEarned: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ticketsSpent: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -819,10 +863,6 @@ export interface ApiRewardReward extends Struct.CollectionTypeSchema {
     probability: Schema.Attribute.Float;
     publishedAt: Schema.Attribute.DateTime;
     quantity: Schema.Attribute.Integer;
-    roulette_history: Schema.Attribute.Relation<
-      'manyToOne',
-      'api::roulette-history.roulette-history'
-    >;
     typeReward: Schema.Attribute.Enumeration<
       ['currency', 'consumable', 'cosmetic']
     >;
@@ -864,7 +904,7 @@ export interface ApiRouletteHistoryRouletteHistory
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
-    rewards: Schema.Attribute.Relation<'oneToMany', 'api::reward.reward'>;
+    reward: Schema.Attribute.Relation<'manyToOne', 'api::reward.reward'>;
     timestamp: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -888,9 +928,31 @@ export interface ApiSettingSetting extends Struct.SingleTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    coinsPerTicket: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<1000>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    exchangeLimitEnabled: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    exchangeLimitPeriod: Schema.Attribute.Enumeration<
+      ['daily', 'monthly', 'yearly']
+    > &
+      Schema.Attribute.DefaultTo<'monthly'>;
+    exchangeLimitTickets: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<10>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

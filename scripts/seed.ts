@@ -13,11 +13,13 @@ const COUNTS = {
 
 async function cleanDatabase(strapi: any) {
   console.log("🧹 Limpiando base de datos...");
-  
+
   // Obtener el usuario gravitad para preservarlo
-  const gravitadUser = await strapi.db.query("plugin::users-permissions.user").findOne({
-    where: { email: "synergiart.websupp@gmail.com" },
-  });
+  const gravitadUser = await strapi.db
+    .query("plugin::users-permissions.user")
+    .findOne({
+      where: { email: "synergiart.websupp@gmail.com" },
+    });
 
   const types = [
     "api::user-transaction-history.user-transaction-history",
@@ -48,8 +50,8 @@ async function cleanDatabase(strapi: any) {
   if (gravitadUser) {
     await strapi.db.query("plugin::users-permissions.user").deleteMany({
       where: {
-        id: { $ne: gravitadUser.id }
-      }
+        id: { $ne: gravitadUser.id },
+      },
     });
     console.log(`🗑️ Eliminados usuarios (preservando gravitad)`);
   } else {
@@ -64,20 +66,26 @@ async function seedDatabase(strapi: any) {
 
   // 1. Obtener Rol Player
   console.log("🔍 Buscando rol 'Player'...");
-  let playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
-    where: { type: "player" },
-  });
+  let playerRole = await strapi.db
+    .query("plugin::users-permissions.role")
+    .findOne({
+      where: { type: "player" },
+    });
 
   if (!playerRole) {
-    playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
-      where: { name: "Player" },
-    });
+    playerRole = await strapi.db
+      .query("plugin::users-permissions.role")
+      .findOne({
+        where: { name: "Player" },
+      });
   }
 
   if (!playerRole) {
-    playerRole = await strapi.db.query("plugin::users-permissions.role").findOne({
-      where: { type: "authenticated" },
-    });
+    playerRole = await strapi.db
+      .query("plugin::users-permissions.role")
+      .findOne({
+        where: { type: "authenticated" },
+      });
   }
 
   console.log(`✅ Usando rol: ${playerRole.name} (ID: ${playerRole.id})`);
@@ -89,43 +97,53 @@ async function seedDatabase(strapi: any) {
     const username = `user${i}`;
     const email = `user${i}@example.com`;
 
-    const existing = await strapi.db.query("plugin::users-permissions.user").findOne({
-      where: { email },
-    });
+    const existing = await strapi.db
+      .query("plugin::users-permissions.user")
+      .findOne({
+        where: { email },
+      });
 
     let user;
     if (!existing) {
-      user = await strapi.entityService.create("plugin::users-permissions.user", {
-        data: {
-          username,
-          email,
-          password: "Password1",
-          confirmed: true,
-          role: playerRole.id,
-          provider: "local",
+      user = await strapi.entityService.create(
+        "plugin::users-permissions.user",
+        {
+          data: {
+            username,
+            email,
+            password: "Password1",
+            confirmed: true,
+            role: playerRole.id,
+            provider: "local",
+          },
         },
-      });
+      );
     } else {
       user = existing;
     }
     users.push(user);
 
-    const existingStats = await strapi.db.query("api::player-stat.player-stat").findOne({
-      where: { users_permissions_user: user.id },
-    });
+    const existingStats = await strapi.db
+      .query("api::player-stat.player-stat")
+      .findOne({
+        where: { users_permissions_user: user.id },
+      });
 
     if (!existingStats) {
       const gamesPlayed = Math.floor(Math.random() * 50) + 1; // Al menos 1 partida
       const gamesWon = Math.floor(Math.random() * gamesPlayed); // Siempre <= gamesPlayed
       const gamesLost = gamesPlayed - gamesWon;
-      
+
+      // Dar más tickets a user1 para testing de ruleta
+      const ticketsAmount = i === 1 ? 50 : Math.floor(Math.random() * 100);
+
       await strapi.entityService.create("api::player-stat.player-stat", {
         data: {
           users_permissions_user: user.documentId,
           score: Math.floor(Math.random() * 10000),
           highestScore: Math.floor(Math.random() * 10000),
           coins: Math.floor(Math.random() * 5000),
-          tickets: Math.floor(Math.random() * 100),
+          tickets: ticketsAmount,
           xp: Math.floor(Math.random() * 500),
           gamesPlayed,
           gamesWon,
@@ -133,6 +151,7 @@ async function seedDatabase(strapi: any) {
           publishedAt: new Date(),
         },
       });
+      console.log(`✅ Usuario ${username}: ${ticketsAmount} tickets`);
     }
   }
 
@@ -150,7 +169,9 @@ async function seedDatabase(strapi: any) {
     });
   }
 
-  const currency = await strapi.entityService.findMany("api::currency-info.currency-info");
+  const currency = await strapi.entityService.findMany(
+    "api::currency-info.currency-info",
+  );
   if (!currency) {
     await strapi.entityService.create("api::currency-info.currency-info", {
       data: {
@@ -174,7 +195,9 @@ async function seedDatabase(strapi: any) {
     });
   }
 
-  const token = await strapi.entityService.findMany("api::token-info.token-info");
+  const token = await strapi.entityService.findMany(
+    "api::token-info.token-info",
+  );
   if (!token) {
     await strapi.entityService.create("api::token-info.token-info", {
       data: {
@@ -194,8 +217,8 @@ async function seedDatabase(strapi: any) {
   const levels = [];
   const difficulties = ["easy", "easy2", "medium", "medium2", "hard", "hard2"];
   for (let i = 1; i <= COUNTS.LEVELS; i++) {
-    const existing = await strapi.db.query("api::level.level").findOne({ 
-      where: { name: `Nivel ${i}` } 
+    const existing = await strapi.db.query("api::level.level").findOne({
+      where: { name: `Nivel ${i}` },
     });
     if (!existing) {
       const level = await strapi.entityService.create("api::level.level", {
@@ -213,27 +236,70 @@ async function seedDatabase(strapi: any) {
   }
 
   // 5. Crear Achievements
-  console.log(`🏆 Creando ${COUNTS.ACHIEVEMENTS} logros...`);
+  console.log(`🏆 Creando logros definidos...`);
+  const achievementConfigs = [
+    {
+      title: "Primera Victoria",
+      description: "Gana tu primera partida",
+      targetType: "gamesWon",
+      goalAmount: 1,
+      rewardType: "coins",
+      rewardAmount: 100,
+    },
+    {
+      title: "5 Victorias",
+      description: "Gana 5 partidas",
+      targetType: "gamesWon",
+      goalAmount: 5,
+      rewardType: "tickets",
+      rewardAmount: 2,
+    },
+    {
+      title: "Maestro del Score",
+      description: "Alcanza 1000 puntos en total",
+      targetType: "score",
+      goalAmount: 1000,
+      rewardType: "coins",
+      rewardAmount: 500,
+    },
+    {
+      title: "Experiencia Acumulada",
+      description: "Obtén 500 puntos de experiencia",
+      targetType: "xp",
+      goalAmount: 500,
+      rewardType: "tickets",
+      rewardAmount: 1,
+    },
+    {
+      title: "Dedicación Total",
+      description: "Juega durante 1 hora (3600 seg)",
+      targetType: "time",
+      goalAmount: 3600,
+      rewardType: "coins",
+      rewardAmount: 200,
+    },
+  ];
+
   const achievements = [];
-  for (let i = 1; i <= COUNTS.ACHIEVEMENTS; i++) {
-    const existing = await strapi.db.query("api::achievement.achievement").findOne({ 
-      where: { title: `Logro ${i}` } 
-    });
-    if (!existing) {
-      const achievement = await strapi.entityService.create("api::achievement.achievement", {
-        data: {
-          title: `Logro ${i}`,
-          description: `Desbloquea este logro haciendo X cosa ${i}`,
-          rewardAmount: 500,
-          targetType: "score",
-          goalAmount: 1000 * i,
-          quantity: 0,
-          rewardType: "coins",
-          isActive: true,
-          visibleToUser: true,
-          publishedAt: new Date(),
-        },
+  for (const config of achievementConfigs) {
+    const existing = await strapi.db
+      .query("api::achievement.achievement")
+      .findOne({
+        where: { title: config.title },
       });
+    if (!existing) {
+      const achievement = await strapi.entityService.create(
+        "api::achievement.achievement",
+        {
+          data: {
+            ...config,
+            quantity: 0,
+            isActive: true,
+            visibleToUser: true,
+            publishedAt: new Date(),
+          },
+        },
+      );
       achievements.push(achievement);
     } else {
       achievements.push(existing);
@@ -244,45 +310,136 @@ async function seedDatabase(strapi: any) {
   console.log(`📅 Creando ${COUNTS.DAILY_REWARDS} recompensas diarias...`);
   const dailyRewards = [];
   for (let i = 1; i <= COUNTS.DAILY_REWARDS; i++) {
-    const existing = await strapi.db.query("api::daily-reward.daily-reward").findOne({ 
-      where: { day: i } 
-    });
-    if (!existing) {
-      const dr = await strapi.entityService.create("api::daily-reward.daily-reward", {
-        data: {
-          name: `Día ${i}`,
-          day: i,
-          rewardType: i % 2 === 0 ? "coins" : "tickets",
-          rewardAmount: i * 50,
-          isActive: true,
-          publishedAt: new Date(),
-        },
+    const existing = await strapi.db
+      .query("api::daily-reward.daily-reward")
+      .findOne({
+        where: { day: i },
       });
+    if (!existing) {
+      const dr = await strapi.entityService.create(
+        "api::daily-reward.daily-reward",
+        {
+          data: {
+            name: `Día ${i}`,
+            day: i,
+            rewardType: i % 2 === 0 ? "coins" : "tickets",
+            rewardAmount: i * 50,
+            isActive: true,
+            publishedAt: new Date(),
+          },
+        },
+      );
       dailyRewards.push(dr);
     } else {
       dailyRewards.push(existing);
     }
   }
 
-  // 7. Crear Rewards (Ruleta)
-  console.log(`🎁 Creando ${COUNTS.REWARDS} premios de ruleta...`);
+  // 7. Crear Rewards (Ruleta) - Variados para testing
+  console.log(`🎁 Creando premios de ruleta variados...`);
   const rewards = [];
-  for (let i = 1; i <= COUNTS.REWARDS; i++) {
-    const existing = await strapi.db.query("api::reward.reward").findOne({ 
-      where: { name: `Premio ${i}` } 
+
+  const rewardConfigs = [
+    // Currency rewards (coins) - Más comunes
+    {
+      name: "100 Coins",
+      description: "Una pequeña cantidad de monedas",
+      typeReward: "currency",
+      value: 100,
+      probability: 40,
+      quantity: 50,
+      isUnique: false,
+    },
+    {
+      name: "500 Coins",
+      description: "Una cantidad moderada de monedas",
+      typeReward: "currency",
+      value: 500,
+      probability: 25,
+      quantity: 30,
+      isUnique: false,
+    },
+    {
+      name: "1000 Coins",
+      description: "¡Muchas monedas!",
+      typeReward: "currency",
+      value: 1000,
+      probability: 15,
+      quantity: 20,
+      isUnique: false,
+    },
+
+    // Currency rewards (tickets) - Menos comunes
+    {
+      name: "5 Tickets",
+      description: "Algunos tickets para más giros",
+      typeReward: "currency",
+      value: 5,
+      probability: 10,
+      quantity: 25,
+      isUnique: false,
+    },
+    {
+      name: "10 Tickets",
+      description: "¡Muchos tickets!",
+      typeReward: "currency",
+      value: 10,
+      probability: 5,
+      quantity: 15,
+      isUnique: false,
+    },
+
+    // Consumable rewards - Raros
+    {
+      name: "Gift Card $10",
+      description: "Tarjeta de regalo de $10 (reclamar con admin)",
+      typeReward: "consumable",
+      value: 10,
+      probability: 3,
+      quantity: 5,
+      isUnique: false,
+    },
+    {
+      name: "Gift Card $50",
+      description: "Tarjeta de regalo de $50 (reclamar con admin)",
+      typeReward: "consumable",
+      value: 50,
+      probability: 1,
+      quantity: 2,
+      isUnique: false,
+    },
+
+    // Cosmetic rewards - Muy raros (no implementado aún)
+    {
+      name: "Avatar Dorado",
+      description: "Avatar especial dorado",
+      typeReward: "cosmetic",
+      value: 0,
+      probability: 0.8,
+      quantity: 3,
+      isUnique: true,
+    },
+    {
+      name: "Tema Oscuro Premium",
+      description: "Tema oscuro exclusivo",
+      typeReward: "cosmetic",
+      value: 0,
+      probability: 0.2,
+      quantity: 1,
+      isUnique: true,
+    },
+  ];
+
+  for (const config of rewardConfigs) {
+    const existing = await strapi.db.query("api::reward.reward").findOne({
+      where: { name: config.name },
     });
     if (!existing) {
       const reward = await strapi.entityService.create("api::reward.reward", {
         data: {
-          name: `Premio ${i}`,
-          description: `Descripción del premio ${i}`,
-          typeReward: "currency",
-          value: i * 100,
-          probability: 100 / COUNTS.REWARDS,
-          quantity: 1,
+          ...config,
           isActive: true,
           visibleToUser: true,
-          isUnique: false,
           publishedAt: new Date(),
         },
       });
@@ -291,86 +448,227 @@ async function seedDatabase(strapi: any) {
       rewards.push(existing);
     }
   }
+  console.log(`✅ Creados ${rewards.length} premios de ruleta`);
 
   // 8. Crear Historiales y Relaciones
   console.log("🔗 Generando historial y relaciones...");
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
-    
+
     // User Game History
     for (let j = 0; j < COUNTS.USER_GAME_HISTORY; j++) {
-      await strapi.entityService.create("api::user-game-history.user-game-history", {
-        data: {
-          users_permissions_user: user.documentId,
-          level: levels[j % levels.length].documentId,
-          score: Math.floor(Math.random() * 1000),
-          completed: Math.random() > 0.5,
-          coinsEarned: Math.floor(Math.random() * 100),
-          duration: Math.floor(Math.random() * 300),
-          completedAt: new Date(),
-
+      await strapi.entityService.create(
+        "api::user-game-history.user-game-history",
+        {
+          data: {
+            users_permissions_user: user.documentId,
+            level: levels[j % levels.length].documentId,
+            score: Math.floor(Math.random() * 1000),
+            completed: Math.random() > 0.5,
+            coinsEarned: Math.floor(Math.random() * 100),
+            duration: Math.floor(Math.random() * 300),
+            completedAt: new Date(),
+          },
         },
-      });
+      );
     }
 
     // User Transaction History
     for (let j = 0; j < COUNTS.USER_TRANSACTION_HISTORY; j++) {
-      await strapi.entityService.create("api::user-transaction-history.user-transaction-history", {
-        data: {
-          users_permissions_user: user.documentId,
-          amountDelivered: Math.floor(Math.random() * 100),
-          coinsExchanged: Math.floor(Math.random() * 50),
-          transactionType: "daily_reward",
-          currency: "coins",
-          statusTransaction: "completed",
-          executedAt: new Date(),
-
-
+      await strapi.entityService.create(
+        "api::user-transaction-history.user-transaction-history",
+        {
+          data: {
+            users_permissions_user: user.documentId,
+            amountDelivered: Math.floor(Math.random() * 100),
+            coinsExchanged: Math.floor(Math.random() * 50),
+            transactionType: "daily_reward",
+            currency: "coins",
+            statusTransaction: "completed",
+            executedAt: new Date(),
+          },
         },
-      });
+      );
     }
 
-    // User Achievements - Crear uno para cada achievement (Simulando Option A: Sparse Data)
+    // User Achievements - Perfiles determinísticos para testing (user1-user5)
     for (let j = 0; j < achievements.length; j++) {
-      // Solo crear el registro con 30% de probabilidad para simular que no todos tienen todos los achievements iniciados
-      if (Math.random() > 0.3) continue;
-
       const achievement = achievements[j];
-      // Variar el estado de completado: algunos completados, otros en progreso
-      const isCompleted = Math.random() > 0.8; 
-      const currentProgress = isCompleted ? achievement.goalAmount : Math.floor(Math.random() * achievement.goalAmount * 0.8);
-      
-      await strapi.entityService.create("api::user-achievement.user-achievement", {
-        data: {
-          users_permissions_user: user.documentId,
-          achievement: achievement.documentId,
-          completed: isCompleted,
-          claimed: false,
-          currentProgress,
-          obtainedAt: isCompleted ? new Date() : null,
 
+      let completed = false;
+      let claimed = false;
+      let currentProgress = 0;
+      let obtainedAt = null;
+      let claimedAt = null;
+
+      // Achievement Indices (based on config order):
+      // 0: Primera Victoria (1 win)
+      // 1: 5 Victorias (5 wins)
+      // 2: Maestro del Score (1000 pts)
+      // 3: Experiencia Acumulada (500 xp)
+      // 4: Dedicación Total (3600 sec)
+
+      if (i === 0) {
+        // User 1: Newbie (Casi todo en 0 o poco progreso)
+        // Ideal para ver estados "Locked" o "In Progress" iniciales
+        if (j === 4) {
+          // Time
+          currentProgress = 100; // 100 seconds
+        } else if (j === 2) {
+          // Score
+          currentProgress = 50; // 50 pts
+        }
+      } else if (i === 1) {
+        if (j === 0) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else if (j === 1) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else if (j === 2) {
+          currentProgress = 800;
+        }
+      } else if (i === 2) {
+        // User 3: Claimed (Ya reclamados) & Progress
+        // Ideal para ver estados "Completed" (Reclamado)
+        if (j === 0) {
+          // First Win -> Claimed
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          obtainedAt.setDate(obtainedAt.getDate() - 2);
+          claimedAt = new Date();
+          claimedAt.setDate(claimedAt.getDate() - 1);
+        } else if (j === 1) {
+          // 5 Wins -> Completed, Not Claimed
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        }
+      } else if (i === 3) {
+        if (j === 0) {
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          claimedAt = new Date();
+        } else if (j === 2) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount + 50;
+          obtainedAt = new Date();
+        } else if (j === 3) {
+          currentProgress = Math.floor(achievement.goalAmount * 0.5);
+        } else if (j === 4) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        }
+      } else {
+        if (j === 0) {
+          completed = true;
+          claimed = true;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+          claimedAt = new Date();
+        } else if (j === 1 || j === 3) {
+          completed = true;
+          claimed = false;
+          currentProgress = achievement.goalAmount;
+          obtainedAt = new Date();
+        } else {
+          currentProgress = Math.floor(achievement.goalAmount * 0.99);
+        }
+      }
+
+      await strapi.entityService.create(
+        "api::user-achievement.user-achievement",
+        {
+          data: {
+            users_permissions_user: user.documentId,
+            achievement: achievement.documentId,
+            completed,
+            claimed,
+            currentProgress,
+            obtainedAt,
+            claimedAt,
+          },
         },
-      });
+      );
     }
 
     // User Daily Rewards (Progreso)
     if (dailyRewards.length > 0) {
-      await strapi.entityService.create("api::user-daily-reward.user-daily-reward", {
-        data: {
-          users_permissions_user: user.documentId,
-          daily_reward: dailyRewards[0].documentId,
-          claimed: true,
-          claimedAt: new Date(),
+      let daysToClaim = 0;
 
-        },
-      });
+      // Escenarios según el índice del usuario
+      if (i === 0) {
+        // user1
+        // Escenario: Reclamó día 1, le toca día 2
+        daysToClaim = 1;
+      } else if (i === 1) {
+        // user2
+        // Escenario: Reclamó 3 días, le toca día 4
+        daysToClaim = 3;
+      } else if (i === 2) {
+        // user3
+        // Escenario: No ha reclamado nada (0 días)
+        daysToClaim = 0;
+      } else if (i === 3) {
+        // user4
+        // Escenario: Reclamó todos los días (7 días)
+        daysToClaim = 7;
+      } else {
+        // user5
+        // Escenario: Reclamó 5 días, le toca día 6
+        daysToClaim = 5;
+      }
+
+      const today = new Date();
+
+      for (let d = 0; d < daysToClaim; d++) {
+        // Asegurarnos de no exceder los rewards disponibles
+        if (d >= dailyRewards.length) break;
+
+        const claimDate = new Date(today);
+        // El último reclamado fue ayer.
+        // d va de 0 a daysToClaim-1.
+        // Si daysToClaim es 3:
+        // d=2 (Día 3) -> Fue ayer (daysAgo = 1)
+        // d=1 (Día 2) -> Fue anteayer (daysAgo = 2)
+        // d=0 (Día 1) -> Hace 3 días (daysAgo = 3)
+        // Formula: daysAgo = (daysToClaim - d)
+
+        const daysAgo = daysToClaim - d;
+        claimDate.setDate(claimDate.getDate() - daysAgo);
+        claimDate.setHours(10, 0, 0, 0);
+
+        await strapi.entityService.create(
+          "api::user-daily-reward.user-daily-reward",
+          {
+            data: {
+              users_permissions_user: user.documentId,
+              daily_reward: dailyRewards[d].documentId,
+              claimed: true,
+              claimedAt: claimDate,
+            },
+          },
+        );
+      }
     }
 
     // User Rewards (Inventario)
     // Usamos el mismo premio que se usará para el historial para mantener consistencia, o uno diferente.
     // Aquí usaremos el correspondiente al índice para variar.
     const userRewardItem = rewards[i % rewards.length];
-    
+
     if (rewards.length > 0) {
       await strapi.entityService.create("api::user-reward.user-reward", {
         data: {
@@ -380,29 +678,34 @@ async function seedDatabase(strapi: any) {
           rewardStatus: "available",
           claimed: false,
           quantity: 1,
-
         },
       });
     }
 
     // Roulette History
     const rewardForHistory = rewards[i % rewards.length];
-    
-    const rouletteHistory = await strapi.entityService.create("api::roulette-history.roulette-history", {
-      data: {
-        users_permissions_user: user.documentId,
-        timestamp: new Date(),
 
+    const rouletteHistory = await strapi.entityService.create(
+      "api::roulette-history.roulette-history",
+      {
+        data: {
+          users_permissions_user: user.documentId,
+          timestamp: new Date(),
+        },
       },
-    });
+    );
 
     // Actualizar el Reward para vincularlo al historial
     // En Strapi v5, entityService.update usa ID (integer) como segundo argumento
-    await strapi.entityService.update("api::reward.reward", rewardForHistory.id, {
-      data: {
-        roulette_history: rouletteHistory.documentId,
+    await strapi.entityService.update(
+      "api::reward.reward",
+      rewardForHistory.id,
+      {
+        data: {
+          roulette_history: rouletteHistory.documentId,
+        },
       },
-    });
+    );
 
     // Log History
     await strapi.entityService.create("api::log-history.log-history", {
@@ -413,7 +716,6 @@ async function seedDatabase(strapi: any) {
         timestamp: new Date(),
         module: "auth",
         eventType: "login",
-
       },
     });
   }
@@ -424,7 +726,7 @@ async function seedDatabase(strapi: any) {
     const user = users[i];
     // Crear 1 o 2 guardianes por usuario
     const guardianCount = Math.floor(Math.random() * 2) + 1;
-    
+
     for (let j = 0; j < guardianCount; j++) {
       const uniqueSuffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
       await strapi.entityService.create("api::guardiand.guardiand", {
@@ -447,32 +749,95 @@ async function seedDatabase(strapi: any) {
 
   // 9. Crear User Achievements para el usuario gravitad
   console.log("👤 Creando achievements para usuario gravitad...");
-  const gravitadUser = await strapi.db.query("plugin::users-permissions.user").findOne({
-    where: { email: "synergiart.websupp@gmail.com" },
-  });
+  const gravitadUser = await strapi.db
+    .query("plugin::users-permissions.user")
+    .findOne({
+      where: { email: "synergiart.websupp@gmail.com" },
+    });
 
   if (gravitadUser && achievements.length > 0) {
-    // Crear user-achievements para gravitad
+    // Crear user-achievements para gravitad con estados específicos para testing
+    // Orden esperado: 0:FirstWin, 1:5Wins, 2:Score, 3:XP, 4:Time
+
+    const states = [
+      {
+        // 0: Primera Victoria -> Claimed
+        completed: true,
+        claimed: true,
+        progressFactor: 1.0, // 100%
+      },
+      {
+        // 1: 5 Victorias -> Available (Completed, Not Claimed)
+        completed: true,
+        claimed: false,
+        progressFactor: 1.2, // 120%
+      },
+      {
+        // 2: Score -> Locked (In Progress)
+        completed: false,
+        claimed: false,
+        progressFactor: 0.5, // 50%
+      },
+      {
+        // 3: XP -> Locked (Started)
+        completed: false,
+        claimed: false,
+        progressFactor: 0.1, // 10%
+      },
+      {
+        // 4: Time -> Available (Exactly on goal)
+        completed: true,
+        claimed: false,
+        progressFactor: 1.0, // 100%
+      },
+    ];
+
     for (let j = 0; j < achievements.length; j++) {
       const achievement = achievements[j];
-      // Primer achievement completado y listo para reclamar, resto en progreso
-      const isCompleted = j === 0;
-      const currentProgress = isCompleted ? achievement.goalAmount : Math.floor(Math.random() * achievement.goalAmount * 0.5);
-      
-      await strapi.entityService.create("api::user-achievement.user-achievement", {
-        data: {
-          users_permissions_user: gravitadUser.documentId,
-          achievement: achievement.documentId,
-          completed: isCompleted,
-          claimed: false,
-          currentProgress,
-          obtainedAt: isCompleted ? new Date() : null,
+      const state = states[j] || {
+        completed: false,
+        claimed: false,
+        progressFactor: 0,
+      };
+
+      const currentProgress = Math.floor(
+        achievement.goalAmount * state.progressFactor,
+      );
+
+      let obtainedAt = null;
+      let claimedAt = null;
+
+      if (state.completed) {
+        obtainedAt = new Date();
+        obtainedAt.setDate(obtainedAt.getDate() - 2); // Hace 2 días
+      }
+
+      if (state.claimed) {
+        claimedAt = new Date(); // Hoy
+      }
+
+      await strapi.entityService.create(
+        "api::user-achievement.user-achievement",
+        {
+          data: {
+            users_permissions_user: gravitadUser.documentId,
+            achievement: achievement.documentId,
+            completed: state.completed,
+            claimed: state.claimed,
+            currentProgress,
+            obtainedAt,
+            claimedAt,
+          },
         },
-      });
+      );
     }
-    console.log(`✅ Creados ${achievements.length} user-achievements para gravitad`);
+    console.log(
+      `✅ Creados ${achievements.length} user-achievements para gravitad con estados de prueba`,
+    );
   } else if (!gravitadUser) {
-    console.log("⚠️ Usuario gravitad no encontrado, no se crearon achievements");
+    console.log(
+      "⚠️ Usuario gravitad no encontrado, no se crearon achievements",
+    );
   }
 
   console.log("✅ Seeder completado exitosamente.");
