@@ -38,7 +38,7 @@
     },
     "puzzleImage": {
       "type": "media",
-      "multiple": false,
+      "multiple": true,
       "allowedTypes": [
         "images",
         "files",
