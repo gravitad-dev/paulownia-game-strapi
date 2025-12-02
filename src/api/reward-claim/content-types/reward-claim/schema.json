@@ -1,0 +1,172 @@
+{
+  "kind": "collectionType",
+  "collectionName": "reward_claims",
+  "info": {
+    "singularName": "reward-claim",
+    "pluralName": "reward-claims",
+    "displayName": "RewardClaim",
+    "description": "Claims for consumable rewards that need to be processed by admin"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "claimCode": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "maxLength": 20
+    },
+    "users_permissions_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "reward_claims"
+    },
+    "user_reward": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::user-reward.user-reward",
+      "inversedBy": "reward_claim"
+    },
+    "guardian": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::guardiand.guardiand"
+    },
+    "fullName": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "address": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "city": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "zipCode": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "country": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "additionalNotes": {
+      "type": "text",
+      "maxLength": 1000
+    },
+    "requiresIdentityVerification": {
+      "type": "boolean",
+      "default": false
+    },
+    "isMinor": {
+      "type": "boolean",
+      "default": false
+    },
+    "birthDate": {
+      "type": "date"
+    },
+    "identityDocumentType": {
+      "type": "enumeration",
+      "enum": ["dni", "passport", "id_card", "other"]
+    },
+    "identityDocumentNumber": {
+      "type": "string",
+      "maxLength": 30
+    },
+    "identityDocumentFront": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "identityDocumentBack": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "guardianDocumentFront": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "guardianDocumentBack": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "guardianEmailConfirmed": {
+      "type": "boolean",
+      "default": false
+    },
+    "guardianEmailConfirmedAt": {
+      "type": "datetime"
+    },
+    "guardianConfirmationToken": {
+      "type": "string",
+      "private": true
+    },
+    "guardianResendCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "claimStatus": {
+      "type": "enumeration",
+      "enum": ["pending", "processing", "delivered", "rejected", "cancelled"],
+      "default": "pending",
+      "required": true
+    },
+    "verificationAttempts": {
+      "type": "integer",
+      "default": 0
+    },
+    "rewardSnapshot": {
+      "type": "json"
+    },
+    "processedAt": {
+      "type": "datetime"
+    },
+    "processedBy": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "processedByName": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "adminNotes": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "trackingNumber": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "consentAcceptedAt": {
+      "type": "datetime"
+    },
+    "termsAccepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "dataProcessingAccepted": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

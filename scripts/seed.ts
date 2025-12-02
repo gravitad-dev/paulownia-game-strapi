@@ -22,6 +22,7 @@ async function cleanDatabase(strapi: any) {
     });
 
   const types = [
+    "api::reward-claim.reward-claim",
     "api::user-transaction-history.user-transaction-history",
     "api::user-game-history.user-game-history",
     "api::user-achievement.user-achievement",
@@ -92,10 +93,21 @@ async function seedDatabase(strapi: any) {
 
   // 2. Crear Usuarios y PlayerStats
   console.log(`👤 Creando ${COUNTS.USERS} usuarios...`);
+
+  // Perfiles de usuarios con edades variadas
+  const userProfiles = [
+    { age: 25, country: "US" }, // user1: Adulto
+    { age: 16, country: "ES" }, // user2: Menor (16 años)
+    { age: 30, country: "MX" }, // user3: Adulto
+    { age: 15, country: "AR" }, // user4: Menor (15 años)
+    { age: 22, country: "CO" }, // user5: Adulto
+  ];
+
   const users = [];
   for (let i = 1; i <= COUNTS.USERS; i++) {
     const username = `user${i}`;
     const email = `user${i}@example.com`;
+    const profile = userProfiles[i - 1] || { age: 25, country: "US" };
 
     const existing = await strapi.db
       .query("plugin::users-permissions.user")
@@ -105,6 +117,13 @@ async function seedDatabase(strapi: any) {
 
     let user;
     if (!existing) {
+      // Calcular fecha de nacimiento basada en la edad
+      const birthDate = new Date();
+      birthDate.setFullYear(birthDate.getFullYear() - profile.age);
+      // Ajustar mes y día para asegurar que la edad sea exacta
+      birthDate.setMonth(0); // Enero
+      birthDate.setDate(1); // Día 1
+
       user = await strapi.entityService.create(
         "plugin::users-permissions.user",
         {
@@ -115,8 +134,13 @@ async function seedDatabase(strapi: any) {
             confirmed: true,
             role: playerRole.id,
             provider: "local",
+            country: profile.country,
+            age: birthDate.toISOString().split("T")[0], // Formato YYYY-MM-DD para campo tipo date
           },
         },
+      );
+      console.log(
+        `✅ Usuario ${username} creado - ${profile.age} años (${profile.country})`,
       );
     } else {
       user = existing;
@@ -217,23 +241,17 @@ async function seedDatabase(strapi: any) {
   const levels = [];
   const difficulties = ["easy", "easy2", "medium", "medium2", "hard", "hard2"];
   for (let i = 1; i <= COUNTS.LEVELS; i++) {
-    const existing = await strapi.db.query("api::level.level").findOne({
-      where: { name: `Nivel ${i}` },
+    const level = await strapi.entityService.create("api::level.level", {
+      data: {
+        name: `Nivel ${i}`,
+        description: `Descripción del nivel ${i}`,
+        difficulty: difficulties[(i - 1) % difficulties.length],
+        publishedAt: new Date(),
+      },
     });
-    if (!existing) {
-      const level = await strapi.entityService.create("api::level.level", {
-        data: {
-          name: `Nivel ${i}`,
-          description: `Descripción del nivel ${i}`,
-          difficulty: difficulties[(i - 1) % difficulties.length],
-          publishedAt: new Date(),
-        },
-      });
-      levels.push(level);
-    } else {
-      levels.push(existing);
-    }
+    levels.push(level);
   }
+  console.log(`✅ Creados ${levels.length} niveles`);
 
   // 5. Crear Achievements
   console.log(`🏆 Creando logros definidos...`);
@@ -282,58 +300,42 @@ async function seedDatabase(strapi: any) {
 
   const achievements = [];
   for (const config of achievementConfigs) {
-    const existing = await strapi.db
-      .query("api::achievement.achievement")
-      .findOne({
-        where: { title: config.title },
-      });
-    if (!existing) {
-      const achievement = await strapi.entityService.create(
-        "api::achievement.achievement",
-        {
-          data: {
-            ...config,
-            quantity: 0,
-            isActive: true,
-            visibleToUser: true,
-            publishedAt: new Date(),
-          },
+    const achievement = await strapi.entityService.create(
+      "api::achievement.achievement",
+      {
+        data: {
+          ...config,
+          quantity: 0,
+          isActive: true,
+          visibleToUser: true,
+          publishedAt: new Date(),
         },
-      );
-      achievements.push(achievement);
-    } else {
-      achievements.push(existing);
-    }
+      },
+    );
+    achievements.push(achievement);
   }
+  console.log(`✅ Creados ${achievements.length} logros`);
 
   // 6. Crear Daily Rewards
   console.log(`📅 Creando ${COUNTS.DAILY_REWARDS} recompensas diarias...`);
   const dailyRewards = [];
   for (let i = 1; i <= COUNTS.DAILY_REWARDS; i++) {
-    const existing = await strapi.db
-      .query("api::daily-reward.daily-reward")
-      .findOne({
-        where: { day: i },
-      });
-    if (!existing) {
-      const dr = await strapi.entityService.create(
-        "api::daily-reward.daily-reward",
-        {
-          data: {
-            name: `Día ${i}`,
-            day: i,
-            rewardType: i % 2 === 0 ? "coins" : "tickets",
-            rewardAmount: i * 50,
-            isActive: true,
-            publishedAt: new Date(),
-          },
+    const dr = await strapi.entityService.create(
+      "api::daily-reward.daily-reward",
+      {
+        data: {
+          name: `Día ${i}`,
+          day: i,
+          rewardType: i % 2 === 0 ? "coins" : "tickets",
+          rewardAmount: i * 50,
+          isActive: true,
+          publishedAt: new Date(),
         },
-      );
-      dailyRewards.push(dr);
-    } else {
-      dailyRewards.push(existing);
-    }
+      },
+    );
+    dailyRewards.push(dr);
   }
+  console.log(`✅ Creadas ${dailyRewards.length} recompensas diarias`);
 
   // 7. Crear Rewards (Ruleta) - Variados para testing
   console.log(`🎁 Creando premios de ruleta variados...`);
@@ -431,22 +433,15 @@ async function seedDatabase(strapi: any) {
   ];
 
   for (const config of rewardConfigs) {
-    const existing = await strapi.db.query("api::reward.reward").findOne({
-      where: { name: config.name },
+    const reward = await strapi.entityService.create("api::reward.reward", {
+      data: {
+        ...config,
+        isActive: true,
+        visibleToUser: true,
+        publishedAt: new Date(),
+      },
     });
-    if (!existing) {
-      const reward = await strapi.entityService.create("api::reward.reward", {
-        data: {
-          ...config,
-          isActive: true,
-          visibleToUser: true,
-          publishedAt: new Date(),
-        },
-      });
-      rewards.push(reward);
-    } else {
-      rewards.push(existing);
-    }
+    rewards.push(reward);
   }
   console.log(`✅ Creados ${rewards.length} premios de ruleta`);
 
@@ -454,26 +449,33 @@ async function seedDatabase(strapi: any) {
   console.log("🔗 Generando historial y relaciones...");
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
+    console.log(`  Procesando user${i + 1}...`);
 
     // User Game History
-    for (let j = 0; j < COUNTS.USER_GAME_HISTORY; j++) {
-      await strapi.entityService.create(
-        "api::user-game-history.user-game-history",
-        {
-          data: {
-            users_permissions_user: user.documentId,
-            level: levels[j % levels.length].documentId,
-            score: Math.floor(Math.random() * 1000),
-            completed: Math.random() > 0.5,
-            coinsEarned: Math.floor(Math.random() * 100),
-            duration: Math.floor(Math.random() * 300),
-            completedAt: new Date(),
+    if (levels.length > 0) {
+      console.log(`    Creando ${COUNTS.USER_GAME_HISTORY} game histories...`);
+      for (let j = 0; j < COUNTS.USER_GAME_HISTORY; j++) {
+        await strapi.entityService.create(
+          "api::user-game-history.user-game-history",
+          {
+            data: {
+              users_permissions_user: user.documentId,
+              level: levels[j % levels.length].documentId,
+              score: Math.floor(Math.random() * 1000),
+              completed: Math.random() > 0.5,
+              coinsEarned: Math.floor(Math.random() * 100),
+              duration: Math.floor(Math.random() * 300),
+              completedAt: new Date(),
+            },
           },
-        },
-      );
+        );
+      }
     }
 
     // User Transaction History
+    console.log(
+      `    Creando ${COUNTS.USER_TRANSACTION_HISTORY} transaction histories...`,
+    );
     for (let j = 0; j < COUNTS.USER_TRANSACTION_HISTORY; j++) {
       await strapi.entityService.create(
         "api::user-transaction-history.user-transaction-history",
@@ -665,11 +667,10 @@ async function seedDatabase(strapi: any) {
     }
 
     // User Rewards (Inventario)
-    // Usamos el mismo premio que se usará para el historial para mantener consistencia, o uno diferente.
-    // Aquí usaremos el correspondiente al índice para variar.
-    const userRewardItem = rewards[i % rewards.length];
-
+    // Crear diferentes tipos de rewards para testing
     if (rewards.length > 0) {
+      // Crear un reward aleatorio
+      const userRewardItem = rewards[i % rewards.length];
       await strapi.entityService.create("api::user-reward.user-reward", {
         data: {
           users_permissions_user: user.documentId,
@@ -680,6 +681,31 @@ async function seedDatabase(strapi: any) {
           quantity: 1,
         },
       });
+
+      // Para usuarios 1, 2, 3, 4 y 5: crear consumables para testing de claims
+      // user2 (i=1) y user4 (i=3) son menores
+      if (i === 0 || i === 1 || i === 2 || i === 3 || i === 4) {
+        // Buscar rewards consumables
+        const consumableRewards = rewards.filter(
+          (r) => r.typeReward === "consumable",
+        );
+        if (consumableRewards.length > 0) {
+          const consumable = consumableRewards[0]; // Gift Card $10
+          await strapi.entityService.create("api::user-reward.user-reward", {
+            data: {
+              users_permissions_user: user.documentId,
+              reward: consumable.documentId,
+              obtainedAt: new Date(),
+              rewardStatus: "pending",
+              claimed: false,
+              quantity: 1,
+              canBeClaimed: true,
+              hasClaim: false,
+            },
+          });
+          console.log(`  💎 user${i}: Gift Card $10 agregada (consumable)`);
+        }
+      }
     }
 
     // Roulette History
@@ -724,22 +750,56 @@ async function seedDatabase(strapi: any) {
   console.log("🛡️ Creando Guardiands...");
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
-    // Crear 1 o 2 guardianes por usuario
-    const guardianCount = Math.floor(Math.random() * 2) + 1;
+    let guardianCount = 0;
+
+    // Configuración determinista de guardianes para testing
+    if (i === 1) {
+      // user2 (Menor, 16 años): 0 guardianes (Caso: Menor sin guardián)
+      guardianCount = 0;
+      console.log(`  🛡️ user2: Sin guardianes (Testing: Menor sin guardián)`);
+    } else if (i === 3) {
+      // user4 (Menor, 15 años): 1 guardián específico (Caso: Menor con guardián)
+      guardianCount = 1;
+      console.log(
+        `  🛡️ user4: 1 guardián asignado (Testing: Menor con guardián)`,
+      );
+    } else {
+      // Otros usuarios: Aleatorio (0-2)
+      guardianCount = Math.floor(Math.random() * 3);
+    }
 
     for (let j = 0; j < guardianCount; j++) {
       const uniqueSuffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+
+      // Datos específicos para el guardián de user4
+      const guardianData =
+        i === 3 && j === 0
+          ? {
+              name: "Padre de User4",
+              lastName: "Guardian",
+              DNI: "DNI-USER4-PARENT",
+              email: "padre.user4@example.com",
+              phone: "555-USER4",
+              address: "Calle User4 123",
+              zipcode: "4444",
+              city: "Ciudad User4",
+              country: "Argentina",
+            }
+          : {
+              name: `Guardian ${j + 1} of ${user.username}`,
+              lastName: `Doe`,
+              DNI: `DNI-${uniqueSuffix}`,
+              email: `guardian${uniqueSuffix}@example.com`,
+              phone: `555-${Math.floor(Math.random() * 10000)}`,
+              address: `Calle Falsa ${Math.floor(Math.random() * 123)}`,
+              zipcode: `12345`,
+              city: `Ciudad Gótica`,
+              country: `País de las Maravillas`,
+            };
+
       await strapi.entityService.create("api::guardiand.guardiand", {
         data: {
-          name: `Guardian ${j + 1} of ${user.username}`,
-          lastName: `Doe`,
-          DNI: `DNI-${uniqueSuffix}`, // Unique DNI
-          email: `guardian${uniqueSuffix}@example.com`,
-          phone: `555-${Math.floor(Math.random() * 10000)}`,
-          address: `Calle Falsa ${Math.floor(Math.random() * 123)}`,
-          zipcode: `12345`,
-          city: `Ciudad Gótica`,
-          country: `País de las Maravillas`,
+          ...guardianData,
           user: user.documentId,
           publishedAt: new Date(),
         },
@@ -855,7 +915,6 @@ async function main() {
     } else {
       await seedDatabase(strapi);
     }
-
     process.exit(0);
   } catch (error) {
     console.error("❌ Error en el seeder:", error);

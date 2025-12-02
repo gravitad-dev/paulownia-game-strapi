@@ -69,12 +69,7 @@
     "avatar": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+      "allowedTypes": ["images", "files", "videos", "audios"]
     },
     "name": {
       "type": "string"
@@ -147,6 +142,12 @@
       "relation": "oneToMany",
       "target": "api::guardiand.guardiand",
       "mappedBy": "user"
+    },
+    "reward_claims": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::reward-claim.reward-claim",
+      "mappedBy": "users_permissions_user"
     }
   }
 }

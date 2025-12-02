@@ -34,7 +34,8 @@
         "claimed",
         "expired",
         "blocked",
-        "pending"
+        "pending",
+        "in_claim"
       ]
     },
     "quantity": {
@@ -50,6 +51,23 @@
     },
     "claimedAt": {
       "type": "datetime"
+    },
+    "canBeClaimed": {
+      "type": "boolean",
+      "default": false
+    },
+    "hasClaim": {
+      "type": "boolean",
+      "default": false
+    },
+    "claimDeadline": {
+      "type": "datetime"
+    },
+    "reward_claim": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::reward-claim.reward-claim",
+      "mappedBy": "user_reward"
     }
   }
 }
