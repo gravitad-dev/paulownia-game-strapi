@@ -161,6 +161,59 @@ async function seedDatabase(strapi: any) {
       // Dar más tickets a user1 para testing de ruleta
       const ticketsAmount = i === 1 ? 50 : Math.floor(Math.random() * 100);
 
+      // Estadísticas de tiempo y rachas variadas por usuario
+      const totalPlayTime = Math.floor(Math.random() * 36000) + 600; // 10 min a 10 horas en segundos
+      const totalSessions = Math.floor(Math.random() * 20) + 1;
+      const averageSessionTime = Math.round(totalPlayTime / totalSessions);
+
+      // Rachas determinísticas para testing
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let lastStreakDate = null;
+      let lastPlayedAt = null;
+      let lastLoginAt = null;
+
+      if (i === 0) {
+        // user1: Racha activa de 3 días
+        currentStreak = 3;
+        longestStreak = 5;
+        lastStreakDate = new Date().toISOString().split("T")[0]; // Hoy
+        lastPlayedAt = new Date();
+        lastLoginAt = new Date();
+      } else if (i === 1) {
+        // user2: Racha rota (jugó hace 3 días)
+        currentStreak = 0;
+        longestStreak = 7;
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+        lastStreakDate = threeDaysAgo.toISOString().split("T")[0];
+        lastPlayedAt = threeDaysAgo;
+        lastLoginAt = threeDaysAgo;
+      } else if (i === 2) {
+        // user3: Nueva racha de 1 día
+        currentStreak = 1;
+        longestStreak = 1;
+        lastStreakDate = new Date().toISOString().split("T")[0];
+        lastPlayedAt = new Date();
+        lastLoginAt = new Date();
+      } else if (i === 3) {
+        // user4: Racha larga activa
+        currentStreak = 12;
+        longestStreak = 12;
+        lastStreakDate = new Date().toISOString().split("T")[0];
+        lastPlayedAt = new Date();
+        lastLoginAt = new Date();
+      } else {
+        // user5: Sin actividad reciente
+        currentStreak = 0;
+        longestStreak = 3;
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        lastStreakDate = weekAgo.toISOString().split("T")[0];
+        lastPlayedAt = weekAgo;
+        lastLoginAt = weekAgo;
+      }
+
       await strapi.entityService.create("api::player-stat.player-stat", {
         data: {
           users_permissions_user: user.documentId,
@@ -172,10 +225,21 @@ async function seedDatabase(strapi: any) {
           gamesPlayed,
           gamesWon,
           gamesLost,
+          // Nuevos campos de tiempo y racha
+          totalPlayTime,
+          totalSessions,
+          averageSessionTime,
+          currentStreak,
+          longestStreak,
+          lastStreakDate,
+          lastPlayedAt,
+          lastLoginAt,
           publishedAt: new Date(),
         },
       });
-      console.log(`✅ Usuario ${username}: ${ticketsAmount} tickets`);
+      console.log(
+        `✅ Usuario ${username}: ${ticketsAmount} tickets, racha: ${currentStreak}/${longestStreak} días, tiempo: ${Math.round(totalPlayTime / 60)}min`,
+      );
     }
   }
 
