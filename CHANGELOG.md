@@ -5,6 +5,99 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-12-02
+
+#### Changed - Reward Claims API Simplification
+
+- **Endpoint Cleanup**: Removed legacy and redundant endpoints to simplify the API
+
+  - Removed UUID-based routes (`/uuid/:uuid`) - Strapi v5 uses `documentId` natively
+  - Removed guardian email confirmation flow (now auto-confirms on document upload)
+  - Removed DELETE endpoint (claims managed via cancel/revert workflow)
+  - Removed UPDATE endpoint for users (only admins can modify via approve/reject)
+
+- **Final Endpoint Structure** (9 endpoints):
+  | Method | Endpoint | Role | Description |
+  |--------|----------|------|-------------|
+  | GET | `/api/reward-claims` | User/Admin | List claims (users see own, admins see all) |
+  | GET | `/api/reward-claims/:id` | User/Admin | Get claim by documentId |
+  | POST | `/api/reward-claims` | User | Create new claim |
+  | POST | `/api/reward-claims/cancel` | User | Cancel pending/processing claim |
+  | POST | `/api/reward-claims/reopen` | User | Create new claim from cancelled/rejected |
+  | POST | `/api/reward-claims/upload-documents` | User | Upload identity documents |
+  | POST | `/api/reward-claims/approve` | Admin | Approve and mark as delivered |
+  | POST | `/api/reward-claims/reject` | Admin | Reject with reason |
+  | POST | `/api/reward-claims/revert` | Admin | Undo approved claim (mistake fix) |
+
+#### Added - Revert Endpoint
+
+- **Admin Mistake Recovery**: New `POST /api/reward-claims/revert` endpoint
+  - Allows admins to undo accidentally approved claims
+  - Reverts `claimStatus` from `delivered` back to `processing`
+  - Resets `user_reward.claimed` and `claimedAt`
+  - Requires reason for audit trail
+  - Admin can then re-approve or reject the claim
+
+#### Removed
+
+- `POST /api/reward-claims/confirm-guardian` - Guardian auto-confirms now
+- `POST /api/reward-claims/resend-guardian-email` - No longer needed
+- `GET/PUT/DELETE /api/reward-claims/uuid/:uuid` - Use documentId instead
+- `DELETE /api/reward-claims/:id` - Use cancel workflow instead
+- Helper functions: `generateConfirmationToken`, `hashToken`
+
+### 2025-12-01
+
+#### Added - Reward Claims System
+
+- **New Content Type**: `RewardClaim` for managing consumable reward claims
+
+  - Complete schema with identity verification, guardian support, and claim tracking
+  - Fields include: `claimCode`, `fullName`, `email`, `phone`, `address`, `city`, `zipCode`, `country`
+  - Identity verification: `birthDate`, `identityDocumentType`, `identityDocumentNumber`
+  - Guardian flow: `guardian` relation (auto-confirmed on document upload)
+  - Status tracking: 5 states (`pending`, `processing`, `delivered`, `rejected`, `cancelled`)
+  - Anti-spam: `verificationAttempts` (max 3)
+  - Admin fields: `processedAt`, `processedBy`, `processedByName`, `adminNotes`, `trackingNumber`
+  - Consent: `termsAccepted`, `dataProcessingAccepted`, `consentAcceptedAt`
+  - Snapshot: `rewardSnapshot` preserves reward data at claim time
+
+- **Status Flow**:
+
+  ```
+  pending → processing → delivered
+                       ↘ rejected → (reopen) → pending
+                       ↘ cancelled → (reopen) → pending
+  ```
+
+- **rewardStatus Flow** (on user-reward):
+  ```
+  available → in_claim → claimed (delivered)
+                       → available (rejected/cancelled/reverted)
+  ```
+
+#### Changed
+
+- **UserReward Schema**: Added claim tracking fields
+
+  - `canBeClaimed` (boolean): Indicates if reward is eligible for claiming
+  - `hasClaim` (boolean): Tracks if claim exists for this reward
+  - `claimDeadline` (datetime): Optional deadline for claiming
+  - `reward_claim` (relation): OneToOne link to RewardClaim
+
+- **User Schema**: Added `reward_claims` relation (OneToMany)
+
+#### Security
+
+- Ownership validation on all claim endpoints
+- Guardian info collected but auto-confirmed (no email verification required)
+- Rate limiting on verification attempts (max 3)
+
+#### Documentation
+
+- Updated `REWARD_CLAIMS_BACKEND.md` with complete API documentation
+- Updated Postman collection with all 9 endpoints
+
 ### 2025-11-28
 
 #### Added
