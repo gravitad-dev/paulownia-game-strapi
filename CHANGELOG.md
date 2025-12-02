@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 2025-12-02
 
+#### Added - User Sessions Module
+
+- **New Content Type**: `UserSession` for tracking user login sessions and activity
+
+  - Fields: `startedAt`, `endedAt`, `duration`, `ipAddress`, `userAgent`, `deviceType`, `isActive`
+  - Relation: `users_permissions_user` (ManyToOne)
+  - Admin-only access: Limited to `find` and `findOne` operations
+
+- **Custom Endpoints**:
+
+  - `GET /api/player-dashboard/session/current`: Get current active session
+  - `POST /api/player-dashboard/session/start`: Start new session
+  - `POST /api/player-dashboard/session/end`: End current session
+  - `GET /api/player-dashboard/session/history`: Get user's session history with pagination
+
+- **Session Management**:
+
+  - Automatic session tracking on user login
+  - Device detection (mobile, tablet, desktop)
+  - IP address and user agent logging
+  - Session duration calculation
+  - Active session management (one active session per user)
+
+- **Player Dashboard Integration**:
+  - Added `GET /api/player-dashboard/summary`: Complete user stats overview
+  - Includes: player stats, achievements, daily rewards, active session, recent activity
+
+#### Security - Admin-Only Routes Restriction
+
+- **Access Control**: Restricted admin routes to prevent unauthorized access
+  - `player-stats` routes: Limited to `find` and `findOne` operations only
+  - `user-sessions` routes: Limited to `find` and `findOne` operations only
+  - Removed CRUD operations: `create`, `update`, `delete` for non-admin users
+  - **Permissions Configuration**: Requires Strapi Admin role configuration:
+    - Public role: All endpoints disabled
+    - Authenticated role: All endpoints disabled
+    - Admin role: Only `find` and `findOne` enabled
+
+#### Fixed - Test Suite
+
+- **Reward Controller Tests**: Fixed consumable reward test expectations
+  - Updated `rewardStatus` from `"pending"` to `"available"` for consumable rewards
+  - Added missing fields: `canBeClaimed: true`, `hasClaim: false`
+  - Test now correctly matches actual implementation behavior
+  - **Result**: All 125 tests passing successfully
+
+#### Fixed - API Documentation
+
+- **Postman Collection**: Corrected invalid sort field in player-stats endpoint
+  - Changed `sort=totalScore:desc` to `sort=score:desc`
+  - **Root Cause**: `totalScore` field doesn't exist in player-stat schema
+  - **Valid Fields**: `score`, `highestScore`, `xp`, `coins`, `tickets`, `winRate`
+
+### 2025-12-01
+
 #### Changed - Reward Claims API Simplification
 
 - **Endpoint Cleanup**: Removed legacy and redundant endpoints to simplify the API
