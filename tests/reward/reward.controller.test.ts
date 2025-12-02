@@ -294,11 +294,13 @@ describe("Controlador de Recompensas - Endpoint de Ruleta", () => {
 
       const createdUserReward = {
         uuid: "new-user-reward-uuid",
-        rewardStatus: "pending",
+        rewardStatus: "available",
         claimed: false,
         obtainedAt: new Date(),
         claimedAt: null,
         quantity: 1,
+        canBeClaimed: true,
+        hasClaim: false,
       };
 
       strapi.entityService.create.mockResolvedValueOnce(createdUserReward);
@@ -310,7 +312,7 @@ describe("Controlador de Recompensas - Endpoint de Ruleta", () => {
       const res = await controller.spin(mockCtx(user));
 
       expect(res.reward.name).toBe("Gift Card $10");
-      expect(res.userReward.rewardStatus).toBe("pending");
+      expect(res.userReward.rewardStatus).toBe("available");
       expect(res.userReward.claimed).toBe(false);
       expect(res.userReward.claimedAt).toBeNull();
       expect(res.playerStats.tickets).toBe(9);
@@ -320,9 +322,11 @@ describe("Controlador de Recompensas - Endpoint de Ruleta", () => {
         "api::user-reward.user-reward",
         expect.objectContaining({
           data: expect.objectContaining({
-            rewardStatus: "pending",
+            rewardStatus: "available",
             claimed: false,
             quantity: 1,
+            canBeClaimed: true,
+            hasClaim: false,
           }),
         }),
       );

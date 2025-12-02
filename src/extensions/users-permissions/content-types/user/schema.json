@@ -148,6 +148,12 @@
       "relation": "oneToMany",
       "target": "api::reward-claim.reward-claim",
       "mappedBy": "users_permissions_user"
+    },
+    "user_sessions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-session.user-session",
+      "mappedBy": "users_permissions_user"
     }
   }
 }

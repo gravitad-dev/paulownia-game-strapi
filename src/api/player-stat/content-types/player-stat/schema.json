@@ -27,32 +27,53 @@
       "default": 0
     },
     "gamesPlayed": {
-      "type": "integer"
+      "type": "integer",
+      "default": 0
     },
     "gamesWon": {
-      "type": "integer"
+      "type": "integer",
+      "default": 0
     },
     "gamesLost": {
-      "type": "integer"
+      "type": "integer",
+      "default": 0
     },
     "winRate": {
-      "type": "float"
+      "type": "float",
+      "default": 0
     },
     "totalPlayTime": {
-      "type": "float",
-      "private": true
+      "type": "integer",
+      "default": 0,
+      "min": 0
     },
     "averageSessionTime": {
       "type": "float",
-      "private": true
+      "default": 0
     },
-    "sessions": {
+    "totalSessions": {
       "type": "integer",
-      "private": true
+      "default": 0,
+      "min": 0
     },
     "lastLoginAt": {
-      "type": "datetime",
-      "private": true
+      "type": "datetime"
+    },
+    "lastPlayedAt": {
+      "type": "datetime"
+    },
+    "currentStreak": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "longestStreak": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "lastStreakDate": {
+      "type": "date"
     },
     "coinsEarned": {
       "type": "integer",
@@ -91,6 +112,12 @@
       "relation": "oneToOne",
       "target": "plugin::users-permissions.user",
       "inversedBy": "player_stat"
+    },
+    "user_sessions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-session.user-session",
+      "mappedBy": "player_stat"
     }
   }
 }

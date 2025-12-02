@@ -716,7 +716,7 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    averageSessionTime: Schema.Attribute.Float & Schema.Attribute.Private;
+    averageSessionTime: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     coins: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -745,20 +745,37 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    gamesLost: Schema.Attribute.Integer;
-    gamesPlayed: Schema.Attribute.Integer;
-    gamesWon: Schema.Attribute.Integer;
+    currentStreak: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    gamesLost: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    gamesPlayed: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    gamesWon: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     highestScore: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    lastLoginAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    lastLoginAt: Schema.Attribute.DateTime;
+    lastPlayedAt: Schema.Attribute.DateTime;
+    lastStreakDate: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::player-stat.player-stat'
     > &
       Schema.Attribute.Private;
+    longestStreak: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
     tickets: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -784,16 +801,35 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
         number
       > &
       Schema.Attribute.DefaultTo<0>;
-    totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
+    totalPlayTime: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    totalSessions: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    user_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
+    >;
     users_permissions_user: Schema.Attribute.Relation<
       'oneToOne',
       'plugin::users-permissions.user'
     >;
     uuid: Schema.Attribute.UID;
-    winRate: Schema.Attribute.Float;
+    winRate: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     xp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
   };
 }
@@ -1298,6 +1334,83 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
         'in_claim',
       ]
     >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    users_permissions_user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    uuid: Schema.Attribute.UID;
+  };
+}
+
+export interface ApiUserSessionUserSession extends Struct.CollectionTypeSchema {
+  collectionName: 'user_sessions';
+  info: {
+    description: 'Tracks user game sessions for analytics';
+    displayName: 'UserSession';
+    pluralName: 'user-sessions';
+    singularName: 'user-session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    coinsEarnedInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deviceInfo: Schema.Attribute.JSON;
+    duration: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    endedAt: Schema.Attribute.DateTime;
+    gamesPlayedInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ipAddress: Schema.Attribute.String & Schema.Attribute.Private;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    lastHeartbeat: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
+    > &
+      Schema.Attribute.Private;
+    player_stat: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::player-stat.player-stat'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    scoreInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    sessionType: Schema.Attribute.Enumeration<['login', 'game', 'idle']> &
+      Schema.Attribute.DefaultTo<'login'>;
+    startedAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1881,6 +1994,10 @@ export interface PluginUsersPermissionsUser
       'oneToMany',
       'api::user-reward.user-reward'
     >;
+    user_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
+    >;
     user_transaction_histories: Schema.Attribute.Relation<
       'oneToMany',
       'api::user-transaction-history.user-transaction-history'
@@ -1924,6 +2041,7 @@ declare module '@strapi/strapi' {
       'api::user-daily-reward.user-daily-reward': ApiUserDailyRewardUserDailyReward;
       'api::user-game-history.user-game-history': ApiUserGameHistoryUserGameHistory;
       'api::user-reward.user-reward': ApiUserRewardUserReward;
+      'api::user-session.user-session': ApiUserSessionUserSession;
       'api::user-transaction-history.user-transaction-history': ApiUserTransactionHistoryUserTransactionHistory;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
