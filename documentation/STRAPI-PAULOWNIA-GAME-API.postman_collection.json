@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "87a3ab99-5739-4740-9498-b99613a2304d",
+    "_postman_id": "d7472d4e-d80a-44b2-adfe-4300f66843ed",
     "name": "STRAPI-PAULOWNIA-GAME-API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "43592215"
@@ -40,7 +40,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "// {\n//     \"identifier\": \"user4@example.com\",\n//     \"password\": \"Password1\"\n// }\n// admin\n {\n  \"identifier\": \"synergiart.websupp@gmail.com\",\n  \"password\": \"Password1\"\n}"
+              "raw": "{\n    \"identifier\": \"user4@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
             },
             "url": {
               "raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
@@ -4298,6 +4298,235 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Player Dashboard",
+          "item": [
+            {
+              "name": "Public (Player)",
+              "item": [
+                {
+                  "name": "Get Summary",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/summary",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-dashboard", "summary"]
+                    },
+                    "description": "Get comprehensive player statistics summary.\n\n## Response includes:\n\n### Currency Stats\n- coins, tickets\n- coinsEarned, coinsSpent\n- ticketsEarned, ticketsSpent\n\n### Game Stats\n- totalGamesPlayed, gamesWon, gamesLost\n- winRate, totalScore, highestScore, averageScore\n- xp\n\n### Progress\n- levelsCompleted, totalLevels, levelProgress%\n- achievementsUnlocked, totalAchievements, achievementProgress%\n\n### Rewards\n- totalRewardsWon\n- consumablesWon, currencyRewardsWon, cosmeticRewardsWon\n\n### Time Tracking\n- totalPlayTime, totalPlayTimeFormatted\n- totalSessionTime, averageSessionTime\n- totalSessions\n\n### Streak\n- currentStreak, longestStreak\n- lastPlayedAt, lastLoginAt\n- dailyRewardsClaimed\n\n### Session\n- hasActiveSession\n- currentSession (if active)\n\n### Ranking\n- globalRank, totalPlayers, rankPercentile\n\n### Meta\n- memberSince"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Start Session",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"sessionType\": \"game\",\n  \"deviceInfo\": {\n    \"platform\": \"web\",\n    \"browser\": \"Chrome\",\n    \"screenResolution\": \"1920x1080\"\n  }\n}"
+                    },
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/session/start",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-dashboard", "session", "start"]
+                    },
+                    "description": "Start a new game session.\n\n## Body (optional):\n- sessionType: 'login' | 'game' | 'idle' (default: 'login')\n- deviceInfo: object with device information\n\n## Response:\n- sessionId, uuid\n- sessionType, startedAt, isActive\n- streak: { currentStreak, longestStreak }\n\n## Notes:\n- Automatically closes any previous active sessions\n- Updates user's streak\n- Updates lastLoginAt and totalSessions"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Heartbeat",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"gamesPlayed\": 1,\n  \"score\": 500,\n  \"coinsEarned\": 50\n}"
+                    },
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/session/heartbeat",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": [
+                        "api",
+                        "player-dashboard",
+                        "session",
+                        "heartbeat"
+                      ]
+                    },
+                    "description": "Send heartbeat to keep session alive and update stats.\n\n## Body (optional - incremental values):\n- gamesPlayed: games played since last heartbeat\n- score: score earned since last heartbeat\n- coinsEarned: coins earned since last heartbeat\n\n## Response:\n- sessionId, isActive\n- duration, durationFormatted\n- lastHeartbeat\n- gamesPlayedInSession, scoreInSession, coinsEarnedInSession\n\n## Important:\n- Call every 30-60 seconds during gameplay\n- Sessions timeout after 5 minutes without heartbeat"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "End Session",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"gamesPlayed\": 0,\n  \"score\": 0,\n  \"coinsEarned\": 0\n}"
+                    },
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/session/end",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-dashboard", "session", "end"]
+                    },
+                    "description": "End the current active session.\n\n## Body (optional - final incremental values):\n- gamesPlayed: final games since last heartbeat\n- score: final score since last heartbeat\n- coinsEarned: final coins since last heartbeat\n\n## Response:\n- sessionId, uuid, isActive (false)\n- startedAt, endedAt\n- duration, durationFormatted\n- gamesPlayedInSession, scoreInSession, coinsEarnedInSession\n\n## Notes:\n- Updates player's totalPlayTime and averageSessionTime\n- Updates lastPlayedAt"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Current Session",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/session/current",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-dashboard", "session", "current"]
+                    },
+                    "description": "Get current active session if any.\n\n## Response when active:\n- data: session details (sessionId, uuid, sessionType, startedAt, duration, etc.)\n- meta: { hasActiveSession: true }\n\n## Response when no session:\n- data: null\n- meta: { hasActiveSession: false }\n\n## Response when session timed out:\n- data: null\n- meta: { hasActiveSession: false, previousSessionTimedOut: true }\n\n## Notes:\n- Auto-closes sessions that haven't had heartbeat in 5+ minutes"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Session History",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-dashboard/session/history?page=1&pageSize=10",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-dashboard", "session", "history"],
+                      "query": [
+                        {
+                          "key": "page",
+                          "value": "1",
+                          "description": "Page number (default: 1)"
+                        },
+                        {
+                          "key": "pageSize",
+                          "value": "10",
+                          "description": "Items per page (default: 10)"
+                        },
+                        {
+                          "key": "sessionType",
+                          "value": "game",
+                          "description": "Filter by type: login, game, idle",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Get session history for the authenticated user.\n\n## Query Parameters:\n- page: page number (default: 1)\n- pageSize: items per page (default: 10)\n- sessionType: filter by 'login', 'game', or 'idle'\n\n## Response:\n- data: array of sessions\n  - sessionId, uuid, sessionType\n  - startedAt, endedAt, duration, durationFormatted\n  - isActive\n  - gamesPlayedInSession, scoreInSession, coinsEarnedInSession\n- meta:\n  - pagination: { page, pageSize, pageCount, total }\n  - summary: { totalSessions, totalDuration, totalDurationFormatted }"
+                  },
+                  "response": []
+                }
+              ],
+              "description": "## Public Player Dashboard Endpoints\n\nEndpoints for authenticated players to access their dashboard, stats and session management.\n\nAll endpoints require Bearer token authentication."
+            },
+            {
+              "name": "Admin",
+              "item": [
+                {
+                  "name": "List All User Sessions",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/user-sessions?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=startedAt:desc",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "user-sessions"],
+                      "query": [
+                        {
+                          "key": "populate",
+                          "value": "*",
+                          "description": "Include user relations"
+                        },
+                        {
+                          "key": "pagination[page]",
+                          "value": "1"
+                        },
+                        {
+                          "key": "pagination[pageSize]",
+                          "value": "25"
+                        },
+                        {
+                          "key": "sort",
+                          "value": "startedAt:desc"
+                        },
+                        {
+                          "key": "filters[isActive][$eq]",
+                          "value": "true",
+                          "description": "Filter active sessions only",
+                          "disabled": true
+                        },
+                        {
+                          "key": "filters[sessionType][$eq]",
+                          "value": "game",
+                          "description": "Filter by session type",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "List all user sessions (ADMIN ONLY).\n\nUse Strapi's standard content-type API.\n\n## Filters:\n- isActive: true/false\n- sessionType: login, game, idle\n- users_permissions_user: filter by user ID"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "List All Player Stats",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{STRAPI_URL_LOCAL}}/api/player-stats?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=score:desc",
+                      "host": ["{{STRAPI_URL_LOCAL}}"],
+                      "path": ["api", "player-stats"],
+                      "query": [
+                        {
+                          "key": "populate",
+                          "value": "*"
+                        },
+                        {
+                          "key": "pagination[page]",
+                          "value": "1"
+                        },
+                        {
+                          "key": "pagination[pageSize]",
+                          "value": "25"
+                        },
+                        {
+                          "key": "sort",
+                          "value": "score:desc"
+                        }
+                      ]
+                    },
+                    "description": "List all player stats (ADMIN ONLY).\n\nUseful for analytics and monitoring player activity."
+                  },
+                  "response": []
+                }
+              ],
+              "description": "## Admin Dashboard Endpoints\n\nAdmin-only endpoints for viewing all users' dashboard data.\n\nThese use Strapi's standard content-type APIs with admin permissions."
+            }
+          ],
+          "description": "## Player Dashboard API\n\nUnified module for player statistics and session management.\n\n### Features:\n- **Summary**: Complete player statistics overview\n- **Sessions**: Track play time, games, and activity\n\n### Session Flow:\n```\nstart → heartbeat (every 30-60s) → end\n          ↓\n    auto-timeout (5 min)\n```\n\n### Session Types:\n- **login**: General login session\n- **game**: Active gameplay session\n- **idle**: Browsing/idle in app"
         }
       ]
     },
