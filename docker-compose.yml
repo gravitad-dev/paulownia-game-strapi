@@ -27,12 +27,12 @@ services:
     ports:
       - ${PORTX}:1337
     networks:
-      - strapi-paulownia
+      - strapi
     depends_on:
-      - strapiDB-paulownia
+      - strapiDB
 
   strapiDB:
-    container_name: strapiDB-paulownia
+    container_name: strapiDB
     platform: linux/amd64 #for platform error on Apple M1 chips
     restart: unless-stopped
     env_file: .env
@@ -48,13 +48,13 @@ services:
 #    ports:
 #      - '5432:5432'
     networks:
-      - strapi-paulownia
+      - strapi
 
 
 volumes:
   paulownia-strapi:
 
 networks:
-  strapi-paulownia:
-    name: Strapi-paulownia
+  strapi:
+    name: Strapi
     driver: bridge
