@@ -18,8 +18,8 @@ services:
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       NODE_ENV: ${NODE_ENV}
     volumes:
-#      - ./config:/opt/app/config
-#      - ./src:/opt/app/src
+      - ./config:/opt/app/config
+      - ./src:/opt/app/src
 #      - ./package.json:/opt/package.json
 #      - ./package-lock.json:/opt/package-lock.json
 #      - ./.env:/opt/app/.env
