@@ -17,6 +17,295 @@ export default factories.createCoreController(
   "api::player-stat.player-stat",
   ({ strapi }) => ({
     ...getUuidControllerMethods("api::player-stat.player-stat"),
+
+    /**
+     * Get complete player stats summary
+     * GET /api/player-stats/summary
+     */
+    async summary(ctx) {
+      const user = ctx.state.user;
+      if (!user) {
+        return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
+      }
+
+      // Get player stats (create if doesn't exist)
+      let playerStat = await strapi.db
+        .query("api::player-stat.player-stat")
+        .findOne({ where: { users_permissions_user: user.id } });
+
+      if (!playerStat) {
+        // Auto-create player stat for user
+        playerStat = await strapi.db
+          .query("api::player-stat.player-stat")
+          .create({
+            data: {
+              users_permissions_user: user.id,
+              coins: 0,
+              tickets: 0,
+              xp: 0,
+              score: 0,
+              highestScore: 0,
+              gamesPlayed: 0,
+              gamesWon: 0,
+              gamesLost: 0,
+              totalPlayTime: 0,
+              totalSessions: 0,
+              averageSessionTime: 0,
+              currentStreak: 0,
+              longestStreak: 0,
+              publishedAt: new Date(),
+            },
+          });
+      }
+
+      // Get game history stats
+      const gameHistories = await strapi.entityService.findMany(
+        "api::user-game-history.user-game-history",
+        {
+          filters: { users_permissions_user: user.id },
+        },
+      );
+
+      const totalGamesPlayed = gameHistories?.length || 0;
+      const totalScore = (gameHistories || []).reduce(
+        (acc: number, g: any) => acc + (g.score || 0),
+        0,
+      );
+      const highestScore = (gameHistories || []).reduce(
+        (max: number, g: any) => Math.max(max, g.score || 0),
+        0,
+      );
+      const averageScore =
+        totalGamesPlayed > 0 ? Math.round(totalScore / totalGamesPlayed) : 0;
+      const totalPlayTimeFromGames = (gameHistories || []).reduce(
+        (acc: number, g: any) => acc + (g.duration || 0),
+        0,
+      );
+
+      // Get levels stats
+      const completedLevels = await strapi.db
+        .query("api::user-game-history.user-game-history")
+        .findMany({
+          where: {
+            users_permissions_user: user.id,
+            completed: true,
+          },
+          populate: ["level"],
+        });
+
+      const uniqueCompletedLevelIds = new Set(
+        completedLevels.filter((h: any) => h.level).map((h: any) => h.level.id),
+      );
+      const levelsCompleted = uniqueCompletedLevelIds.size;
+
+      const totalLevelsResult = await strapi.db
+        .query("api::level.level")
+        .count({ where: { publishedAt: { $ne: null } } });
+      const totalLevels = totalLevelsResult || 0;
+
+      // Get achievements stats
+      const userAchievements = await strapi.entityService.findMany(
+        "api::user-achievement.user-achievement",
+        {
+          filters: {
+            users_permissions_user: user.id,
+            completed: true,
+          },
+        },
+      );
+      const achievementsUnlocked = userAchievements?.length || 0;
+
+      const totalAchievementsResult = await strapi.db
+        .query("api::achievement.achievement")
+        .count({
+          where: {
+            publishedAt: { $ne: null },
+            isActive: true,
+          },
+        });
+      const totalAchievements = totalAchievementsResult || 0;
+
+      // Get rewards stats
+      const userRewards = await strapi.entityService.findMany(
+        "api::user-reward.user-reward",
+        {
+          filters: { users_permissions_user: user.id },
+          populate: ["reward"],
+        },
+      );
+
+      const totalRewardsWon = userRewards?.length || 0;
+      const consumablesWon = (userRewards || []).filter(
+        (r: any) => r.reward?.typeReward === "consumable",
+      ).length;
+      const currencyRewardsWon = (userRewards || []).filter(
+        (r: any) => r.reward?.typeReward === "currency",
+      ).length;
+      const cosmeticRewardsWon = (userRewards || []).filter(
+        (r: any) => r.reward?.typeReward === "cosmetic",
+      ).length;
+
+      // Get ranking info
+      const latestRanking = await strapi.entityService.findMany(
+        "api::ranking.ranking",
+        {
+          sort: { timestamp: "desc" },
+          limit: 1,
+        },
+      );
+
+      let globalRank: number | null = null;
+      let totalPlayers = 0;
+
+      if (latestRanking && latestRanking.length > 0) {
+        const rankingData = latestRanking[0] as any;
+        const topPlayers = rankingData.topPlayers || [];
+        totalPlayers = rankingData.stats?.totalPlayers || topPlayers.length;
+
+        const playerRankIndex = topPlayers.findIndex(
+          (p: any) => p.userId === user.id || p.username === user.username,
+        );
+        if (playerRankIndex !== -1) {
+          globalRank = playerRankIndex + 1;
+        }
+      }
+
+      // Get session stats - use db.query for new content type
+      const USER_SESSION_UID = "api::user-session.user-session" as any;
+      const sessions = await strapi.db.query(USER_SESSION_UID).findMany({
+        where: { users_permissions_user: user.id },
+        orderBy: { startedAt: "desc" },
+      });
+
+      const sessionsArray = sessions || [];
+      const totalSessionTime = sessionsArray.reduce(
+        (acc: number, s: any) => acc + (s.duration || 0),
+        0,
+      );
+      const totalSessionsCount = sessionsArray.length;
+      const averageSessionTime =
+        totalSessionsCount > 0
+          ? Math.round(totalSessionTime / totalSessionsCount)
+          : 0;
+
+      // Get active session if any
+      const activeSession = sessionsArray.find((s: any) => s.isActive);
+
+      // Get daily rewards streak info
+      const dailyRewardsClaimed = await strapi.entityService.findMany(
+        "api::user-daily-reward.user-daily-reward",
+        {
+          filters: {
+            users_permissions_user: user.id,
+            claimed: true,
+          },
+          sort: { claimedAt: "desc" },
+        },
+      );
+
+      // Format time helper (seconds to human readable)
+      const formatTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        if (hours > 0) {
+          return `${hours}h ${minutes}m`;
+        }
+        if (minutes > 0) {
+          return `${minutes}m ${secs}s`;
+        }
+        return `${secs}s`;
+      };
+
+      return {
+        data: {
+          // Estadísticas básicas de monedas
+          coins: playerStat.coins || 0,
+          tickets: playerStat.tickets || 0,
+          coinsEarned: playerStat.coinsEarned || 0,
+          coinsSpent: playerStat.coinsSpent || 0,
+          ticketsEarned: playerStat.ticketsEarned || 0,
+          ticketsSpent: playerStat.ticketsSpent || 0,
+
+          // Estadísticas de juego
+          totalGamesPlayed,
+          gamesWon: playerStat.gamesWon || 0,
+          gamesLost: playerStat.gamesLost || 0,
+          winRate: playerStat.winRate || 0,
+          totalScore,
+          highestScore: Math.max(highestScore, playerStat.highestScore || 0),
+          averageScore,
+          xp: playerStat.xp || 0,
+
+          // Niveles
+          levelsCompleted,
+          totalLevels,
+          currentLevel: levelsCompleted + 1,
+          levelProgress:
+            totalLevels > 0
+              ? Math.round((levelsCompleted / totalLevels) * 100)
+              : 0,
+
+          // Logros
+          achievementsUnlocked,
+          totalAchievements,
+          achievementProgress:
+            totalAchievements > 0
+              ? Math.round((achievementsUnlocked / totalAchievements) * 100)
+              : 0,
+
+          // Premios
+          totalRewardsWon,
+          consumablesWon,
+          currencyRewardsWon,
+          cosmeticRewardsWon,
+
+          // Tiempo de juego
+          totalPlayTime:
+            playerStat.totalPlayTime || totalPlayTimeFromGames || 0,
+          totalPlayTimeFormatted: formatTime(
+            playerStat.totalPlayTime || totalPlayTimeFromGames || 0,
+          ),
+          totalSessionTime,
+          totalSessionTimeFormatted: formatTime(totalSessionTime),
+          averageSessionTime:
+            playerStat.averageSessionTime || averageSessionTime,
+          averageSessionTimeFormatted: formatTime(
+            playerStat.averageSessionTime || averageSessionTime,
+          ),
+          totalSessions: playerStat.totalSessions || totalSessionsCount,
+
+          // Racha / Actividad
+          currentStreak: playerStat.currentStreak || 0,
+          longestStreak: playerStat.longestStreak || 0,
+          lastPlayedAt: playerStat.lastPlayedAt || null,
+          lastLoginAt: playerStat.lastLoginAt || null,
+          dailyRewardsClaimed: dailyRewardsClaimed?.length || 0,
+
+          // Sesión actual
+          hasActiveSession: !!activeSession,
+          currentSession: activeSession
+            ? {
+                sessionId: activeSession.id,
+                startedAt: activeSession.startedAt,
+                sessionType: activeSession.sessionType,
+              }
+            : null,
+
+          // Ranking
+          globalRank,
+          totalPlayers,
+          rankPercentile:
+            globalRank && totalPlayers > 0
+              ? Math.round(((totalPlayers - globalRank) / totalPlayers) * 100)
+              : null,
+
+          // Fecha de registro
+          memberSince: user.createdAt,
+        },
+      };
+    },
+
     async exchangeCoinsToTickets(ctx) {
       const user = ctx.state.user;
       if (!user) {

@@ -716,7 +716,7 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    averageSessionTime: Schema.Attribute.Float & Schema.Attribute.Private;
+    averageSessionTime: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     coins: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -745,20 +745,37 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    gamesLost: Schema.Attribute.Integer;
-    gamesPlayed: Schema.Attribute.Integer;
-    gamesWon: Schema.Attribute.Integer;
+    currentStreak: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    gamesLost: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    gamesPlayed: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
+    gamesWon: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     highestScore: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    lastLoginAt: Schema.Attribute.DateTime & Schema.Attribute.Private;
+    lastLoginAt: Schema.Attribute.DateTime;
+    lastPlayedAt: Schema.Attribute.DateTime;
+    lastStreakDate: Schema.Attribute.Date;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::player-stat.player-stat'
     > &
       Schema.Attribute.Private;
+    longestStreak: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
-    sessions: Schema.Attribute.Integer & Schema.Attribute.Private;
     tickets: Schema.Attribute.Integer &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMax<
@@ -784,16 +801,35 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
         number
       > &
       Schema.Attribute.DefaultTo<0>;
-    totalPlayTime: Schema.Attribute.Float & Schema.Attribute.Private;
+    totalPlayTime: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    totalSessions: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    user_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
+    >;
     users_permissions_user: Schema.Attribute.Relation<
       'oneToOne',
       'plugin::users-permissions.user'
     >;
     uuid: Schema.Attribute.UID;
-    winRate: Schema.Attribute.Float;
+    winRate: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
     xp: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
   };
 }
@@ -826,6 +862,134 @@ export interface ApiRankingRanking extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
+  collectionName: 'reward_claims';
+  info: {
+    description: 'Claims for consumable rewards that need to be processed by admin';
+    displayName: 'RewardClaim';
+    pluralName: 'reward-claims';
+    singularName: 'reward-claim';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    additionalNotes: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 1000;
+      }>;
+    address: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500;
+      }>;
+    adminNotes: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2000;
+      }>;
+    birthDate: Schema.Attribute.Date;
+    city: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    claimCode: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
+    claimStatus: Schema.Attribute.Enumeration<
+      ['pending', 'processing', 'delivered', 'rejected', 'cancelled']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'pending'>;
+    consentAcceptedAt: Schema.Attribute.DateTime;
+    country: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dataProcessingAccepted: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    email: Schema.Attribute.Email & Schema.Attribute.Required;
+    fullName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    guardian: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::guardiand.guardiand'
+    >;
+    guardianConfirmationToken: Schema.Attribute.String &
+      Schema.Attribute.Private;
+    guardianDocumentBack: Schema.Attribute.Media<'images' | 'files'>;
+    guardianDocumentFront: Schema.Attribute.Media<'images' | 'files'>;
+    guardianEmailConfirmed: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    guardianEmailConfirmedAt: Schema.Attribute.DateTime;
+    guardianResendCount: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    identityDocumentBack: Schema.Attribute.Media<'images' | 'files'>;
+    identityDocumentFront: Schema.Attribute.Media<'images' | 'files'>;
+    identityDocumentNumber: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 30;
+      }>;
+    identityDocumentType: Schema.Attribute.Enumeration<
+      ['dni', 'passport', 'id_card', 'other']
+    >;
+    isMinor: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reward-claim.reward-claim'
+    > &
+      Schema.Attribute.Private;
+    phone: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
+    processedAt: Schema.Attribute.DateTime;
+    processedBy: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    processedByName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    requiresIdentityVerification: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    rewardSnapshot: Schema.Attribute.JSON;
+    termsAccepted: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    trackingNumber: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 100;
+      }>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user_reward: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::user-reward.user-reward'
+    >;
+    users_permissions_user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    uuid: Schema.Attribute.UID;
+    verificationAttempts: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<0>;
+    zipCode: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 20;
+      }>;
   };
 }
 
@@ -1135,6 +1299,8 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    canBeClaimed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    claimDeadline: Schema.Attribute.DateTime;
     claimed: Schema.Attribute.Boolean &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<false>;
@@ -1142,6 +1308,7 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    hasClaim: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1152,9 +1319,98 @@ export interface ApiUserRewardUserReward extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     quantity: Schema.Attribute.Integer;
     reward: Schema.Attribute.Relation<'manyToOne', 'api::reward.reward'>;
-    rewardStatus: Schema.Attribute.Enumeration<
-      ['notAvailable', 'available', 'claimed', 'expired', 'blocked', 'pending']
+    reward_claim: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::reward-claim.reward-claim'
     >;
+    rewardStatus: Schema.Attribute.Enumeration<
+      [
+        'notAvailable',
+        'available',
+        'claimed',
+        'expired',
+        'blocked',
+        'pending',
+        'in_claim',
+      ]
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    users_permissions_user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    uuid: Schema.Attribute.UID;
+  };
+}
+
+export interface ApiUserSessionUserSession extends Struct.CollectionTypeSchema {
+  collectionName: 'user_sessions';
+  info: {
+    description: 'Tracks user game sessions for analytics';
+    displayName: 'UserSession';
+    pluralName: 'user-sessions';
+    singularName: 'user-session';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    coinsEarnedInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    deviceInfo: Schema.Attribute.JSON;
+    duration: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    endedAt: Schema.Attribute.DateTime;
+    gamesPlayedInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    ipAddress: Schema.Attribute.String & Schema.Attribute.Private;
+    isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    lastHeartbeat: Schema.Attribute.DateTime;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
+    > &
+      Schema.Attribute.Private;
+    player_stat: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::player-stat.player-stat'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    scoreInSession: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>;
+    sessionType: Schema.Attribute.Enumeration<['login', 'game', 'idle']> &
+      Schema.Attribute.DefaultTo<'login'>;
+    startedAt: Schema.Attribute.DateTime & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1707,6 +1963,10 @@ export interface PluginUsersPermissionsUser
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
+    reward_claims: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::reward-claim.reward-claim'
+    >;
     role: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.role'
@@ -1733,6 +1993,10 @@ export interface PluginUsersPermissionsUser
     user_rewards: Schema.Attribute.Relation<
       'oneToMany',
       'api::user-reward.user-reward'
+    >;
+    user_sessions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-session.user-session'
     >;
     user_transaction_histories: Schema.Attribute.Relation<
       'oneToMany',
@@ -1768,6 +2032,7 @@ declare module '@strapi/strapi' {
       'api::log-history.log-history': ApiLogHistoryLogHistory;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
       'api::ranking.ranking': ApiRankingRanking;
+      'api::reward-claim.reward-claim': ApiRewardClaimRewardClaim;
       'api::reward.reward': ApiRewardReward;
       'api::roulette-history.roulette-history': ApiRouletteHistoryRouletteHistory;
       'api::setting.setting': ApiSettingSetting;
@@ -1776,6 +2041,7 @@ declare module '@strapi/strapi' {
       'api::user-daily-reward.user-daily-reward': ApiUserDailyRewardUserDailyReward;
       'api::user-game-history.user-game-history': ApiUserGameHistoryUserGameHistory;
       'api::user-reward.user-reward': ApiUserRewardUserReward;
+      'api::user-session.user-session': ApiUserSessionUserSession;
       'api::user-transaction-history.user-transaction-history': ApiUserTransactionHistoryUserTransactionHistory;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

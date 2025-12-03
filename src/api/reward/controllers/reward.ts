@@ -160,11 +160,13 @@ export default factories.createCoreController(
             data: {
               users_permissions_user: user.documentId ?? user.id,
               reward: selectedReward.documentId ?? selectedReward.id,
-              rewardStatus: "pending",
+              rewardStatus: "available",
               claimed: false,
               obtainedAt: now,
               claimedAt: null,
               quantity: 1,
+              canBeClaimed: true,
+              hasClaim: false,
             },
           },
         );

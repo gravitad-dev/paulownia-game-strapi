@@ -1,3 +1,3 @@
 import { getUuidRoutes } from "../../../helpers/uuidApi";
 
-export default getUuidRoutes("player-stat");
+export default getUuidRoutes("user-session");

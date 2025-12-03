@@ -15,12 +15,12 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
 # Fix SWC native binding issue
-ENV SWC_DISABLE_BINARY=1
+# ENV SWC_DISABLE_BINARY=1
 
 WORKDIR /opt/
 
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+COPY package.json ./
+RUN npm install --legacy-peer-deps
 
 WORKDIR /opt/app
 COPY . .
