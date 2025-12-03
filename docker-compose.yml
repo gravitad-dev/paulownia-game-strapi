@@ -1,6 +1,6 @@
 services:
   strapi:
-    container_name: strapi
+    container_name: paulownia
     build:
       context: .
       dockerfile: ${DOCKERFILE}
@@ -20,12 +20,12 @@ services:
     volumes:
       - ./config:/opt/app/config
       - ./src:/opt/app/src
-      - ./package.json:/opt/package.json
-      - ./package-lock.json:/opt/package-lock.json
-      - ./.env:/opt/app/.env
+#      - ./package.json:/opt/package.json
+#      - ./package-lock.json:/opt/package-lock.json
+#      - ./.env:/opt/app/.env
       - ./public/uploads:/opt/app/public/uploads
     ports:
-      - '1337:1337'
+      - ${PORTX}:1337
     networks:
       - strapi
     depends_on:
@@ -50,18 +50,6 @@ services:
     networks:
       - strapi
 
-  strapiAdminer:
-    container_name: strapiAdminer
-    image: adminer
-    restart: unless-stopped
- #   ports:
- #     - '9090:8080'
-    environment:
-      - ADMINER_DEFAULT_SERVER=strapiDB
-    networks:
-      - strapi
-    depends_on:
-      - strapiDB
 
 volumes:
   paulownia-strapi:
