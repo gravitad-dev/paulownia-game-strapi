@@ -55,6 +55,6 @@ volumes:
   paulownia-strapi:
 
 networks:
-  strapi:
-    name: Strapi
+  strapi-paulownia:
+    name: Strapi-paulownia
     driver: bridge
