@@ -27,7 +27,10 @@ export default factories.createCoreController(
       const sortParam = sort ?? { date: "asc" };
 
       const levels = await strapi.entityService.findMany("api::level.level", {
-        filters: dbFilters,
+        filters: {
+          ...dbFilters,
+          isActive: true,
+        },
         populate: ["cover", "puzzleImage"],
         sort: sortParam,
         publicationState: "live",
