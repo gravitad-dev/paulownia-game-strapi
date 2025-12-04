@@ -384,6 +384,16 @@ async function seedDatabase(strapi: any) {
   console.log(`📅 Creando ${COUNTS.DAILY_REWARDS} recompensas diarias...`);
   const dailyRewards = [];
   for (let i = 1; i <= COUNTS.DAILY_REWARDS; i++) {
+    const existing = await strapi.entityService.findMany(
+      "api::daily-reward.daily-reward",
+      { filters: { day: i } },
+    );
+
+    if (existing && existing.length > 0) {
+      dailyRewards.push(existing[0]);
+      continue;
+    }
+
     const dr = await strapi.entityService.create(
       "api::daily-reward.daily-reward",
       {
