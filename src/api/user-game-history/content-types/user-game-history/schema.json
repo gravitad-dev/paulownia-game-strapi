@@ -41,6 +41,15 @@
     "completed": {
       "type": "boolean",
       "default": false
+    },
+    "seed": {
+      "type": "string",
+      "private": true
+    },
+    "history": {
+      "type": "json",
+      "private": true,
+      "required": false
     }
   }
 }

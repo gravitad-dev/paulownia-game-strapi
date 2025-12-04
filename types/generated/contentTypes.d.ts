@@ -1286,6 +1286,7 @@ export interface ApiUserGameHistoryUserGameHistory
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     duration: Schema.Attribute.Integer;
+    history: Schema.Attribute.JSON & Schema.Attribute.Private;
     level: Schema.Attribute.Relation<'manyToOne', 'api::level.level'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -1295,6 +1296,7 @@ export interface ApiUserGameHistoryUserGameHistory
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     score: Schema.Attribute.Integer;
+    seed: Schema.Attribute.String & Schema.Attribute.Private;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1323,7 +1325,7 @@ export interface ApiUserLevelUserLevel extends Struct.CollectionTypeSchema {
     lastPlayed: Schema.Attribute.DateTime;
     level: Schema.Attribute.Relation<'manyToOne', 'api::level.level'>;
     levelStatus: Schema.Attribute.Enumeration<
-      ['bloqueado', 'disponible', 'completado', 'ganado']
+      ['blocked ', 'disabled ', 'available  ', 'won']
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

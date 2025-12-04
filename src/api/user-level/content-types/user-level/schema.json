@@ -17,10 +17,10 @@
     "levelStatus": {
       "type": "enumeration",
       "enum": [
-        "bloqueado",
-        "disponible",
-        "completado",
-        "ganado"
+        "blocked ",
+        "disabled ",
+        "available  ",
+        "won"
       ]
     },
     "level": {
