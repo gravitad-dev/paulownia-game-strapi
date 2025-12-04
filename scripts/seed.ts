@@ -974,6 +974,220 @@ async function seedDatabase(strapi: any) {
     );
   }
 
+  // 11. Crear Rankings de ejemplo (históricos)
+  console.log("🏁 Generando rankings de ejemplo...");
+  try {
+    // Obtener total de player-stats y limitar top players al total disponible
+    const totalPlayers = await strapi.db
+      .query("api::player-stat.player-stat")
+      .count();
+
+    const topLimit = Math.min(5, Math.max(0, totalPlayers));
+
+    // Obtener top players desde player-stat (limitado a los que existen)
+    const topStats: any[] = await strapi.entityService.findMany(
+      "api::player-stat.player-stat",
+      {
+        sort: { score: "desc" },
+        limit: topLimit,
+        populate: { users_permissions_user: true },
+      },
+    );
+
+    const topPlayers = topStats.map((ps, idx) => {
+      const user = ps.users_permissions_user || null;
+      const gamesPlayed = Number(ps.gamesPlayed || 0);
+      const gamesWon = Number(ps.gamesWon || ps.victories || 0);
+      const winRateNum = gamesPlayed > 0 ? gamesWon / gamesPlayed : 0;
+      const winRatePct = `${(winRateNum * 100).toFixed(2)}%`;
+
+      return {
+        rank: idx + 1,
+        score: Number(ps.score || 0),
+        xp: Number(ps.xp || 0),
+        victories: gamesWon,
+        gamesWon: gamesWon,
+        gamesPlayed,
+        winRate: Number(winRateNum),
+        winRatePercent: Number((winRateNum * 100).toFixed(2)),
+        winRateFormatted: winRatePct,
+        coins: Number(ps.coins || 0),
+        tickets: Number(ps.tickets || 0),
+        user: user
+          ? {
+              id: user.id,
+              username: user.username,
+              country: user.country || null,
+            }
+          : null,
+        username: user ? user.username : null,
+        country: user ? user.country || null : null,
+      };
+    });
+
+    // Calcular estadísticas globales de forma coherente con el cron
+    const allPlayers: any[] = await strapi.entityService.findMany(
+      "api::player-stat.player-stat",
+      {
+        populate: { users_permissions_user: true },
+        limit: 1000,
+      },
+    );
+
+    const totalPlayersAll = allPlayers.length;
+    const averageScore = Math.round(
+      allPlayers.reduce(
+        (acc: number, p: any) => acc + Number(p.highestScore || p.score || 0),
+        0,
+      ) / (totalPlayersAll || 1),
+    );
+
+    const mostWinsPlayer = [...allPlayers].sort(
+      (a: any, b: any) =>
+        Number(b.gamesWon || b.victories || 0) -
+        Number(a.gamesWon || a.victories || 0),
+    )[0];
+    const mostGamesPlayer = [...allPlayers].sort(
+      (a: any, b: any) =>
+        Number(b.gamesPlayed || 0) - Number(a.gamesPlayed || 0),
+    )[0];
+
+    const playersWithWinRate = allPlayers.map((p: any) => {
+      const gamesPlayed = Number(p.gamesPlayed || 0);
+      const gamesWon = Number(p.gamesWon || p.victories || 0);
+      let wr = 0;
+      if (p.winRate !== null && p.winRate !== undefined) {
+        const raw = Number(p.winRate);
+        wr = raw > 1 ? raw / 100 : raw;
+      } else if (gamesPlayed > 0) {
+        wr = gamesWon / gamesPlayed;
+      }
+      return {
+        ...p,
+        calculatedWinRateRatio: wr,
+        calculatedWinRatePercent: Number((wr * 100).toFixed(2)),
+      };
+    });
+
+    const highestWinRatePlayer = [...playersWithWinRate].sort(
+      (a: any, b: any) =>
+        (b.calculatedWinRatePercent || 0) - (a.calculatedWinRatePercent || 0),
+    )[0];
+
+    // Reutilizar helper similar al cron para top10 semana/mes
+    const { utcToZonedTime, zonedTimeToUtc } = await import("date-fns-tz");
+    const { startOfWeek, startOfMonth, addDays } = await import("date-fns");
+    const tz = "Europe/Madrid";
+    const now = new Date();
+    const zonedNow = utcToZonedTime(now, tz);
+    const startWeekZoned = startOfWeek(zonedNow, { weekStartsOn: 1 });
+    const startMonthZoned = startOfMonth(zonedNow);
+    const startOfWeekUtc = zonedTimeToUtc(startWeekZoned, tz);
+    const startOfMonthUtc = zonedTimeToUtc(startMonthZoned, tz);
+
+    const getTop10ByPeriod = async (startDate: Date) => {
+      const histories = await strapi.entityService.findMany(
+        "api::user-game-history.user-game-history",
+        {
+          filters: {
+            completedAt: { $gte: startDate },
+          },
+          populate: { users_permissions_user: true },
+          sort: { score: "desc" },
+          limit: 1000,
+        },
+      );
+
+      const uniqueUsers = new Map();
+      histories.forEach((h: any) => {
+        const userId = h.users_permissions_user?.id;
+        if (userId && !uniqueUsers.has(userId)) {
+          uniqueUsers.set(userId, {
+            username: h.users_permissions_user.username,
+            score: h.score,
+            date: h.completedAt,
+          });
+        }
+      });
+
+      return Array.from(uniqueUsers.values())
+        .sort((a: any, b: any) => b.score - a.score)
+        .slice(0, 10);
+    };
+
+    const top10Week = await getTop10ByPeriod(startOfWeekUtc);
+    const top10Month = await getTop10ByPeriod(startOfMonthUtc);
+
+    const stats = {
+      totalPlayers: totalPlayersAll,
+      averageScore,
+      mostWins: mostWinsPlayer
+        ? {
+            username: mostWinsPlayer.users_permissions_user?.username,
+            count: mostWinsPlayer.gamesWon || mostWinsPlayer.victories || 0,
+          }
+        : null,
+      mostGamesPlayed: mostGamesPlayer
+        ? {
+            username: mostGamesPlayer.users_permissions_user?.username,
+            count: mostGamesPlayer.gamesPlayed || 0,
+          }
+        : null,
+      highestWinRate: highestWinRatePlayer
+        ? {
+            username: highestWinRatePlayer.users_permissions_user?.username,
+            rate: highestWinRatePlayer.calculatedWinRatePercent,
+          }
+        : null,
+      top10Week,
+      top10Month,
+      generatedAt: now.toISOString(),
+    };
+
+    const rankingEntries = [
+      {
+        timestamp: new Date(now),
+        topPlayers,
+        stats,
+      },
+      {
+        timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000), // ayer
+        topPlayers: topPlayers.map((p) => ({
+          ...p,
+          score: Math.max(0, p.score - 20),
+        })),
+        stats: { ...stats, note: "snapshot-1d" },
+      },
+      {
+        timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // hace 2 días
+        topPlayers: topPlayers.map((p) => ({
+          ...p,
+          score: Math.max(0, p.score - 50),
+        })),
+        stats: { ...stats, note: "snapshot-2d" },
+      },
+    ];
+
+    for (const entry of rankingEntries) {
+      // Evitar duplicados por timestamp exacto
+      const existing = await strapi.db.query("api::ranking.ranking").findOne({
+        where: { timestamp: entry.timestamp },
+      });
+      if (!existing) {
+        await strapi.entityService.create("api::ranking.ranking", {
+          data: {
+            timestamp: entry.timestamp,
+            topPlayers: entry.topPlayers,
+            stats: entry.stats,
+          },
+        });
+      }
+    }
+    console.log("✅ Rankings de ejemplo creados");
+  } catch (e) {
+    console.error("⚠️ Error creando rankings de ejemplo:", e);
+  }
+
   console.log("✅ Seeder completado exitosamente.");
 }
 

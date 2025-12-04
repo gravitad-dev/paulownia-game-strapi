@@ -17,9 +17,9 @@
     },
     "claimCode": {
       "type": "string",
+      "maxLength": 20,
       "required": true,
-      "unique": true,
-      "maxLength": 20
+      "unique": true
     },
     "users_permissions_user": {
       "type": "relation",
@@ -40,8 +40,8 @@
     },
     "fullName": {
       "type": "string",
-      "required": true,
-      "maxLength": 100
+      "maxLength": 100,
+      "required": true
     },
     "email": {
       "type": "email",
@@ -88,25 +88,30 @@
     },
     "identityDocumentNumber": {
       "type": "string",
-      "maxLength": 30
+      "maxLength": 30,
+      "private": true
     },
     "identityDocumentFront": {
       "type": "media",
+      "private": true,
       "multiple": false,
       "allowedTypes": ["images", "files"]
     },
     "identityDocumentBack": {
       "type": "media",
+      "private": true,
       "multiple": false,
       "allowedTypes": ["images", "files"]
     },
     "guardianDocumentFront": {
       "type": "media",
+      "private": true,
       "multiple": false,
       "allowedTypes": ["images", "files"]
     },
     "guardianDocumentBack": {
       "type": "media",
+      "private": true,
       "multiple": false,
       "allowedTypes": ["images", "files"]
     },
@@ -127,13 +132,14 @@
     },
     "claimStatus": {
       "type": "enumeration",
-      "enum": ["pending", "processing", "delivered", "rejected", "cancelled"],
+      "required": true,
       "default": "pending",
-      "required": true
+      "enum": ["pending", "processing", "delivered", "rejected", "cancelled"]
     },
     "verificationAttempts": {
       "type": "integer",
-      "default": 0
+      "default": 0,
+      "private": true
     },
     "rewardSnapshot": {
       "type": "json"
@@ -143,15 +149,18 @@
     },
     "processedBy": {
       "type": "string",
-      "maxLength": 100
+      "maxLength": 100,
+      "private": true
     },
     "processedByName": {
       "type": "string",
-      "maxLength": 100
+      "maxLength": 100,
+      "private": true
     },
     "adminNotes": {
       "type": "text",
-      "maxLength": 2000
+      "maxLength": 2000,
+      "private": true
     },
     "trackingNumber": {
       "type": "string",

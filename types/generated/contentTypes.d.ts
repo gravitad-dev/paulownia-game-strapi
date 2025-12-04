@@ -886,6 +886,7 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
         maxLength: 500;
       }>;
     adminNotes: Schema.Attribute.Text &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 2000;
       }>;
@@ -927,16 +928,21 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
     >;
     guardianConfirmationToken: Schema.Attribute.String &
       Schema.Attribute.Private;
-    guardianDocumentBack: Schema.Attribute.Media<'images' | 'files'>;
-    guardianDocumentFront: Schema.Attribute.Media<'images' | 'files'>;
+    guardianDocumentBack: Schema.Attribute.Media<'images' | 'files'> &
+      Schema.Attribute.Private;
+    guardianDocumentFront: Schema.Attribute.Media<'images' | 'files'> &
+      Schema.Attribute.Private;
     guardianEmailConfirmed: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     guardianEmailConfirmedAt: Schema.Attribute.DateTime;
     guardianResendCount: Schema.Attribute.Integer &
       Schema.Attribute.DefaultTo<0>;
-    identityDocumentBack: Schema.Attribute.Media<'images' | 'files'>;
-    identityDocumentFront: Schema.Attribute.Media<'images' | 'files'>;
+    identityDocumentBack: Schema.Attribute.Media<'images' | 'files'> &
+      Schema.Attribute.Private;
+    identityDocumentFront: Schema.Attribute.Media<'images' | 'files'> &
+      Schema.Attribute.Private;
     identityDocumentNumber: Schema.Attribute.String &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 30;
       }>;
@@ -956,10 +962,12 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
       }>;
     processedAt: Schema.Attribute.DateTime;
     processedBy: Schema.Attribute.String &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 100;
       }>;
     processedByName: Schema.Attribute.String &
+      Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 100;
       }>;
@@ -985,6 +993,7 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
     >;
     uuid: Schema.Attribute.UID;
     verificationAttempts: Schema.Attribute.Integer &
+      Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<0>;
     zipCode: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{

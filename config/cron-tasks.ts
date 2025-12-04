@@ -8,16 +8,19 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
     try {
       const beforeCount = await strapi.entityService.count(
         "api::user-daily-reward.user-daily-reward",
-        { filters: {} }
+        { filters: {} },
       );
       const delRes = await strapi.db
         .query("api::user-daily-reward.user-daily-reward")
         .deleteMany({ where: {} });
       const afterCount = await strapi.entityService.count(
         "api::user-daily-reward.user-daily-reward",
-        { filters: {} }
+        { filters: {} },
       );
-      const deleted = typeof delRes?.count === "number" ? delRes.count : beforeCount - afterCount;
+      const deleted =
+        typeof delRes?.count === "number"
+          ? delRes.count
+          : beforeCount - afterCount;
       const finishedAt = new Date().toISOString();
       const stats = {
         mode: dayStr,
@@ -37,29 +40,67 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   const generateRanking = async ({ strapi }: { strapi: any }) => {
     console.log("Running ranking generation...");
     try {
-      const players = await strapi.entityService.findMany("api::player-stat.player-stat", {
-        sort: { highestScore: "desc" },
-        limit: 100,
-        populate: {
-          users_permissions_user: {
-            populate: {
-              avatar: true,
+      const players = await strapi.entityService.findMany(
+        "api::player-stat.player-stat",
+        {
+          sort: { highestScore: "desc" },
+          limit: 100,
+          populate: {
+            users_permissions_user: {
+              populate: {
+                avatar: true,
+              },
             },
           },
         },
-      });
+      );
 
       const topPlayers = players.map((p: any, index: number) => {
         const user = p.users_permissions_user;
+
+        // Normalizar números
+        const highestScore = Number(p.highestScore || 0);
+        const xp = Number(p.xp || 0);
+        const coins = Number(p.coins || 0);
+        const tickets = Number(p.tickets || 0);
+        const gamesPlayed = Number(p.gamesPlayed || 0);
+        const gamesWon = Number(p.gamesWon || p.victories || 0);
+
+        // Normalizar winRate: preferir p.winRate si está definido.
+        // p.winRate puede venir en formato ratio (0-1) o porcentaje (0-100).
+        // Aquí lo convertimos a ratio 0-1 para consistencia en `winRate`.
+        let winRateRatio = 0;
+        if (p.winRate !== null && p.winRate !== undefined) {
+          const wr = Number(p.winRate);
+          // Si está en formato porcentaje (>1), convertir a ratio
+          winRateRatio = wr > 1 ? wr / 100 : wr;
+        } else if (gamesPlayed > 0) {
+          winRateRatio = gamesWon / gamesPlayed;
+        }
+
+        const winRatePercent = winRateRatio * 100;
+        const winRateFormatted = `${winRatePercent.toFixed(2)}%`;
+
         return {
           rank: index + 1,
-          username: user?.username || "Unknown",
-          score: p.highestScore,
-          xp: p.xp,
-          gamesWon: p.gamesWon,
-          winRate: p.winRate,
-          coins: p.coins,
-          tickets: p.tickets,
+          username: user?.username || null,
+          user: user
+            ? {
+                id: user.id,
+                username: user.username,
+                country: user.country || null,
+              }
+            : null,
+          score: highestScore,
+          xp,
+          victories: gamesWon,
+          gamesWon,
+          gamesPlayed,
+          winRate: Number(winRateRatio), // 0-1
+          winRatePercent: Number(Number(winRatePercent).toFixed(2)), // 0-100 (two decimals)
+          winRateFormatted,
+          coins,
+          tickets,
           country: user?.country || null,
           avatar: user?.avatar?.url || null,
         };
@@ -67,28 +108,46 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
 
       // Calcular estadísticas globales
       const totalPlayers = players.length;
-      const averageScore = players.reduce((acc: number, p: any) => acc + (p.highestScore || 0), 0) / (totalPlayers || 1);
-      
-      const mostWinsPlayer = [...players].sort((a: any, b: any) => (b.gamesWon || 0) - (a.gamesWon || 0))[0];
-      const mostGamesPlayer = [...players].sort((a: any, b: any) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0))[0];
-      
+      const averageScore =
+        players.reduce(
+          (acc: number, p: any) => acc + (p.highestScore || 0),
+          0,
+        ) / (totalPlayers || 1);
+
+      const mostWinsPlayer = [...players].sort(
+        (a: any, b: any) => (b.gamesWon || 0) - (a.gamesWon || 0),
+      )[0];
+      const mostGamesPlayer = [...players].sort(
+        (a: any, b: any) => (b.gamesPlayed || 0) - (a.gamesPlayed || 0),
+      )[0];
+
       // Calcular winRate en tiempo real si es null o undefined
       const playersWithWinRate = players.map((p: any) => {
-        const winRate = (p.winRate !== null && p.winRate !== undefined) 
-          ? p.winRate 
-          : (p.gamesPlayed > 0 ? (p.gamesWon / p.gamesPlayed) * 100 : 0);
-        
+        const gamesPlayed = Number(p.gamesPlayed || 0);
+        const gamesWon = Number(p.gamesWon || p.victories || 0);
+        let wr = 0;
+        if (p.winRate !== null && p.winRate !== undefined) {
+          const raw = Number(p.winRate);
+          wr = raw > 1 ? raw / 100 : raw; // normalize to ratio
+        } else if (gamesPlayed > 0) {
+          wr = gamesWon / gamesPlayed;
+        }
         return {
           ...p,
-          calculatedWinRate: winRate
+          calculatedWinRateRatio: wr, // 0-1
+          calculatedWinRatePercent: Number((wr * 100).toFixed(2)), // 0-100
         };
       });
-      const highestWinRatePlayer = [...playersWithWinRate].sort((a: any, b: any) => (b.calculatedWinRate || 0) - (a.calculatedWinRate || 0))[0];
+
+      const highestWinRatePlayer = [...playersWithWinRate].sort(
+        (a: any, b: any) =>
+          (b.calculatedWinRatePercent || 0) - (a.calculatedWinRatePercent || 0),
+      )[0];
 
       // Calcular fechas de inicio para semana y mes
-      const { utcToZonedTime, zonedTimeToUtc } = await import('date-fns-tz');
-      const { startOfWeek, startOfMonth, addDays } = await import('date-fns');
-      const tz = 'Europe/Madrid';
+      const { utcToZonedTime, zonedTimeToUtc } = await import("date-fns-tz");
+      const { startOfWeek, startOfMonth, addDays } = await import("date-fns");
+      const tz = "Europe/Madrid";
       const now = new Date();
       const zonedNow = utcToZonedTime(now, tz);
       const startWeekZoned = startOfWeek(zonedNow, { weekStartsOn: 1 });
@@ -98,24 +157,27 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
 
       // Helper para obtener top 10 de un periodo
       const getTop10ByPeriod = async (startDate: Date) => {
-        const histories = await strapi.entityService.findMany("api::user-game-history.user-game-history", {
-          filters: {
-            completedAt: { $gte: startDate },
+        const histories = await strapi.entityService.findMany(
+          "api::user-game-history.user-game-history",
+          {
+            filters: {
+              completedAt: { $gte: startDate },
+            },
+            populate: { users_permissions_user: true },
+            sort: { score: "desc" },
+            limit: 1000, // Traemos suficientes para filtrar por usuario único
           },
-          populate: { users_permissions_user: true },
-          sort: { score: "desc" },
-          limit: 1000, // Traemos suficientes para filtrar por usuario único
-        });
+        );
 
         const uniqueUsers = new Map();
         histories.forEach((h: any) => {
           const userId = h.users_permissions_user?.id;
           if (userId && !uniqueUsers.has(userId)) {
-             uniqueUsers.set(userId, {
-               username: h.users_permissions_user.username,
-               score: h.score,
-               date: h.completedAt
-             });
+            uniqueUsers.set(userId, {
+              username: h.users_permissions_user.username,
+              score: h.score,
+              date: h.completedAt,
+            });
           }
         });
 
@@ -130,21 +192,28 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
       const stats = {
         totalPlayers,
         averageScore: Math.round(averageScore),
-        mostWins: mostWinsPlayer ? {
-          username: mostWinsPlayer.users_permissions_user?.username,
-          count: mostWinsPlayer.gamesWon
-        } : null,
-        mostGamesPlayed: mostGamesPlayer ? {
-          username: mostGamesPlayer.users_permissions_user?.username,
-          count: mostGamesPlayer.gamesPlayed
-        } : null,
-        highestWinRate: highestWinRatePlayer ? {
-          username: highestWinRatePlayer.users_permissions_user?.username,
-          rate: Math.round(highestWinRatePlayer.calculatedWinRate * 100) / 100
-        } : null,
+        mostWins: mostWinsPlayer
+          ? {
+              username: mostWinsPlayer.users_permissions_user?.username,
+              count: mostWinsPlayer.gamesWon,
+            }
+          : null,
+        mostGamesPlayed: mostGamesPlayer
+          ? {
+              username: mostGamesPlayer.users_permissions_user?.username,
+              count: mostGamesPlayer.gamesPlayed,
+            }
+          : null,
+        highestWinRate: highestWinRatePlayer
+          ? {
+              username: highestWinRatePlayer.users_permissions_user?.username,
+              // rate en porcentaje con 2 decimales (ej. 34.15)
+              rate: highestWinRatePlayer.calculatedWinRatePercent,
+            }
+          : null,
         top10Week,
         top10Month,
-        generatedAt: new Date()
+        generatedAt: new Date(),
       };
 
       await strapi.entityService.create("api::ranking.ranking", {
@@ -154,12 +223,12 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
           stats,
         },
       });
-      
+
       // Política de Retención: Mantener historial de 1 año (365 días)
       // Eliminamos registros antiguos para evitar crecimiento infinito de la DB
       const retentionZoned = addDays(zonedNow, -365);
       const retentionDate = zonedTimeToUtc(retentionZoned, tz);
-      
+
       const deleted = await strapi.db.query("api::ranking.ranking").deleteMany({
         where: {
           timestamp: {
@@ -167,9 +236,11 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
           },
         },
       });
-      
+
       if (deleted.count > 0) {
-        console.log(`Ranking cleanup: Deleted ${deleted.count} records older than 1 year.`);
+        console.log(
+          `Ranking cleanup: Deleted ${deleted.count} records older than 1 year.`,
+        );
       }
 
       console.log("Ranking generation completed.");
@@ -192,13 +263,17 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   const day = parseInt(dayStr, 10);
   const hour = parseInt(hourStr, 10);
   const validDay = Number.isFinite(day) && day >= 1 && day <= 31 ? day : 1;
-  const validHourMadrid = Number.isFinite(hour) && hour >= 0 && hour <= 23 ? hour : 0;
+  const validHourMadrid =
+    Number.isFinite(hour) && hour >= 0 && hour <= 23 ? hour : 0;
 
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Madrid', timeZoneName: 'short' }).formatToParts(new Date());
-  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Madrid",
+    timeZoneName: "short",
+  }).formatToParts(new Date());
+  const tzPart = parts.find((p) => p.type === "timeZoneName");
   const m = tzPart && tzPart.value.match(/GMT([+-]\d+)/);
   const offsetHours = m ? parseInt(m[1], 10) : 1;
-  const utcHour = ((validHourMadrid - offsetHours) % 24 + 24) % 24;
+  const utcHour = (((validHourMadrid - offsetHours) % 24) + 24) % 24;
   const expr = `0 ${utcHour} ${validDay} * *`;
   tasks[expr] = resetTask;
 
@@ -208,7 +283,11 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   if (rankingConfig === "test") {
     rankingExpr = "* * * * *"; // Every minute for testing
     console.log("Ranking Cron running in TEST mode (every minute)");
-  } else if (!isNaN(parseInt(rankingConfig)) && !rankingConfig.includes("*") && !rankingConfig.includes(" ")) {
+  } else if (
+    !isNaN(parseInt(rankingConfig)) &&
+    !rankingConfig.includes("*") &&
+    !rankingConfig.includes(" ")
+  ) {
     rankingExpr = `0 */${rankingConfig} * * *`; // Every X hours
     console.log(`Ranking Cron running every ${rankingConfig} hours`);
   } else {
@@ -217,6 +296,6 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   }
 
   tasks[rankingExpr] = generateRanking;
-  
+
   return tasks;
 };
