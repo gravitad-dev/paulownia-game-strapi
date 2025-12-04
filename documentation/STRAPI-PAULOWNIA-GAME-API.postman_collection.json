@@ -40,7 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"identifier\": \"user1@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
+							"raw": "{\n    \"identifier\": \"user2@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
 						},
 						"url": {
 							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
@@ -5530,7 +5530,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels?pagination[page]=1&pagination[pageSize]=25&sort=name:asc",
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels?pagination[page]=1&pagination[pageSize]=25&sort=name:asc&filters[isActive][$eq]=true",
 									"host": [
 										"{{STRAPI_URL_LOCAL}}"
 									],
@@ -5566,6 +5566,10 @@
 											"value": "hard",
 											"description": "Filtro nativo por dificultad.",
 											"disabled": true
+										},
+										{
+											"key": "filters[isActive][$eq]",
+											"value": "true"
 										}
 									]
 								},
@@ -5590,7 +5594,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"maestro\",\n  \"startAt\": \"2025-12-04T12:00:00.000Z\",\n  \"seed\": \"abc123\"\n}"
+									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"aprendiz\",\n  \"startAt\": \"2025-12-05T12:00:00.000Z\",\n  \"seed\": \"125321\"\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/game/start",
@@ -5619,7 +5623,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"maestro\",\n  \"endAt\": \"2025-12-04T12:15:00.000Z\",\n  \"hash\": \"2f019a2f41d852425d18f88532d7fa6be6f25b17375c6dfb8f69f84856749765\",\n  \"status\": \"won\",\n  \"bonusPoints\": 100\n}"
+									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"maestro\",\n  \"endAt\": \"2025-12-04T12:15:00.000Z\",\n  \"hash\": \"abc71ec0cd1d2c9fb6a0b6afd6c1ee0d6a39e862b1e891d2cc64eb4a5236d713\",\n  \"status\": \"won\",\n  \"bonusPoints\": 100\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/game/end",
