@@ -6,6 +6,42 @@ const USER_GAME_HISTORY_UID = "api::user-game-history.user-game-history";
 const LEVEL_UID = "api::level.level";
 const USER_LEVEL_UID = "api::user-level.user-level";
 
+// =============== COINS REWARDS BY DIFFICULTY ===============
+// Maximum 1000 coins for highest difficulty (leyenda), scales down from there
+// These constants can be adjusted easily in the future
+const COINS_REWARDS_BY_DIFFICULTY: Record<string, number> = {
+  aprendiz: 100,    // Beginner - easiest
+  novato: 200,      // Novice
+  aventurero: 400,  // Adventurer
+  veterano: 600,    // Veteran
+  maestro: 800,     // Master
+  leyenda: 1000,    // Legend - hardest, maximum reward
+};
+
+// Default coins if difficulty is not recognized
+const DEFAULT_COINS_REWARD = 100;
+
+// Coins multiplier for losing (0 = no coins on loss)
+const COINS_LOSS_MULTIPLIER = 0;
+// ============================================================
+
+/**
+ * Get coins reward based on difficulty and game status
+ * @param difficulty - The difficulty level (aprendiz, novato, aventurero, veterano, maestro, leyenda)
+ * @param won - Whether the player won the game
+ * @returns The coins reward amount
+ */
+const getCoinsReward = (difficulty: string, won: boolean): number => {
+  if (!won) {
+    // If player lost, apply the loss multiplier (default: 0 coins)
+    const baseCoins = COINS_REWARDS_BY_DIFFICULTY[String(difficulty).toLowerCase()] ?? DEFAULT_COINS_REWARD;
+    return Math.floor(baseCoins * COINS_LOSS_MULTIPLIER);
+  }
+  
+  const coins = COINS_REWARDS_BY_DIFFICULTY[String(difficulty).toLowerCase()];
+  return coins ?? DEFAULT_COINS_REWARD;
+};
+
 const difficultyToGrid = (difficulty: string): string => {
   const d = String(difficulty || "").toLowerCase();
   const small = ["aprendiz", "novato"];
@@ -242,6 +278,10 @@ export default {
     const extra = Number(bonusPoints || 0);
     const score = Math.max(0, base + extra - penalty);
 
+    // Calculate coins earned based on difficulty and win status
+    const won = String(status).toLowerCase() === "won";
+    const coinsEarned = getCoinsReward(difficulty, won);
+
     await strapi.db.query(USER_GAME_HISTORY_UID).update({
       where: { id: target.id },
       data: {
@@ -249,6 +289,7 @@ export default {
         completedAt: endDate,
         duration: durationSeconds,
         score,
+        coinsEarned,
         history: { ...(target.history || {}), status },
       },
     });
@@ -257,7 +298,6 @@ export default {
       .query(USER_LEVEL_UID)
       .findOne({ where: { users_permissions_user: user.id, level: level.id } });
     if (ul) {
-      const won = String(status).toLowerCase() === "won";
       await strapi.db.query(USER_LEVEL_UID).update({
         where: { id: ul.id },
         data: { levelStatus: won ? "won" : "available", lastPlayed: endDate },
@@ -268,11 +308,12 @@ export default {
       .query(PLAYER_STAT_UID)
       .findOne({ where: { users_permissions_user: user.id } });
     if (ps) {
-      const won = String(status).toLowerCase() === "won";
       const gamesPlayed = (ps.gamesPlayed || 0) + 1;
       const gamesWon = (ps.gamesWon || 0) + (won ? 1 : 0);
       const gamesLost = (ps.gamesLost || 0) + (won ? 0 : 1);
       const highestScore = Math.max(ps.highestScore || 0, score);
+      const newCoins = (ps.coins || 0) + coinsEarned;
+      const newCoinsEarned = (ps.coinsEarned || 0) + coinsEarned;
       await strapi.db.query(PLAYER_STAT_UID).update({
         where: { id: ps.id },
         data: {
@@ -280,6 +321,8 @@ export default {
           gamesWon,
           gamesLost,
           highestScore,
+          coins: newCoins,
+          coinsEarned: newCoinsEarned,
           lastPlayedAt: endDate,
         },
       });
@@ -297,6 +340,7 @@ export default {
       );
       const scoreInSession = (session.scoreInSession || 0) + score;
       const gamesPlayedInSession = (session.gamesPlayedInSession || 0) + 1;
+      const coinsEarnedInSession = (session.coinsEarnedInSession || 0) + coinsEarned;
       await strapi.db.query(USER_SESSION_UID).update({
         where: { id: session.id },
         data: {
@@ -305,6 +349,7 @@ export default {
           duration,
           scoreInSession,
           gamesPlayedInSession,
+          coinsEarnedInSession,
         },
       });
     }
@@ -313,10 +358,10 @@ export default {
       data: {
         status,
         score,
+        coins: coinsEarned,
         duration: durationSeconds,
         completedAt: endAt,
-        levelStatus:
-          String(status).toLowerCase() === "won" ? "won" : "available",
+        levelStatus: won ? "won" : "available",
       },
     };
   },
