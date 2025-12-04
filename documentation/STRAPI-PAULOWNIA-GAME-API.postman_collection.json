@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "54c1ac4a-faef-4713-b6f4-f4eb0d658d70",
+		"_postman_id": "0c3d4d19-27ed-4908-a876-842a951db9b9",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -40,7 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"identifier\": \"user4@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
+							"raw": "{\n    \"identifier\": \"user1@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
 						},
 						"url": {
 							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
@@ -1356,6 +1356,66 @@
 					"response": []
 				},
 				{
+					"name": "My Levels",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=date:asc",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								"my-levels"
+							],
+							"query": [
+								{
+									"key": "populate",
+									"value": "*",
+									"description": "Incluye relaciones y medios. '*' para todo."
+								},
+								{
+									"key": "pagination[page]",
+									"value": "1",
+									"description": "Página actual (>=1)."
+								},
+								{
+									"key": "pagination[pageSize]",
+									"value": "25",
+									"description": "Tamaño de página (ej: 25)."
+								},
+								{
+									"key": "sort",
+									"value": "date:asc",
+									"description": "Orden por campo:orden (ej: date:asc)."
+								},
+								{
+									"key": "filters[difficulty][$eq]",
+									"value": "easy",
+									"description": "Filtra por dificultad (enum).",
+									"disabled": true
+								},
+								{
+									"key": "filters[name][$contains]",
+									"value": "Nivel",
+									"description": "Nombre que contiene texto.",
+									"disabled": true
+								},
+								{
+									"key": "publicationState",
+									"value": "live",
+									"description": "Estado de publicación: live o preview.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista niveles con estado específico del usuario, soporta filtros, orden y paginación.\n\nRespuesta: { data: [...], meta: { pagination: { page, pageSize, pageCount, total } } }\n\nCampos en data: uuid, name, description, difficulty, cover, puzzleImage, isActive, status (blocked | available | won | disabled), lastPlayed."
+					},
+					"response": []
+				},
+				{
 					"name": "Get Level by ID",
 					"request": {
 						"method": "GET",
@@ -1384,6 +1444,42 @@
 							]
 						},
 						"description": "Detalle de nivel. populate: cover, puzzleImage, user_game_histories."
+					},
+					"response": []
+				},
+				{
+					"name": "Unlock Level by ID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"changeme\"\n}"
+						},
+						"url": {
+							"raw": "{{STRAPI_URL_LOCAL}}/api/levels/:documentId/unlock",
+							"host": [
+								"{{STRAPI_URL_LOCAL}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								":documentId",
+								"unlock"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "tqxfodlv6yljfb7vy4hdecq4"
+								}
+							]
+						},
+						"description": "Desbloquea un nivel por documentId proporcionando la contraseña en el body."
 					},
 					"response": []
 				},
@@ -4890,52 +4986,6 @@
 			]
 		},
 		{
-			"name": "Ranking",
-			"item": [
-				{
-					"name": "Get Ranking",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/rankings?pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
-							"host": [
-								"{{STRAPI_URL_LOCAL}}"
-							],
-							"path": [
-								"api",
-								"rankings"
-							],
-							"query": [
-								{
-									"key": "pagination[page]",
-									"value": "1",
-									"description": "PAGE-BASED: Número de página (>=1). NO mezclar con limit/start."
-								},
-								{
-									"key": "pagination[pageSize]",
-									"value": "25",
-									"description": "PAGE-BASED: Cantidad de resultados por página. NO mezclar con limit/start."
-								},
-								{
-									"key": "sort",
-									"value": "createdAt:desc"
-								},
-								{
-									"key": "filters[timestamp][$gte]",
-									"value": "2025-01-01",
-									"description": "Filtrar por fecha mayor o igual.",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Obtiene el último ranking generado. \n\nEl objeto `topPlayers` incluye:\n- rank\n- username\n- score\n- xp\n- gamesWon\n- winRate (porcentaje de victorias: gamesWon/gamesPlayed * 100)\n- coins\n- tickets\n- country\n- avatar (url)\n\nEl objeto `stats` incluye estadísticas globales:\n- totalPlayers\n- averageScore\n- mostWins { username, count }\n- mostGamesPlayed { username, count }\n- highestWinRate { username, rate } (porcentaje)\n- top10Week [ { username, score, date } ]\n- top10Month [ { username, score, date } ]\n\nPaginación (NO mezclar ambos modos):\n\nMODO 1 - Offset-based:\n- pagination[limit]: Cantidad de resultados\n- pagination[start]: Desde qué registro (0-indexed)\n\nMODO 2 - Page-based:\n- pagination[page]: Número de página (>=1)\n- pagination[pageSize]: Resultados por página"
-					},
-					"response": []
-				}
-			]
-		},
-		{
 			"name": "Customs",
 			"item": [
 				{
@@ -5466,26 +5516,41 @@
 									"variable": [
 										{
 											"key": "uuid",
-											"value": "lJ5wXTFBdLnT15z8mDPYpCoD"
+											"value": "8v0rbg6jmBuvn7gOGHG1pCgA"
 										}
 									]
 								},
 								"description": "Desbloquea un nivel protegido por contraseña.\n\nRequiere:\n- Usuario autenticado\n- UUID del nivel en la URL\n- password en el body\n\nRespuestas:\n- 200: Level unlocked successfully / Level already unlocked\n- 400: Invalid password\n- 401: You must be logged in to unlock a level\n- 404: Level not found"
 							},
 							"response": []
+						},
+						{
+							"name": "List My Levels (status)",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"levels",
+										"my-levels"
+									]
+								},
+								"description": "List levels with user-specific status.\n\nResponse items: uuid, name, description, difficulty, cover, puzzleImage, isActive, status (blocked | available | won | disabled), lastPlayed."
+							},
+							"response": []
 						}
 					]
-				}
-			]
-		},
-		{
-			"name": "Reward Claims",
-			"item": [
+				},
 				{
-					"name": "User Endpoints",
+					"name": "Game Session",
 					"item": [
 						{
-							"name": "Create Claim",
+							"name": "Start Game",
 							"request": {
 								"method": "POST",
 								"header": [
@@ -5496,29 +5561,502 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"data\": {\n    \"userRewardId\": \"abc123-uuid\",\n    \"fullName\": \"Juan Pérez\",\n    \"email\": \"juan@example.com\",\n    \"phone\": \"+56912345678\",\n    \"address\": \"Calle Principal 123, Depto 4B\",\n    \"city\": \"Santiago\",\n    \"zipCode\": \"8320000\",\n    \"country\": \"Chile\",\n    \"additionalNotes\": \"Favor llamar antes de entregar\",\n    \"termsAccepted\": true,\n    \"dataProcessingAccepted\": true\n  }\n}"
+									"raw": "{\n  \"levelUuid\": \"LEVEL-UUID\",\n  \"difficulty\": \"maestro\",\n  \"startAt\": \"2025-12-04T12:00:00.000Z\",\n  \"seed\": \"abc123\"\n}"
 								},
 								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims",
+									"raw": "{{STRAPI_URL_LOCAL}}/api/game/start",
 									"host": [
 										"{{STRAPI_URL_LOCAL}}"
 									],
 									"path": [
 										"api",
-										"reward-claims"
+										"game",
+										"start"
 									]
 								},
-								"description": "Create a new reward claim for a consumable reward.\n\n## Requirements:\n- User must own the user-reward (userRewardId = UUID)\n- Reward must be of type 'consumable'\n- Reward status must be 'available' or 'pending'\n- Must not have an existing active claim (hasClaim=false)\n- Must not have passed the claim deadline\n- Consent checkboxes required\n\n## Response includes:\n- Unique claimCode (CLAIM-YYYY-NNNNNN)\n- rewardSnapshot of the prize\n- Created claim data with status 'pending'\n\n## After creation:\n- user_reward.hasClaim = true\n- claimStatus = 'pending' (awaiting documents)\n\n## Next step:\nUser must call POST /upload-documents to submit ID verification."
+								"description": "Inicia una partida y devuelve un hash único.\n\nCampos requeridos:\n- levelUuid\n- difficulty\n- startAt (ISO)\n- seed\n\nRespuesta:\n- hash (string)\n- gridSize (6x6x6 | 8x8x8)\n- startedAt\n- gameHistoryId"
 							},
 							"response": []
 						},
 						{
-							"name": "Get Claim by Code",
+							"name": "End Game",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"levelUuid\": \"LEVEL-UUID\",\n  \"difficulty\": \"maestro\",\n  \"endAt\": \"2025-12-04T12:15:00.000Z\",\n  \"hash\": \"<hash devuelto en start>\",\n  \"status\": \"won\",\n  \"bonusPoints\": 100\n}"
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/game/end",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"game",
+										"end"
+									]
+								},
+								"description": "Finaliza una partida y actualiza estadísticas.\n\nCampos requeridos:\n- levelUuid\n- difficulty\n- endAt (ISO)\n- hash\n- status (won | lost)\n\nOpcional:\n- bonusPoints (número)\n\nIdempotencia:\n- Si el history ya está completado para el mismo hash, responde `alreadyCompleted: true` con los datos previos.\n\nRespuesta:\n- status, score, duration, completedAt, levelStatus"
+							},
+							"response": []
+						}
+					],
+					"description": "Endpoints de Sesión de Juego (inicio y cierre)."
+				},
+				{
+					"name": "Ranking",
+					"item": [
+						{
+							"name": "Get Ranking",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims?filters[claimCode][$eq]=CLAIM-2025-211205",
+									"raw": "{{STRAPI_URL_LOCAL}}/api/rankings?pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"rankings"
+									],
+									"query": [
+										{
+											"key": "pagination[page]",
+											"value": "1",
+											"description": "PAGE-BASED: Número de página (>=1). NO mezclar con limit/start."
+										},
+										{
+											"key": "pagination[pageSize]",
+											"value": "25",
+											"description": "PAGE-BASED: Cantidad de resultados por página. NO mezclar con limit/start."
+										},
+										{
+											"key": "sort",
+											"value": "createdAt:desc"
+										},
+										{
+											"key": "filters[timestamp][$gte]",
+											"value": "2025-01-01",
+											"description": "Filtrar por fecha mayor o igual.",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Obtiene el último ranking generado. \n\nEl objeto `topPlayers` incluye:\n- rank\n- username\n- score\n- xp\n- gamesWon\n- winRate (porcentaje de victorias: gamesWon/gamesPlayed * 100)\n- coins\n- tickets\n- country\n- avatar (url)\n\nEl objeto `stats` incluye estadísticas globales:\n- totalPlayers\n- averageScore\n- mostWins { username, count }\n- mostGamesPlayed { username, count }\n- highestWinRate { username, rate } (porcentaje)\n- top10Week [ { username, score, date } ]\n- top10Month [ { username, score, date } ]\n\nPaginación (NO mezclar ambos modos):\n\nMODO 1 - Offset-based:\n- pagination[limit]: Cantidad de resultados\n- pagination[start]: Desde qué registro (0-indexed)\n\nMODO 2 - Page-based:\n- pagination[page]: Número de página (>=1)\n- pagination[pageSize]: Resultados por página"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Reward Claims",
+					"item": [
+						{
+							"name": "User Endpoints",
+							"item": [
+								{
+									"name": "Create Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"data\": {\n    \"userRewardId\": \"abc123-uuid\",\n    \"fullName\": \"Juan Pérez\",\n    \"email\": \"juan@example.com\",\n    \"phone\": \"+56912345678\",\n    \"address\": \"Calle Principal 123, Depto 4B\",\n    \"city\": \"Santiago\",\n    \"zipCode\": \"8320000\",\n    \"country\": \"Chile\",\n    \"additionalNotes\": \"Favor llamar antes de entregar\",\n    \"termsAccepted\": true,\n    \"dataProcessingAccepted\": true\n  }\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims"
+											]
+										},
+										"description": "Create a new reward claim for a consumable reward.\n\n## Requirements:\n- User must own the user-reward (userRewardId = UUID)\n- Reward must be of type 'consumable'\n- Reward status must be 'available' or 'pending'\n- Must not have an existing active claim (hasClaim=false)\n- Must not have passed the claim deadline\n- Consent checkboxes required\n\n## Response includes:\n- Unique claimCode (CLAIM-YYYY-NNNNNN)\n- rewardSnapshot of the prize\n- Created claim data with status 'pending'\n\n## After creation:\n- user_reward.hasClaim = true\n- claimStatus = 'pending' (awaiting documents)\n\n## Next step:\nUser must call POST /upload-documents to submit ID verification."
+									},
+									"response": []
+								},
+								{
+									"name": "Get Claim by Code",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims?filters[claimCode][$eq]=CLAIM-2025-211205",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims"
+											],
+											"query": [
+												{
+													"key": "filters[claimCode][$eq]",
+													"value": "CLAIM-2025-211205",
+													"description": "Search by claim code"
+												}
+											]
+										},
+										"description": "Get detailed claim information by claim code using Strapi filters.\n\nUsage: GET /api/reward-claims?filters[claimCode][$eq]=CLAIM-XXX\n\nOwnership is verified - users can only access their own claims.\nAdmins can access any claim."
+									},
+									"response": []
+								},
+								{
+									"name": "Upload Documents (Adult)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "claimCode",
+													"value": "CLAIM-2025-001234",
+													"description": "Claim code (required)",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentType",
+													"value": "dni",
+													"description": "dni | passport | id_card | other",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentNumber",
+													"value": "12345678-9",
+													"description": "Document number",
+													"type": "text"
+												},
+												{
+													"key": "birthDate",
+													"value": "1990-05-15",
+													"description": "YYYY-MM-DD format. Age >= 18 for adult flow",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentFront",
+													"description": "Front side of user's ID (JPG, PNG, PDF - max 5MB)",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "identityDocumentBack",
+													"description": "Back side of user's ID (JPG, PNG, PDF - max 5MB)",
+													"type": "file",
+													"src": []
+												}
+											]
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/upload-documents",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"upload-documents"
+											]
+										},
+										"description": "Upload identity verification documents for ADULT users (age >= 18).\n\n## Required fields:\n- claimCode: CLAIM-YYYY-NNNNNN\n- identityDocumentType: dni | passport | id_card | other\n- identityDocumentNumber: document number\n- birthDate: YYYY-MM-DD (must be >= 18 years old)\n- identityDocumentFront: image file (user's own ID)\n- identityDocumentBack: image file (user's own ID)\n\n## After upload:\n- claimStatus changes to 'processing'\n- user_reward.rewardStatus changes to 'in_claim'\n- Documents are stored and awaiting admin review\n\n## Max 3 verification attempts per claim.\n\n## Supported files:\n- JPG, PNG, PDF (max 5MB each)"
+									},
+									"response": []
+								},
+								{
+									"name": "Upload Documents (Minor)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "claimCode",
+													"value": "CLAIM-2025-001234",
+													"description": "Claim code (required)",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentType",
+													"value": "dni",
+													"description": "dni | passport | id_card | other",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentNumber",
+													"value": "12345678-9",
+													"description": "Minor's document number",
+													"type": "text"
+												},
+												{
+													"key": "birthDate",
+													"value": "2010-05-15",
+													"description": "YYYY-MM-DD format. Age < 18 triggers minor flow",
+													"type": "text"
+												},
+												{
+													"key": "identityDocumentFront",
+													"description": "Front side of MINOR's ID",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "identityDocumentBack",
+													"description": "Back side of MINOR's ID",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "guardianDocumentFront",
+													"description": "Front side of GUARDIAN's ID",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "guardianDocumentBack",
+													"description": "Back side of GUARDIAN's ID",
+													"type": "file",
+													"src": []
+												},
+												{
+													"key": "guardianId",
+													"value": "",
+													"description": "UUID of existing guardian (use this OR guardianData)",
+													"type": "text",
+													"disabled": true
+												},
+												{
+													"key": "guardianData",
+													"value": "{\"name\":\"María\",\"lastName\":\"González\",\"DNI\":\"11111111-1\",\"email\":\"maria@example.com\",\"phone\":\"+56987654321\",\"address\":\"Calle 123\",\"zipcode\":\"8320000\",\"city\":\"Santiago\",\"country\":\"Chile\"}",
+													"description": "JSON with guardian info (use this OR guardianId)",
+													"type": "text"
+												}
+											]
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/upload-documents",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"upload-documents"
+											]
+										},
+										"description": "Upload identity verification documents for MINOR users (age < 18).\n\n## Required fields:\n- claimCode: CLAIM-YYYY-NNNNNN\n- identityDocumentType: dni | passport | id_card | other\n- identityDocumentNumber: MINOR's document number\n- birthDate: YYYY-MM-DD (must be < 18 years old)\n- identityDocumentFront: MINOR's ID front\n- identityDocumentBack: MINOR's ID back\n- guardianDocumentFront: GUARDIAN's ID front\n- guardianDocumentBack: GUARDIAN's ID back\n\n## Guardian info (one of):\n- guardianId: UUID of an existing guardian record\n- guardianData: JSON object with new guardian info\n\n## guardianData JSON structure:\n```json\n{\n  \"name\": \"María\",\n  \"lastName\": \"González\",\n  \"DNI\": \"11111111-1\",\n  \"email\": \"guardian@example.com\",\n  \"phone\": \"+56987654321\",\n  \"address\": \"Calle 123\",\n  \"zipcode\": \"8320000\",\n  \"city\": \"Santiago\",\n  \"country\": \"Chile\"\n}\n```\n\n## After upload:\n- claimStatus → 'processing'\n- Guardian auto-confirmed (no email required)\n- user_reward.rewardStatus → 'in_claim'\n\n## Max 3 verification attempts per claim."
+									},
+									"response": []
+								},
+								{
+									"name": "Cancel Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\"\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/cancel",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"cancel"
+											]
+										},
+										"description": "Cancel an active claim.\n\n## Requirements:\n- Claim must belong to authenticated user\n- Status must be 'pending' or 'processing'\n\n## After cancellation:\n- claimStatus = 'cancelled'\n- user_reward.hasClaim = false\n- user_reward.rewardStatus = 'available'\n\nUser can create a new claim with /reopen or POST /reward-claims"
+									},
+									"response": []
+								},
+								{
+									"name": "Reopen Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"data\": {\n    \"fullName\": \"Juan Pérez\",\n    \"email\": \"juan@example.com\",\n    \"phone\": \"+56912345678\",\n    \"address\": \"Nueva dirección 456\",\n    \"city\": \"Santiago\",\n    \"zipCode\": \"8320000\",\n    \"country\": \"Chile\",\n    \"additionalNotes\": \"Cambié de dirección\"\n  }\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/reopen",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"reopen"
+											]
+										},
+										"description": "Create a new claim from a cancelled or rejected claim.\n\n## Requirements:\n- Original claim must be 'cancelled' or 'rejected'\n- user_reward must not have another active claim\n- Claim deadline must not have passed\n\n## Creates a NEW claim:\n- New claimCode (CLAIM-YYYY-NNNNNN)\n- Optionally update address/contact info\n- Old data is preserved if not provided\n\n## After reopen:\n- New claim with status 'pending'\n- user_reward.hasClaim = true\n- Must upload documents again"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Admin Endpoints",
+							"item": [
+								{
+									"name": "Approve Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"trackingNumber\": \"CHI123456789\",\n  \"adminNotes\": \"Enviado por Chilexpress, código de retiro: ABC123\"\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/approve",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"approve"
+											]
+										},
+										"description": "Approve and mark a claim as delivered (ADMIN ONLY).\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'processing'\n\n## Body:\n- claimCode: required\n- trackingNumber: optional (shipping tracking)\n- adminNotes: optional (appended to existing notes)\n\n## After approval:\n- claimStatus → 'delivered'\n- processedAt, processedBy, processedByName set\n- user_reward.rewardStatus → 'claimed'\n- user_reward.claimed = true\n- user_reward.claimedAt set"
+									},
+									"response": []
+								},
+								{
+									"name": "Reject Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"reason\": \"Documentos ilegibles. Por favor, suba fotos más claras.\"\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/reject",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"reject"
+											]
+										},
+										"description": "Reject a claim (ADMIN ONLY).\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'pending' or 'processing'\n\n## Body:\n- claimCode: required\n- reason: required (explanation for user)\n\n## After rejection:\n- claimStatus → 'rejected'\n- adminNotes appended with [Rejected: reason]\n- processedAt, processedBy, processedByName set\n- user_reward.rewardStatus → 'available'\n- user_reward.hasClaim = false\n\nUser can create a new claim with /reopen"
+									},
+									"response": []
+								},
+								{
+									"name": "Revert Claim",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"reason\": \"Error de administración. El premio no fue enviado correctamente.\"\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/revert",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												"revert"
+											]
+										},
+										"description": "Revert a delivered claim back to processing (ADMIN ONLY).\n\nUse this when an admin made a mistake approving a claim.\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'delivered'\n\n## Body:\n- claimCode: required\n- reason: required (explanation for revert)\n\n## After revert:\n- claimStatus → 'processing'\n- adminNotes appended with [Reverted by admin: reason]\n- user_reward.rewardStatus → 'in_claim'\n- user_reward.claimed = false\n- user_reward.claimedAt = null\n\nAdmin can then /approve or /reject the claim again."
+									},
+									"response": []
+								},
+								{
+									"name": "Update Claim (Admin)",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"data\": {\n    \"trackingNumber\": \"CHI123456789\",\n    \"adminNotes\": \"Actualizando tracking\"\n  }\n}"
+										},
+										"url": {
+											"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/:documentId",
+											"host": [
+												"{{STRAPI_URL_LOCAL}}"
+											],
+											"path": [
+												"api",
+												"reward-claims",
+												":documentId"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": ""
+												}
+											]
+										},
+										"description": "Direct update of claim fields (ADMIN ONLY).\n\nUse this for manual field updates.\nFor status changes, prefer /approve or /reject endpoints.\n\n## Editable fields:\n- trackingNumber\n- adminNotes\n- claimStatus (use with caution)\n- processedAt, processedBy, processedByName"
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "List Reward Claims",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc&filters[users_permissions_user][email][$eq]=user1@example.com",
 									"host": [
 										"{{STRAPI_URL_LOCAL}}"
 									],
@@ -5528,329 +6066,60 @@
 									],
 									"query": [
 										{
-											"key": "filters[claimCode][$eq]",
-											"value": "CLAIM-2025-211205",
-											"description": "Search by claim code"
-										}
-									]
-								},
-								"description": "Get detailed claim information by claim code using Strapi filters.\n\nUsage: GET /api/reward-claims?filters[claimCode][$eq]=CLAIM-XXX\n\nOwnership is verified - users can only access their own claims.\nAdmins can access any claim."
-							},
-							"response": []
-						},
-						{
-							"name": "Upload Documents (Adult)",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "formdata",
-									"formdata": [
-										{
-											"key": "claimCode",
-											"value": "CLAIM-2025-001234",
-											"description": "Claim code (required)",
-											"type": "text"
+											"key": "populate",
+											"value": "*",
+											"description": "Include relations: user_reward, users_permissions_user, guardian"
 										},
 										{
-											"key": "identityDocumentType",
-											"value": "dni",
-											"description": "dni | passport | id_card | other",
-											"type": "text"
+											"key": "pagination[page]",
+											"value": "1"
 										},
 										{
-											"key": "identityDocumentNumber",
-											"value": "12345678-9",
-											"description": "Document number",
-											"type": "text"
+											"key": "pagination[pageSize]",
+											"value": "25"
 										},
 										{
-											"key": "birthDate",
-											"value": "1990-05-15",
-											"description": "YYYY-MM-DD format. Age >= 18 for adult flow",
-											"type": "text"
+											"key": "sort",
+											"value": "createdAt:desc"
 										},
 										{
-											"key": "identityDocumentFront",
-											"description": "Front side of user's ID (JPG, PNG, PDF - max 5MB)",
-											"type": "file",
-											"src": []
-										},
-										{
-											"key": "identityDocumentBack",
-											"description": "Back side of user's ID (JPG, PNG, PDF - max 5MB)",
-											"type": "file",
-											"src": []
-										}
-									]
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/upload-documents",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"upload-documents"
-									]
-								},
-								"description": "Upload identity verification documents for ADULT users (age >= 18).\n\n## Required fields:\n- claimCode: CLAIM-YYYY-NNNNNN\n- identityDocumentType: dni | passport | id_card | other\n- identityDocumentNumber: document number\n- birthDate: YYYY-MM-DD (must be >= 18 years old)\n- identityDocumentFront: image file (user's own ID)\n- identityDocumentBack: image file (user's own ID)\n\n## After upload:\n- claimStatus changes to 'processing'\n- user_reward.rewardStatus changes to 'in_claim'\n- Documents are stored and awaiting admin review\n\n## Max 3 verification attempts per claim.\n\n## Supported files:\n- JPG, PNG, PDF (max 5MB each)"
-							},
-							"response": []
-						},
-						{
-							"name": "Upload Documents (Minor)",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "formdata",
-									"formdata": [
-										{
-											"key": "claimCode",
-											"value": "CLAIM-2025-001234",
-											"description": "Claim code (required)",
-											"type": "text"
-										},
-										{
-											"key": "identityDocumentType",
-											"value": "dni",
-											"description": "dni | passport | id_card | other",
-											"type": "text"
-										},
-										{
-											"key": "identityDocumentNumber",
-											"value": "12345678-9",
-											"description": "Minor's document number",
-											"type": "text"
-										},
-										{
-											"key": "birthDate",
-											"value": "2010-05-15",
-											"description": "YYYY-MM-DD format. Age < 18 triggers minor flow",
-											"type": "text"
-										},
-										{
-											"key": "identityDocumentFront",
-											"description": "Front side of MINOR's ID",
-											"type": "file",
-											"src": []
-										},
-										{
-											"key": "identityDocumentBack",
-											"description": "Back side of MINOR's ID",
-											"type": "file",
-											"src": []
-										},
-										{
-											"key": "guardianDocumentFront",
-											"description": "Front side of GUARDIAN's ID",
-											"type": "file",
-											"src": []
-										},
-										{
-											"key": "guardianDocumentBack",
-											"description": "Back side of GUARDIAN's ID",
-											"type": "file",
-											"src": []
-										},
-										{
-											"key": "guardianId",
-											"value": "",
-											"description": "UUID of existing guardian (use this OR guardianData)",
-											"type": "text",
+											"key": "filters[claimStatus][$eq]",
+											"value": "pending",
+											"description": "pending | processing | delivered | rejected | cancelled",
 											"disabled": true
 										},
 										{
-											"key": "guardianData",
-											"value": "{\"name\":\"María\",\"lastName\":\"González\",\"DNI\":\"11111111-1\",\"email\":\"maria@example.com\",\"phone\":\"+56987654321\",\"address\":\"Calle 123\",\"zipcode\":\"8320000\",\"city\":\"Santiago\",\"country\":\"Chile\"}",
-											"description": "JSON with guardian info (use this OR guardianId)",
-											"type": "text"
+											"key": "filters[isMinor][$eq]",
+											"value": "true",
+											"disabled": true
+										},
+										{
+											"key": "filters[country][$eq]",
+											"value": "Chile",
+											"disabled": true
+										},
+										{
+											"key": "filters[users_permissions_user][documentId]",
+											"value": "xz25renjjoxt8tgik504a5vg",
+											"disabled": true
+										},
+										{
+											"key": "filters[users_permissions_user][email][$eq]",
+											"value": "user1@example.com"
 										}
 									]
 								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/upload-documents",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"upload-documents"
-									]
-								},
-								"description": "Upload identity verification documents for MINOR users (age < 18).\n\n## Required fields:\n- claimCode: CLAIM-YYYY-NNNNNN\n- identityDocumentType: dni | passport | id_card | other\n- identityDocumentNumber: MINOR's document number\n- birthDate: YYYY-MM-DD (must be < 18 years old)\n- identityDocumentFront: MINOR's ID front\n- identityDocumentBack: MINOR's ID back\n- guardianDocumentFront: GUARDIAN's ID front\n- guardianDocumentBack: GUARDIAN's ID back\n\n## Guardian info (one of):\n- guardianId: UUID of an existing guardian record\n- guardianData: JSON object with new guardian info\n\n## guardianData JSON structure:\n```json\n{\n  \"name\": \"María\",\n  \"lastName\": \"González\",\n  \"DNI\": \"11111111-1\",\n  \"email\": \"guardian@example.com\",\n  \"phone\": \"+56987654321\",\n  \"address\": \"Calle 123\",\n  \"zipcode\": \"8320000\",\n  \"city\": \"Santiago\",\n  \"country\": \"Chile\"\n}\n```\n\n## After upload:\n- claimStatus → 'processing'\n- Guardian auto-confirmed (no email required)\n- user_reward.rewardStatus → 'in_claim'\n\n## Max 3 verification attempts per claim."
+								"description": "List reward claims with filtering, sorting and pagination.\n\n## Security:\n- Regular users: only see their own claims\n- Admins: see all claims\n\n## Available filters:\n- claimStatus: pending, processing, delivered, rejected, cancelled\n- isMinor: true/false\n- country, city, etc.\n\n## Status meanings:\n- **pending**: Claim created, awaiting documents\n- **processing**: Documents uploaded, awaiting admin review\n- **delivered**: Approved and shipped/delivered\n- **rejected**: Rejected by admin (can reopen)\n- **cancelled**: Cancelled by user (can reopen)"
 							},
 							"response": []
 						},
 						{
-							"name": "Cancel Claim",
+							"name": "Get Reward Claim by ID",
 							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\"\n}"
-								},
+								"method": "GET",
+								"header": [],
 								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/cancel",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"cancel"
-									]
-								},
-								"description": "Cancel an active claim.\n\n## Requirements:\n- Claim must belong to authenticated user\n- Status must be 'pending' or 'processing'\n\n## After cancellation:\n- claimStatus = 'cancelled'\n- user_reward.hasClaim = false\n- user_reward.rewardStatus = 'available'\n\nUser can create a new claim with /reopen or POST /reward-claims"
-							},
-							"response": []
-						},
-						{
-							"name": "Reopen Claim",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"data\": {\n    \"fullName\": \"Juan Pérez\",\n    \"email\": \"juan@example.com\",\n    \"phone\": \"+56912345678\",\n    \"address\": \"Nueva dirección 456\",\n    \"city\": \"Santiago\",\n    \"zipCode\": \"8320000\",\n    \"country\": \"Chile\",\n    \"additionalNotes\": \"Cambié de dirección\"\n  }\n}"
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/reopen",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"reopen"
-									]
-								},
-								"description": "Create a new claim from a cancelled or rejected claim.\n\n## Requirements:\n- Original claim must be 'cancelled' or 'rejected'\n- user_reward must not have another active claim\n- Claim deadline must not have passed\n\n## Creates a NEW claim:\n- New claimCode (CLAIM-YYYY-NNNNNN)\n- Optionally update address/contact info\n- Old data is preserved if not provided\n\n## After reopen:\n- New claim with status 'pending'\n- user_reward.hasClaim = true\n- Must upload documents again"
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Admin Endpoints",
-					"item": [
-						{
-							"name": "Approve Claim",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"trackingNumber\": \"CHI123456789\",\n  \"adminNotes\": \"Enviado por Chilexpress, código de retiro: ABC123\"\n}"
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/approve",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"approve"
-									]
-								},
-								"description": "Approve and mark a claim as delivered (ADMIN ONLY).\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'processing'\n\n## Body:\n- claimCode: required\n- trackingNumber: optional (shipping tracking)\n- adminNotes: optional (appended to existing notes)\n\n## After approval:\n- claimStatus → 'delivered'\n- processedAt, processedBy, processedByName set\n- user_reward.rewardStatus → 'claimed'\n- user_reward.claimed = true\n- user_reward.claimedAt set"
-							},
-							"response": []
-						},
-						{
-							"name": "Reject Claim",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"reason\": \"Documentos ilegibles. Por favor, suba fotos más claras.\"\n}"
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/reject",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"reject"
-									]
-								},
-								"description": "Reject a claim (ADMIN ONLY).\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'pending' or 'processing'\n\n## Body:\n- claimCode: required\n- reason: required (explanation for user)\n\n## After rejection:\n- claimStatus → 'rejected'\n- adminNotes appended with [Rejected: reason]\n- processedAt, processedBy, processedByName set\n- user_reward.rewardStatus → 'available'\n- user_reward.hasClaim = false\n\nUser can create a new claim with /reopen"
-							},
-							"response": []
-						},
-						{
-							"name": "Revert Claim",
-							"request": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"claimCode\": \"CLAIM-2025-001234\",\n  \"reason\": \"Error de administración. El premio no fue enviado correctamente.\"\n}"
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/revert",
-									"host": [
-										"{{STRAPI_URL_LOCAL}}"
-									],
-									"path": [
-										"api",
-										"reward-claims",
-										"revert"
-									]
-								},
-								"description": "Revert a delivered claim back to processing (ADMIN ONLY).\n\nUse this when an admin made a mistake approving a claim.\n\n## Requirements:\n- Admin role required\n- claimStatus must be 'delivered'\n\n## Body:\n- claimCode: required\n- reason: required (explanation for revert)\n\n## After revert:\n- claimStatus → 'processing'\n- adminNotes appended with [Reverted by admin: reason]\n- user_reward.rewardStatus → 'in_claim'\n- user_reward.claimed = false\n- user_reward.claimedAt = null\n\nAdmin can then /approve or /reject the claim again."
-							},
-							"response": []
-						},
-						{
-							"name": "Update Claim (Admin)",
-							"request": {
-								"method": "PUT",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n  \"data\": {\n    \"trackingNumber\": \"CHI123456789\",\n    \"adminNotes\": \"Actualizando tracking\"\n  }\n}"
-								},
-								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/:documentId",
+									"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/:documentId?populate=*",
 									"host": [
 										"{{STRAPI_URL_LOCAL}}"
 									],
@@ -5859,6 +6128,12 @@
 										"reward-claims",
 										":documentId"
 									],
+									"query": [
+										{
+											"key": "populate",
+											"value": "*"
+										}
+									],
 									"variable": [
 										{
 											"key": "documentId",
@@ -5866,109 +6141,14 @@
 										}
 									]
 								},
-								"description": "Direct update of claim fields (ADMIN ONLY).\n\nUse this for manual field updates.\nFor status changes, prefer /approve or /reject endpoints.\n\n## Editable fields:\n- trackingNumber\n- adminNotes\n- claimStatus (use with caution)\n- processedAt, processedBy, processedByName"
+								"description": "Get a specific reward claim by document ID.\n\nOwnership verified for non-admin users."
 							},
 							"response": []
 						}
-					]
-				},
-				{
-					"name": "List Reward Claims",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims?populate=*&pagination[page]=1&pagination[pageSize]=25&sort=createdAt:desc&filters[users_permissions_user][email][$eq]=user1@example.com",
-							"host": [
-								"{{STRAPI_URL_LOCAL}}"
-							],
-							"path": [
-								"api",
-								"reward-claims"
-							],
-							"query": [
-								{
-									"key": "populate",
-									"value": "*",
-									"description": "Include relations: user_reward, users_permissions_user, guardian"
-								},
-								{
-									"key": "pagination[page]",
-									"value": "1"
-								},
-								{
-									"key": "pagination[pageSize]",
-									"value": "25"
-								},
-								{
-									"key": "sort",
-									"value": "createdAt:desc"
-								},
-								{
-									"key": "filters[claimStatus][$eq]",
-									"value": "pending",
-									"description": "pending | processing | delivered | rejected | cancelled",
-									"disabled": true
-								},
-								{
-									"key": "filters[isMinor][$eq]",
-									"value": "true",
-									"disabled": true
-								},
-								{
-									"key": "filters[country][$eq]",
-									"value": "Chile",
-									"disabled": true
-								},
-								{
-									"key": "filters[users_permissions_user][documentId]",
-									"value": "xz25renjjoxt8tgik504a5vg",
-									"disabled": true
-								},
-								{
-									"key": "filters[users_permissions_user][email][$eq]",
-									"value": "user1@example.com"
-								}
-							]
-						},
-						"description": "List reward claims with filtering, sorting and pagination.\n\n## Security:\n- Regular users: only see their own claims\n- Admins: see all claims\n\n## Available filters:\n- claimStatus: pending, processing, delivered, rejected, cancelled\n- isMinor: true/false\n- country, city, etc.\n\n## Status meanings:\n- **pending**: Claim created, awaiting documents\n- **processing**: Documents uploaded, awaiting admin review\n- **delivered**: Approved and shipped/delivered\n- **rejected**: Rejected by admin (can reopen)\n- **cancelled**: Cancelled by user (can reopen)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Reward Claim by ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{STRAPI_URL_LOCAL}}/api/reward-claims/:documentId?populate=*",
-							"host": [
-								"{{STRAPI_URL_LOCAL}}"
-							],
-							"path": [
-								"api",
-								"reward-claims",
-								":documentId"
-							],
-							"query": [
-								{
-									"key": "populate",
-									"value": "*"
-								}
-							],
-							"variable": [
-								{
-									"key": "documentId",
-									"value": ""
-								}
-							]
-						},
-						"description": "Get a specific reward claim by document ID.\n\nOwnership verified for non-admin users."
-					},
-					"response": []
+					],
+					"description": "## Reward Claims API\n\nComplete flow for claiming consumable rewards (physical prizes).\n\n### Status Flow:\n```\npending → processing → delivered\n                     ↘ rejected\n                     ↘ cancelled\n```\n\n### User Flow:\n1. **Create claim** → POST /reward-claims\n2. **Upload documents** → POST /upload-documents\n   - Adults: own ID (front + back)\n   - Minors: own ID + guardian ID + guardian info\n3. **Wait for admin review**\n4. **Receive reward** (delivered) or **fix issues** (rejected)\n\n### rewardStatus Flow:\n```\navailable → in_claim → claimed (delivered)\n                     → available (rejected/cancelled)\n```"
 				}
-			],
-			"description": "## Reward Claims API\n\nComplete flow for claiming consumable rewards (physical prizes).\n\n### Status Flow:\n```\npending → processing → delivered\n                     ↘ rejected\n                     ↘ cancelled\n```\n\n### User Flow:\n1. **Create claim** → POST /reward-claims\n2. **Upload documents** → POST /upload-documents\n   - Adults: own ID (front + back)\n   - Minors: own ID + guardian ID + guardian info\n3. **Wait for admin review**\n4. **Receive reward** (delivered) or **fix issues** (rejected)\n\n### rewardStatus Flow:\n```\navailable → in_claim → claimed (delivered)\n                     → available (rejected/cancelled)\n```"
+			]
 		}
 	],
 	"auth": {

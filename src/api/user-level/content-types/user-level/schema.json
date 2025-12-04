@@ -17,9 +17,9 @@
     "levelStatus": {
       "type": "enumeration",
       "enum": [
-        "blocked ",
-        "disabled ",
-        "available  ",
+        "blocked",
+        "disabled",
+        "available",
         "won"
       ]
     },

@@ -1325,7 +1325,7 @@ export interface ApiUserLevelUserLevel extends Struct.CollectionTypeSchema {
     lastPlayed: Schema.Attribute.DateTime;
     level: Schema.Attribute.Relation<'manyToOne', 'api::level.level'>;
     levelStatus: Schema.Attribute.Enumeration<
-      ['blocked ', 'disabled ', 'available  ', 'won']
+      ['blocked', 'disabled', 'available', 'won']
     >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

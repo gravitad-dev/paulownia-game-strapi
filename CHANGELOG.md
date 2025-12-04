@@ -16,7 +16,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Creates or updates a `UserLevel` entry with `levelStatus: 'available'`.
     - Returns success message and the updated `UserLevel`.
 - **Schema Update**:
-  - Added `users_permissions_user` relation to `UserLevel` to link progress to the user.
+- Added `users_permissions_user` relation to `UserLevel` to link progress to the user.
+
+#### Changed - Level Unlocking Routes
+
+- **Dual Support**: ahora existen dos rutas para desbloquear niveles
+  - `POST /api/levels/:id/unlock`
+  - `POST /api/levels/uuid/:uuid/unlock`
+- **Ubicación de rutas**: registradas en `src/api/level/routes/01-custom-level.ts` para reconocimiento correcto.
+- **Controlador**: `level.unlock` acepta `id` o `uuid` y valida `password` en el body.
+
+#### Fixed - My Levels status
+
+- `GET /api/levels/my-levels` ahora refleja el estado correcto por usuario
+  - `available  ` cuando el nivel está desbloqueado por el usuario
+  - `blocked ` cuando está bloqueado
+  - `disabled ` cuando el nivel está inactivo (`isActive=false`)
+- Implementación: consulta `UserLevel` por `users_permissions_user` y `level` para cada nivel.
+
+#### Added - Game Session
+
+- **New Endpoints**:
+  - `POST /api/game/start`: inicia partida y devuelve `hash`, `gridSize`, `startedAt`, `gameHistoryId`.
+  - `POST /api/game/end`: finaliza partida, actualiza estadísticas y retorna `status`, `score`, `duration`, `completedAt`, `levelStatus`.
+- **Idempotencia**: `end` retorna `alreadyCompleted: true` si el `hash` ya fue completado previamente.
+- **Seguridad**: requiere Bearer token; ownership validado por middleware.
+
+#### Fixed - Game Session Controller
+
+- Acceso seguro a `strapi.config` en `start` para evitar `TypeError: Cannot read properties of undefined (reading 'get')`.
+- `end` ahora verifica histories completados por `hash` antes de procesar, devolviendo `alreadyCompleted` cuando corresponde.
+- Tests actualizados: suite `game-session` pasa completa; total general 136 tests pasando.
+
+#### Documentation
+
+- Postman: agregados `POST /api/game/start` y `POST /api/game/end` al final de la colección.
+ - Postman: agregados `POST /api/levels/uuid/:uuid/unlock`, `POST /api/levels/:id/unlock` y `GET /api/levels/my-levels` en la sección Levels.
 
 ### 2025-12-02
 

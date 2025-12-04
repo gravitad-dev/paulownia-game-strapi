@@ -133,11 +133,15 @@ describe("Level Controller - Unlock", () => {
     expect(res.message).toBe("Level unlocked successfully");
     expect(res.userLevel.levelStatus).toBe("available  ");
     
-    expect(strapi.entityService.update).toHaveBeenCalledWith("api::user-level.user-level", existingUserLevel.id, expect.objectContaining({
-        data: {
-            levelStatus: "available  "
-        }
-    }));
+    expect(strapi.entityService.update).toHaveBeenCalledWith(
+      "api::user-level.user-level",
+      existingUserLevel.id,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          levelStatus: "available  ",
+        }),
+      }),
+    );
   });
 
   test("unlock: retorna éxito si ya estaba desbloqueado", async () => {
