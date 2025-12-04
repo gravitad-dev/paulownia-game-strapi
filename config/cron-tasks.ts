@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 export default ({ env }: { env: (key: string, def?: any) => any }) => {
   const dayStr = String(env("CRON_RESET_DAY", "1")).toLowerCase();
   const hourStr = String(env("CRON_RESET_HOUR", "0"));
@@ -249,6 +252,113 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
     }
   };
 
+  const cleanupOrphanedUploads = async ({ strapi }: { strapi: any }) => {
+    console.log("🔍 Running orphaned uploads check...");
+    try {
+      // 1. Get all files from database
+      // Usamos query engine directamente para eficiencia
+      const dbFiles = await strapi.db.query("plugin::upload.file").findMany({
+        select: ["hash", "ext", "formats"],
+      });
+
+      const validFiles = new Set<string>();
+      dbFiles.forEach((file: any) => {
+        // Main file
+        validFiles.add(`${file.hash}${file.ext}`);
+
+        // Formats (thumbnail, small, medium, large, etc.)
+        if (file.formats) {
+          // formats es un objeto JSON
+          Object.values(file.formats).forEach((format: any) => {
+            if (format && format.hash && format.ext) {
+              validFiles.add(`${format.hash}${format.ext}`);
+            }
+          });
+        }
+      });
+
+      console.log(
+        `✅ Found ${dbFiles.length} file records in DB (expecting approx ${validFiles.size} physical files).`,
+      );
+
+      // 2. Get all files from disk
+      // Aseguramos la ruta correcta a public/uploads
+      const uploadDir = path.join(process.cwd(), "public/uploads");
+
+      if (!fs.existsSync(uploadDir)) {
+        console.warn("⚠️ Uploads directory not found at:", uploadDir);
+        return;
+      }
+
+      const diskFiles = fs.readdirSync(uploadDir).filter((file) => {
+        // Ignore system files
+        return (
+          file !== ".gitkeep" &&
+          file !== ".DS_Store" &&
+          fs.statSync(path.join(uploadDir, file)).isFile()
+        );
+      });
+
+      console.log(`📂 Found ${diskFiles.length} files on disk.`);
+
+      // 3. Compare
+      const orphans: string[] = [];
+      let totalSize = 0;
+
+      diskFiles.forEach((file) => {
+        if (!validFiles.has(file)) {
+          orphans.push(file);
+          try {
+            const stats = fs.statSync(path.join(uploadDir, file));
+            totalSize += stats.size;
+          } catch (e) {
+            // Ignore error if file disappears or perm issue
+          }
+        }
+      });
+
+      // 4. Report
+      if (orphans.length > 0) {
+        const sizeInMB = (totalSize / (1024 * 1024)).toFixed(2);
+        console.log(
+          `\n⚠️ Found ${orphans.length} orphaned files (Total wasted space: ${sizeInMB} MB):`,
+        );
+
+        // List first 20
+        orphans.slice(0, 20).forEach((file) => console.log(` - ${file}`));
+        if (orphans.length > 20) {
+          console.log(` ... and ${orphans.length - 20} more.`);
+        }
+
+        // Log to a specific file if needed, or just stdout
+
+        // Controlled deletion via env flag
+        const shouldDelete =
+          String(env("CLEANUP_DELETE", "true")).toLowerCase() === "true";
+        if (shouldDelete) {
+          console.log("🗑️ Deleting orphaned files...");
+          for (const file of orphans) {
+            try {
+              fs.unlinkSync(path.join(uploadDir, file));
+              console.log(`Deleted: ${file}`);
+            } catch (delErr) {
+              console.error(`Failed to delete ${file}:`, delErr);
+            }
+          }
+          console.log("✅ Cleanup complete.");
+        } else {
+          console.log(
+            "🔎 Dry-run mode: set CLEANUP_DELETE=true to enable deletion.",
+          );
+        }
+      } else {
+        console.log("\n✨ No orphaned files found. Everything is clean!");
+      }
+    } catch (error) {
+      console.error("❌ Error checking orphaned uploads:", error);
+    }
+  };
+
   const tasks: Record<string, any> = {};
 
   if (dayStr === "test") {
@@ -296,6 +406,11 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
   }
 
   tasks[rankingExpr] = generateRanking;
+
+  // Tarea de limpieza de imágenes huérfanas
+  const cleanupConfig = env("CRON_CLEANUP_SCHEDULE", "0 4 * * 0"); // Default: weekly, Sunday 4 AM
+  console.log(`Cleanup Cron configured with schedule: ${cleanupConfig}`);
+  tasks[cleanupConfig] = cleanupOrphanedUploads;
 
   return tasks;
 };

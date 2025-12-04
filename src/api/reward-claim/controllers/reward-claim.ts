@@ -647,21 +647,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
     const { body, files } = ctx.request;
 
-    // Debug log to inspect incoming body and guardianData
-    strapi.log.info(
-      `[RewardClaim] Full Body: ${JSON.stringify(body, null, 2)}`,
-    );
-    if (body.guardianData) {
-      strapi.log.info(
-        `[RewardClaim] GuardianData received: ${JSON.stringify(body.guardianData, null, 2)}`,
-      );
-      strapi.log.info(
-        `[RewardClaim] GuardianData type: ${typeof body.guardianData}`,
-      );
-    } else {
-      strapi.log.warn(`[RewardClaim] No guardianData found in request body`);
-    }
-
     const {
       identityDocumentType,
       identityDocumentNumber,
@@ -696,24 +681,13 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     // we force it to Minor to ensure protection.
     if (!claim.isMinor && docIsMinor) {
       isMinor = true;
-      strapi.log.info(
-        `[RewardClaim] Claim switched to Minor based on uploaded document age (${docAge})`,
-      );
     }
-
-    strapi.log.info(
-      `[RewardClaim] Final isMinor status: ${isMinor} (Claim: ${claim.isMinor}, DocAge: ${docAge})`,
-    );
 
     let guardianRecord = null;
     let guardianConfirmationToken = null;
 
     // Handle minor flow
     if (isMinor) {
-      strapi.log.info(
-        `[RewardClaim] Processing minor flow. GuardianId: ${guardianId}, GuardianData present: ${!!guardianData}`,
-      );
-
       if (!guardianId && !guardianData) {
         strapi.log.warn(
           `[RewardClaim] Missing guardian info for minor claim ${claimCode}`,
@@ -724,9 +698,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       }
 
       if (guardianId) {
-        strapi.log.info(
-          `[RewardClaim] Searching for existing guardian with ID: ${guardianId}`,
-        );
         // Find existing guardian
         guardianRecord = await strapi.db.query(GUARDIAN_UID).findOne({
           where: {
@@ -736,21 +707,13 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
         });
 
         if (!guardianRecord) {
-          strapi.log.warn(
-            `[RewardClaim] Guardian not found for ID: ${guardianId}`,
-          );
           return ctx.notFound("Guardian not found", {
             reason: "guardian_not_found",
           });
         }
 
-        strapi.log.info(`[RewardClaim] Guardian found: ${guardianRecord.id}`);
-
         // Verify guardian belongs to user
         if (guardianRecord.user?.id !== user.id) {
-          strapi.log.warn(
-            `[RewardClaim] Guardian ownership mismatch. GuardianUser: ${guardianRecord.user?.id}, CurrentUser: ${user.id}`,
-          );
           return ctx.forbidden("Guardian does not belong to you", {
             reason: "guardian_not_owner",
           });
@@ -794,9 +757,6 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
 
       // Generate confirmation token - REMOVED (Simplified flow)
       // We now assume guardian consent is implied by providing their data/documents
-      strapi.log.info(
-        `Guardian linked for claim ${claimCode}. Auto-confirming guardian email.`,
-      );
     }
 
     // Update claim data first

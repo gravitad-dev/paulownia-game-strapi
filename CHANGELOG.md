@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-12-04
+
+#### Added - Level Unlocking
+
+- **New Endpoint**: `POST /api/levels/:uuid/unlock`
+  - Allows users to unlock a level by providing a password in the request body.
+  - **Logic**:
+    - Verifies the password against the level's password.
+    - Creates or updates a `UserLevel` entry with `levelStatus: 'available'`.
+    - Returns success message and the updated `UserLevel`.
+- **Schema Update**:
+  - Added `users_permissions_user` relation to `UserLevel` to link progress to the user.
+
 ### 2025-12-02
 
 #### Added - User Sessions Module

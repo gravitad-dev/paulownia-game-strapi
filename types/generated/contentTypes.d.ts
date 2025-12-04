@@ -1337,6 +1337,10 @@ export interface ApiUserLevelUserLevel extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    users_permissions_user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     uuid: Schema.Attribute.UID;
   };
 }
@@ -2042,6 +2046,10 @@ export interface PluginUsersPermissionsUser
     user_game_histories: Schema.Attribute.Relation<
       'oneToMany',
       'api::user-game-history.user-game-history'
+    >;
+    user_levels: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-level.user-level'
     >;
     user_rewards: Schema.Attribute.Relation<
       'oneToMany',

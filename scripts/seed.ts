@@ -304,18 +304,57 @@ async function seedDatabase(strapi: any) {
   console.log(`🎮 Creando ${COUNTS.LEVELS} niveles...`);
   const levels = [];
   const difficulties = ["easy", "easy2", "medium", "medium2", "hard", "hard2"];
+  
+  // Subir imagen de puzzle una vez
+  const fs = require("fs");
+  const path = require("path");
+  const puzzleImagePath = path.join(__dirname, "..", "scriptsassets", "puzzleImage.png");
+  
+  let puzzleImageId: number | null = null;
+  if (fs.existsSync(puzzleImagePath)) {
+    try {
+      const fileStat = fs.statSync(puzzleImagePath);
+      const uploadedFiles = await strapi.plugins.upload.services.upload.upload({
+        data: {},
+        files: {
+          filepath: puzzleImagePath,
+          originalFilename: "puzzleImage.png",
+          mimetype: "image/png",
+          size: fileStat.size,
+        },
+      });
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        puzzleImageId = uploadedFiles[0].id;
+        console.log(`📷 Imagen puzzleImage subida (ID: ${puzzleImageId})`);
+      }
+    } catch (uploadError) {
+      console.log(`⚠️ Error subiendo imagen: ${uploadError}`);
+    }
+  } else {
+    console.log(`⚠️ No se encontró imagen en ${puzzleImagePath}`);
+  }
+  
   for (let i = 1; i <= COUNTS.LEVELS; i++) {
+    const levelData: any = {
+      name: `Nivel ${i}`,
+      description: `Descripción del nivel ${i}`,
+      difficulty: difficulties[(i - 1) % difficulties.length],
+      password: "123456",
+      isActive: true,
+      date: new Date().toISOString().split("T")[0],
+      publishedAt: new Date(),
+    };
+    
+    if (puzzleImageId) {
+      levelData.puzzleImage = [puzzleImageId];
+    }
+    
     const level = await strapi.entityService.create("api::level.level", {
-      data: {
-        name: `Nivel ${i}`,
-        description: `Descripción del nivel ${i}`,
-        difficulty: difficulties[(i - 1) % difficulties.length],
-        publishedAt: new Date(),
-      },
+      data: levelData,
     });
     levels.push(level);
   }
-  console.log(`✅ Creados ${levels.length} niveles`);
+  console.log(`✅ Creados ${levels.length} niveles con password '123456'`);
 
   // 5. Crear Achievements
   console.log(`🏆 Creando logros definidos...`);

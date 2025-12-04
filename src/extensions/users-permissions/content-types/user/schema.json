@@ -159,6 +159,12 @@
       "relation": "oneToMany",
       "target": "api::user-session.user-session",
       "mappedBy": "users_permissions_user"
+    },
+    "user_levels": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-level.user-level",
+      "mappedBy": "users_permissions_user"
     }
   }
 }
