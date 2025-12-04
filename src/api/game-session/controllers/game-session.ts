@@ -94,11 +94,15 @@ export default {
       .query(USER_LEVEL_UID)
       .findOne({ where: { users_permissions_user: user.id, level: level.id } });
     if (!existingUL) {
-      return ctx.forbidden("Level not unlocked", { reason: "level_not_unlocked" });
+      return ctx.forbidden("Level not unlocked", {
+        reason: "level_not_unlocked",
+      });
     }
-    const statusUL = String(existingUL.levelStatus || "");
-    if (statusUL !== "available  " && statusUL !== "won") {
-      return ctx.forbidden("Level is not available", { reason: "level_locked" });
+    const statusUL = String(existingUL.levelStatus || "").trim();
+    if (statusUL !== "available" && statusUL !== "won") {
+      return ctx.forbidden("Level is not available", {
+        reason: "level_locked",
+      });
     }
 
     const history = await strapi.db.query(USER_GAME_HISTORY_UID).create({
@@ -256,7 +260,7 @@ export default {
       const won = String(status).toLowerCase() === "won";
       await strapi.db.query(USER_LEVEL_UID).update({
         where: { id: ul.id },
-        data: { levelStatus: won ? "won" : "available  ", lastPlayed: endDate },
+        data: { levelStatus: won ? "won" : "available", lastPlayed: endDate },
       });
     }
 
@@ -312,7 +316,7 @@ export default {
         duration: durationSeconds,
         completedAt: endAt,
         levelStatus:
-          String(status).toLowerCase() === "won" ? "won" : "available  ",
+          String(status).toLowerCase() === "won" ? "won" : "available",
       },
     };
   },

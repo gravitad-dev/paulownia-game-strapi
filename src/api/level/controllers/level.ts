@@ -56,8 +56,8 @@ export default factories.createCoreController(
         const ul = userLevelMap.get(lvl.id);
         const isActive = !!lvl.isActive;
         const rawStatus = isActive
-          ? (ul?.levelStatus ?? "blocked ")
-          : "disabled ";
+          ? (ul?.levelStatus ?? "blocked")
+          : "disabled";
         const status = (rawStatus || "").trim();
 
         return {

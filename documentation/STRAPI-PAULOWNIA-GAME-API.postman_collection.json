@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0c3d4d19-27ed-4908-a876-842a951db9b9",
+		"_postman_id": "a6006e03-3490-4406-9c4c-392ef38207a0",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -5516,7 +5516,7 @@
 									"variable": [
 										{
 											"key": "uuid",
-											"value": "8v0rbg6jmBuvn7gOGHG1pCgA"
+											"value": "QdqKL8wGJItcfOV0psfK2dDv"
 										}
 									]
 								},
@@ -5530,7 +5530,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels",
+									"raw": "{{STRAPI_URL_LOCAL}}/api/levels/my-levels?pagination[page]=1&pagination[pageSize]=25&sort=name:asc",
 									"host": [
 										"{{STRAPI_URL_LOCAL}}"
 									],
@@ -5538,9 +5538,38 @@
 										"api",
 										"levels",
 										"my-levels"
+									],
+									"query": [
+										{
+											"key": "pagination[page]",
+											"value": "1",
+											"description": "Página actual (>=1)."
+										},
+										{
+											"key": "pagination[pageSize]",
+											"value": "25",
+											"description": "Resultados por página."
+										},
+										{
+											"key": "sort",
+											"value": "name:asc",
+											"description": "Ordenamiento (ej: status:asc, difficulty:desc, name:asc)."
+										},
+										{
+											"key": "filters[status][$eq]",
+											"value": "blocked",
+											"description": "Filtro por estado (blocked | available | won | disabled).",
+											"disabled": true
+										},
+										{
+											"key": "filters[difficulty][$eq]",
+											"value": "hard",
+											"description": "Filtro nativo por dificultad.",
+											"disabled": true
+										}
 									]
 								},
-								"description": "List levels with user-specific status.\n\nResponse items: uuid, name, description, difficulty, cover, puzzleImage, isActive, status (blocked | available | won | disabled), lastPlayed."
+								"description": "List levels with user-specific status.\n\n**Features**:\n- **Pagination**: `pagination[page]`, `pagination[pageSize]`\n- **Sorting**: `sort` (supports computed `status` and native fields like `name`, `difficulty`)\n- **Filtering**:\n  - Computed `status`: `filters[status][$eq]`, `filters[status][$in]`, etc.\n  - Native fields: `filters[difficulty]`, `filters[name]`, etc.\n\nResponse items: uuid, name, description, difficulty, cover, puzzleImage, isActive, status (blocked | available | won | disabled), lastPlayed."
 							},
 							"response": []
 						}
@@ -5561,7 +5590,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"levelUuid\": \"LEVEL-UUID\",\n  \"difficulty\": \"maestro\",\n  \"startAt\": \"2025-12-04T12:00:00.000Z\",\n  \"seed\": \"abc123\"\n}"
+									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"maestro\",\n  \"startAt\": \"2025-12-04T12:00:00.000Z\",\n  \"seed\": \"abc123\"\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/game/start",
@@ -5590,7 +5619,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"levelUuid\": \"LEVEL-UUID\",\n  \"difficulty\": \"maestro\",\n  \"endAt\": \"2025-12-04T12:15:00.000Z\",\n  \"hash\": \"<hash devuelto en start>\",\n  \"status\": \"won\",\n  \"bonusPoints\": 100\n}"
+									"raw": "{\n  \"levelUuid\": \"QdqKL8wGJItcfOV0psfK2dDv\",\n  \"difficulty\": \"maestro\",\n  \"endAt\": \"2025-12-04T12:15:00.000Z\",\n  \"hash\": \"2f019a2f41d852425d18f88532d7fa6be6f25b17375c6dfb8f69f84856749765\",\n  \"status\": \"won\",\n  \"bonusPoints\": 100\n}"
 								},
 								"url": {
 									"raw": "{{STRAPI_URL_LOCAL}}/api/game/end",

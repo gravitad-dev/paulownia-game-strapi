@@ -304,12 +304,17 @@ async function seedDatabase(strapi: any) {
   console.log(`🎮 Creando ${COUNTS.LEVELS} niveles...`);
   const levels = [];
   const difficulties = ["easy", "easy2", "medium", "medium2", "hard", "hard2"];
-  
+
   // Subir imagen de puzzle una vez
   const fs = require("fs");
   const path = require("path");
-  const puzzleImagePath = path.join(__dirname, "..", "scriptsassets", "puzzleImage.png");
-  
+  const puzzleImagePath = path.join(
+    __dirname,
+    "..",
+    "scriptsassets",
+    "puzzleImage.png",
+  );
+
   let puzzleImageId: number | null = null;
   if (fs.existsSync(puzzleImagePath)) {
     try {
@@ -333,7 +338,7 @@ async function seedDatabase(strapi: any) {
   } else {
     console.log(`⚠️ No se encontró imagen en ${puzzleImagePath}`);
   }
-  
+
   for (let i = 1; i <= COUNTS.LEVELS; i++) {
     const levelData: any = {
       name: `Nivel ${i}`,
@@ -344,17 +349,48 @@ async function seedDatabase(strapi: any) {
       date: new Date().toISOString().split("T")[0],
       publishedAt: new Date(),
     };
-    
+
     if (puzzleImageId) {
       levelData.puzzleImage = [puzzleImageId];
     }
-    
+
     const level = await strapi.entityService.create("api::level.level", {
       data: levelData,
     });
     levels.push(level);
   }
   console.log(`✅ Creados ${levels.length} niveles con password '123456'`);
+
+  // 4.1 Crear User Levels
+  console.log("🎮 Asignando niveles a usuarios (UserLevels)...");
+  for (const user of users) {
+    for (let i = 0; i < levels.length; i++) {
+      const level = levels[i];
+      let status = "blocked"; // Default
+
+      // Lógica simple para testing
+      // Nivel 1: available para todos
+      if (i === 0) {
+        status = "available";
+      }
+      // User1: Nivel 2 won, Nivel 3 available
+      else if (user.username === "user1") {
+        if (i === 1) status = "won";
+        if (i === 2) status = "available";
+      }
+
+      await strapi.entityService.create("api::user-level.user-level", {
+        data: {
+          users_permissions_user: user.documentId,
+          level: level.documentId,
+          levelStatus: status, // Verificar sin espacios
+          lastPlayed: status === "won" ? new Date() : null,
+          publishedAt: new Date(),
+        },
+      });
+    }
+  }
+  console.log(`✅ UserLevels creados para ${users.length} usuarios`);
 
   // 5. Crear Achievements
   console.log(`🏆 Creando logros definidos...`);

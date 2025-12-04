@@ -21,9 +21,8 @@ describe("Level Controller - Unlock", () => {
     strapi = createStrapiMock();
     (global as any).strapi = strapi;
     jest.resetModules();
-    controller = (
-      await import("../../src/api/level/controllers/level")
-    ).default;
+    controller = (await import("../../src/api/level/controllers/level"))
+      .default;
   });
 
   const makeLevel = (id: number, uuid: string, password?: string) => ({
@@ -33,7 +32,12 @@ describe("Level Controller - Unlock", () => {
     name: `Level ${id}`,
   });
 
-  const makeUserLevel = (id: number, userId: number, levelId: number, status: string) => ({
+  const makeUserLevel = (
+    id: number,
+    userId: number,
+    levelId: number,
+    status: string,
+  ) => ({
     id,
     users_permissions_user: { id: userId },
     level: { id: levelId },
@@ -44,16 +48,16 @@ describe("Level Controller - Unlock", () => {
     const ctx = mockCtx();
     ctx.params = { id: "some-uuid" };
     ctx.request = { body: { password: "123" } };
-    
+
     // The controller method might not exist yet, but we are testing for it
     // We expect the controller to have an 'unlock' method
     try {
-        const res = await controller.unlock(ctx);
-        expect(res.status).toBe(401);
+      const res = await controller.unlock(ctx);
+      expect(res.status).toBe(401);
     } catch (e) {
-        // If method doesn't exist yet, it will fail here, which is expected in TDD
-        // But for the test to be valid once implemented:
-        expect(true).toBe(true); 
+      // If method doesn't exist yet, it will fail here, which is expected in TDD
+      // But for the test to be valid once implemented:
+      expect(true).toBe(true);
     }
   });
 
@@ -89,56 +93,63 @@ describe("Level Controller - Unlock", () => {
     ctx.request = { body: { password: "secret" } };
 
     strapi.db.query("api::level.level").findOne.mockResolvedValue(level);
-    strapi.db.query("api::user-level.user-level").findOne.mockResolvedValue(null);
-    
+    strapi.db
+      .query("api::user-level.user-level")
+      .findOne.mockResolvedValue(null);
+
     strapi.entityService.create.mockResolvedValue({
-        id: 10,
-        levelStatus: 'available  ',
-        level: { id: level.id },
-        users_permissions_user: { id: user.id }
+      id: 10,
+      levelStatus: "available",
+      level: { id: level.id },
+      users_permissions_user: { id: user.id },
     });
 
     const res = await controller.unlock(ctx);
-    
+
     expect(res.message).toBe("Level unlocked successfully");
-    expect(res.userLevel.levelStatus).toBe("available  ");
-    
-    expect(strapi.entityService.create).toHaveBeenCalledWith("api::user-level.user-level", expect.objectContaining({
+    expect(res.userLevel.levelStatus).toBe("available");
+
+    expect(strapi.entityService.create).toHaveBeenCalledWith(
+      "api::user-level.user-level",
+      expect.objectContaining({
         data: expect.objectContaining({
-            level: level.id,
-            users_permissions_user: user.id,
-            levelStatus: "available  "
-        })
-    }));
+          level: level.id,
+          users_permissions_user: user.id,
+          levelStatus: "available",
+        }),
+      }),
+    );
   });
 
   test("unlock: actualiza nivel existente a 'available' si estaba bloqueado", async () => {
     const level = makeLevel(1, "uuid-1", "secret");
-    const existingUserLevel = makeUserLevel(10, user.id, level.id, "blocked ");
-    
+    const existingUserLevel = makeUserLevel(10, user.id, level.id, "blocked");
+
     const ctx = mockCtx(user);
     ctx.params = { id: level.uuid };
     ctx.request = { body: { password: "secret" } };
 
     strapi.db.query("api::level.level").findOne.mockResolvedValue(level);
-    strapi.db.query("api::user-level.user-level").findOne.mockResolvedValue(existingUserLevel);
-    
+    strapi.db
+      .query("api::user-level.user-level")
+      .findOne.mockResolvedValue(existingUserLevel);
+
     strapi.entityService.update.mockResolvedValue({
-        ...existingUserLevel,
-        levelStatus: 'available  '
+      ...existingUserLevel,
+      levelStatus: "available",
     });
 
     const res = await controller.unlock(ctx);
-    
+
     expect(res.message).toBe("Level unlocked successfully");
-    expect(res.userLevel.levelStatus).toBe("available  ");
-    
+    expect(res.userLevel.levelStatus).toBe("available");
+
     expect(strapi.entityService.update).toHaveBeenCalledWith(
       "api::user-level.user-level",
       existingUserLevel.id,
       expect.objectContaining({
         data: expect.objectContaining({
-          levelStatus: "available  ",
+          levelStatus: "available",
         }),
       }),
     );
@@ -146,20 +157,22 @@ describe("Level Controller - Unlock", () => {
 
   test("unlock: retorna éxito si ya estaba desbloqueado", async () => {
     const level = makeLevel(1, "uuid-1", "secret");
-    const existingUserLevel = makeUserLevel(10, user.id, level.id, "available  ");
-    
+    const existingUserLevel = makeUserLevel(10, user.id, level.id, "available");
+
     const ctx = mockCtx(user);
     ctx.params = { id: level.uuid };
     ctx.request = { body: { password: "secret" } };
 
     strapi.db.query("api::level.level").findOne.mockResolvedValue(level);
-    strapi.db.query("api::user-level.user-level").findOne.mockResolvedValue(existingUserLevel);
+    strapi.db
+      .query("api::user-level.user-level")
+      .findOne.mockResolvedValue(existingUserLevel);
 
     const res = await controller.unlock(ctx);
-    
+
     expect(res.message).toBe("Level already unlocked");
-    expect(res.userLevel.levelStatus).toBe("available  ");
-    
+    expect(res.userLevel.levelStatus).toBe("available");
+
     expect(strapi.entityService.update).not.toHaveBeenCalled();
     expect(strapi.entityService.create).not.toHaveBeenCalled();
   });

@@ -77,7 +77,10 @@ describe("Game Session Controller", () => {
 
       levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
-      userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "available  " });
+      userLevelQuery.findOne.mockResolvedValue({
+        id: 30,
+        levelStatus: "available",
+      });
       userGameHistoryQuery.create.mockResolvedValue({ id: 40 });
       userSessionQuery.findMany.mockResolvedValue([]);
       userSessionQuery.create.mockResolvedValue({ id: 50 });
@@ -131,7 +134,7 @@ describe("Game Session Controller", () => {
 
       levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
-      userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "blocked " });
+      userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "blocked" });
 
       const ctx = mockCtx(user) as any;
       ctx.request = {
