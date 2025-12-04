@@ -276,11 +276,23 @@ export default {
     const base = gridSize === "8x8x8" ? 5120 : 2160;
     const penalty = Math.floor(durationSeconds / 5);
     const extra = Number(bonusPoints || 0);
-    const score = Math.max(0, base + extra - penalty);
+    let score = Math.max(0, base + extra - penalty);
 
     // Calculate coins earned based on difficulty and win status
     const won = String(status).toLowerCase() === "won";
-    const coinsEarned = getCoinsReward(difficulty, won);
+    let coinsEarned = getCoinsReward(difficulty, won);
+
+    // Check if level was already won to prevent farming
+    const ul = await strapi.db
+      .query(USER_LEVEL_UID)
+      .findOne({ where: { users_permissions_user: user.id, level: level.id } });
+    
+    const alreadyWon = ul && ul.levelStatus === 'won';
+
+    if (alreadyWon) {
+      score = 0;
+      coinsEarned = 0;
+    }
 
     await strapi.db.query(USER_GAME_HISTORY_UID).update({
       where: { id: target.id },
@@ -293,10 +305,6 @@ export default {
         history: { ...(target.history || {}), status },
       },
     });
-
-    const ul = await strapi.db
-      .query(USER_LEVEL_UID)
-      .findOne({ where: { users_permissions_user: user.id, level: level.id } });
     if (ul) {
       await strapi.db.query(USER_LEVEL_UID).update({
         where: { id: ul.id },
