@@ -643,14 +643,19 @@ export interface ApiLevelLevel extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    date: Schema.Attribute.Date;
     description: Schema.Attribute.String;
     difficulty: Schema.Attribute.Enumeration<
       ['easy', 'easy2', 'medium', 'medium2', 'hard', 'hard2']
     >;
+    isActive: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::level.level'> &
       Schema.Attribute.Private;
     name: Schema.Attribute.String;
+    password: Schema.Attribute.Text & Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     puzzleImage: Schema.Attribute.Media<
       'images' | 'files' | 'videos' | 'audios',
@@ -662,6 +667,10 @@ export interface ApiLevelLevel extends Struct.CollectionTypeSchema {
     user_game_histories: Schema.Attribute.Relation<
       'oneToMany',
       'api::user-game-history.user-game-history'
+    >;
+    user_levels: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-level.user-level'
     >;
     uuid: Schema.Attribute.UID;
   };
@@ -1293,6 +1302,39 @@ export interface ApiUserGameHistoryUserGameHistory
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    uuid: Schema.Attribute.UID;
+  };
+}
+
+export interface ApiUserLevelUserLevel extends Struct.CollectionTypeSchema {
+  collectionName: 'user_levels';
+  info: {
+    displayName: 'UserLevels';
+    pluralName: 'user-levels';
+    singularName: 'user-level';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    lastPlayed: Schema.Attribute.DateTime;
+    level: Schema.Attribute.Relation<'manyToOne', 'api::level.level'>;
+    levelStatus: Schema.Attribute.Enumeration<
+      ['bloqueado', 'disponible', 'completado', 'ganado']
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::user-level.user-level'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
     uuid: Schema.Attribute.UID;
   };
 }
@@ -2049,6 +2091,7 @@ declare module '@strapi/strapi' {
       'api::user-achievement.user-achievement': ApiUserAchievementUserAchievement;
       'api::user-daily-reward.user-daily-reward': ApiUserDailyRewardUserDailyReward;
       'api::user-game-history.user-game-history': ApiUserGameHistoryUserGameHistory;
+      'api::user-level.user-level': ApiUserLevelUserLevel;
       'api::user-reward.user-reward': ApiUserRewardUserReward;
       'api::user-session.user-session': ApiUserSessionUserSession;
       'api::user-transaction-history.user-transaction-history': ApiUserTransactionHistoryUserTransactionHistory;

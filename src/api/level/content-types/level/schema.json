@@ -56,6 +56,24 @@
         "hard",
         "hard2"
       ]
+    },
+    "password": {
+      "type": "text",
+      "private": true
+    },
+    "user_levels": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::user-level.user-level",
+      "mappedBy": "level"
+    },
+    "date": {
+      "type": "date"
+    },
+    "isActive": {
+      "type": "boolean",
+      "required": true,
+      "default": false
     }
   }
 }

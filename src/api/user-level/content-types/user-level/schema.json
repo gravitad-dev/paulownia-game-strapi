@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_levels",
+  "info": {
+    "singularName": "user-level",
+    "pluralName": "user-levels",
+    "displayName": "UserLevels"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "uuid": {
+      "type": "uid"
+    },
+    "levelStatus": {
+      "type": "enumeration",
+      "enum": [
+        "bloqueado",
+        "disponible",
+        "completado",
+        "ganado"
+      ]
+    },
+    "level": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::level.level",
+      "inversedBy": "user_levels"
+    },
+    "lastPlayed": {
+      "type": "datetime"
+    }
+  }
+}
