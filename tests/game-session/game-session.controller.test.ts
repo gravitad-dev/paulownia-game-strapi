@@ -134,7 +134,10 @@ describe("Game Session Controller", () => {
 
       levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
-      userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "blocked" });
+      userLevelQuery.findOne.mockResolvedValue({
+        id: 30,
+        levelStatus: "blocked",
+      });
 
       const ctx = mockCtx(user) as any;
       ctx.request = {
@@ -181,7 +184,7 @@ describe("Game Session Controller", () => {
       levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
       userGameHistoryQuery.findMany.mockResolvedValue([history]);
       userGameHistoryQuery.update.mockResolvedValue({});
-      userLevelQuery.findOne.mockResolvedValue({ id: 30 });
+      userLevelQuery.findOne.mockResolvedValue({ id: 30, wonDifficulties: [] });
       userLevelQuery.update.mockResolvedValue({});
       playerStatQuery.findOne.mockResolvedValue({
         id: 20,
@@ -216,13 +219,146 @@ describe("Game Session Controller", () => {
       expect(res.data.status).toBe("won");
       expect(res.data.levelStatus).toBe("won");
       expect(userGameHistoryQuery.update).toHaveBeenCalled();
-      expect(playerStatQuery.update).toHaveBeenCalled();
+      expect(strapi.entityService.update).toHaveBeenCalled(); // Check entityService.update instead of playerStatQuery.update
       expect(userLevelQuery.update).toHaveBeenCalled();
       expect(userSessionQuery.update).toHaveBeenCalled();
       expect(res.data.duration).toBeGreaterThan(0);
       expect(res.data.score).toBeGreaterThan(0);
       // Maestro difficulty should give 800 coins on win
       expect(res.data.coins).toBe(800);
+
+      // Verify wonDifficulties was updated
+      const updateCall = userLevelQuery.update.mock.calls[0];
+      expect(updateCall[0].where.id).toBe(30);
+      expect(updateCall[0].data.wonDifficulties).toEqual(["maestro"]);
+    });
+
+    test("da 0 coins si la dificultad ya fue ganada", async () => {
+      const levelQuery = strapi.db.query("api::level.level");
+      const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
+      const userLevelQuery = strapi.db.query("api::user-level.user-level");
+      const userGameHistoryQuery = strapi.db.query(
+        "api::user-game-history.user-game-history",
+      );
+      const userSessionQuery = strapi.db.query(
+        "api::user-session.user-session",
+      );
+
+      const startAt = new Date(Date.now() - 120000).toISOString();
+      const history = {
+        id: 40,
+        history: { hash: "H123", startAt },
+        completed: false,
+      };
+
+      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      userGameHistoryQuery.findMany.mockResolvedValue([history]);
+      userGameHistoryQuery.update.mockResolvedValue({});
+      // User already won "maestro" difficulty
+      userLevelQuery.findOne.mockResolvedValue({
+        id: 30,
+        levelStatus: "won",
+        wonDifficulties: ["maestro"],
+      });
+      userLevelQuery.update.mockResolvedValue({});
+      playerStatQuery.findOne.mockResolvedValue({
+        id: 20,
+        gamesPlayed: 5,
+        gamesWon: 2,
+        gamesLost: 3,
+        highestScore: 1000,
+      });
+      playerStatQuery.update.mockResolvedValue({});
+      userSessionQuery.findOne.mockResolvedValue({
+        id: 50,
+        startedAt: new Date(Date.now() - 300000),
+        isActive: true,
+      });
+      userSessionQuery.update.mockResolvedValue({});
+
+      const ctx = mockCtx(user) as any;
+      ctx.request = {
+        body: {
+          levelUuid: "LEVEL-UUID",
+          difficulty: "maestro", // Same difficulty already won
+          endAt: new Date().toISOString(),
+          hash: "H123",
+          bonusPoints: 100,
+          status: "won",
+        },
+      };
+
+      const res = await controller.end(ctx);
+      expect(res.data.score).toBe(0);
+      expect(res.data.coins).toBe(0);
+    });
+
+    test("da coins si gana otra dificultad del mismo nivel", async () => {
+      const levelQuery = strapi.db.query("api::level.level");
+      const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
+      const userLevelQuery = strapi.db.query("api::user-level.user-level");
+      const userGameHistoryQuery = strapi.db.query(
+        "api::user-game-history.user-game-history",
+      );
+      const userSessionQuery = strapi.db.query(
+        "api::user-session.user-session",
+      );
+
+      const startAt = new Date(Date.now() - 120000).toISOString();
+      const history = {
+        id: 40,
+        history: { hash: "H123", startAt },
+        completed: false,
+      };
+
+      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      userGameHistoryQuery.findMany.mockResolvedValue([history]);
+      userGameHistoryQuery.update.mockResolvedValue({});
+      // User won "aprendiz" but not "maestro"
+      userLevelQuery.findOne.mockResolvedValue({
+        id: 30,
+        levelStatus: "won",
+        wonDifficulties: ["aprendiz"],
+      });
+      userLevelQuery.update.mockResolvedValue({});
+      playerStatQuery.findOne.mockResolvedValue({
+        id: 20,
+        gamesPlayed: 5,
+        gamesWon: 2,
+        gamesLost: 3,
+        highestScore: 1000,
+      });
+      playerStatQuery.update.mockResolvedValue({});
+      userSessionQuery.findOne.mockResolvedValue({
+        id: 50,
+        startedAt: new Date(Date.now() - 300000),
+        isActive: true,
+      });
+      userSessionQuery.update.mockResolvedValue({});
+
+      const ctx = mockCtx(user) as any;
+      ctx.request = {
+        body: {
+          levelUuid: "LEVEL-UUID",
+          difficulty: "maestro", // Different difficulty
+          endAt: new Date().toISOString(),
+          hash: "H123",
+          bonusPoints: 100,
+          status: "won",
+        },
+      };
+
+      const res = await controller.end(ctx);
+      expect(res.data.score).toBeGreaterThan(0);
+      expect(res.data.coins).toBe(800); // Maestro coins
+
+      // Verify wonDifficulties is updated with new difficulty
+      const updateCall = userLevelQuery.update.mock.calls[0];
+      expect(updateCall[0].where.id).toBe(30);
+      expect(updateCall[0].data.wonDifficulties).toEqual([
+        "aprendiz",
+        "maestro",
+      ]);
     });
 
     test("idempotente si el history ya está completado", async () => {

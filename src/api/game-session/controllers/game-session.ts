@@ -10,12 +10,12 @@ const USER_LEVEL_UID = "api::user-level.user-level";
 // Maximum 1000 coins for highest difficulty (leyenda), scales down from there
 // These constants can be adjusted easily in the future
 const COINS_REWARDS_BY_DIFFICULTY: Record<string, number> = {
-  aprendiz: 100,    // Beginner - easiest
-  novato: 200,      // Novice
-  aventurero: 400,  // Adventurer
-  veterano: 600,    // Veteran
-  maestro: 800,     // Master
-  leyenda: 1000,    // Legend - hardest, maximum reward
+  aprendiz: 100, // Beginner - easiest
+  novato: 200, // Novice
+  aventurero: 400, // Adventurer
+  veterano: 600, // Veteran
+  maestro: 800, // Master
+  leyenda: 1000, // Legend - hardest, maximum reward
 };
 
 // Default coins if difficulty is not recognized
@@ -34,10 +34,12 @@ const COINS_LOSS_MULTIPLIER = 0;
 const getCoinsReward = (difficulty: string, won: boolean): number => {
   if (!won) {
     // If player lost, apply the loss multiplier (default: 0 coins)
-    const baseCoins = COINS_REWARDS_BY_DIFFICULTY[String(difficulty).toLowerCase()] ?? DEFAULT_COINS_REWARD;
+    const baseCoins =
+      COINS_REWARDS_BY_DIFFICULTY[String(difficulty).toLowerCase()] ??
+      DEFAULT_COINS_REWARD;
     return Math.floor(baseCoins * COINS_LOSS_MULTIPLIER);
   }
-  
+
   const coins = COINS_REWARDS_BY_DIFFICULTY[String(difficulty).toLowerCase()];
   return coins ?? DEFAULT_COINS_REWARD;
 };
@@ -78,10 +80,19 @@ export default {
       });
     }
 
+    const gridSize = difficultyToGrid(difficulty);
+    const salt = String(
+      (strapi as any)?.config?.get?.("server.puzzleSeedSalt") ??
+        process.env.PUZZLE_SEED_SALT ??
+        "",
+    );
+    const hash = makeHash(levelUuid, difficulty, startAt, seed, user.id, salt);
+
     const level = await strapi.db
       .query(LEVEL_UID)
       .findOne({ where: { uuid: levelUuid } });
     if (!level) {
+      // Check if already completed with same hash before returning not found
       const anyByHash = await strapi.db.query(USER_GAME_HISTORY_UID).findMany({
         where: {
           users_permissions_user: user.id,
@@ -103,14 +114,6 @@ export default {
       }
       return ctx.notFound("Level not found", { reason: "level_not_found" });
     }
-
-    const gridSize = difficultyToGrid(difficulty);
-    const salt = String(
-      (strapi as any)?.config?.get?.("server.puzzleSeedSalt") ??
-        process.env.PUZZLE_SEED_SALT ??
-        "",
-    );
-    const hash = makeHash(levelUuid, difficulty, startAt, seed, user.id, salt);
 
     let playerStat = await strapi.db
       .query(PLAYER_STAT_UID)
@@ -282,14 +285,16 @@ export default {
     const won = String(status).toLowerCase() === "won";
     let coinsEarned = getCoinsReward(difficulty, won);
 
-    // Check if level was already won to prevent farming
+    // Check if THIS DIFFICULTY was already won to prevent farming
     const ul = await strapi.db
       .query(USER_LEVEL_UID)
       .findOne({ where: { users_permissions_user: user.id, level: level.id } });
-    
-    const alreadyWon = ul && ul.levelStatus === 'won';
 
-    if (alreadyWon) {
+    const wonDifficulties: string[] = ul?.wonDifficulties || [];
+    const difficultyLower = String(difficulty).toLowerCase();
+    const alreadyWonThisDifficulty = wonDifficulties.includes(difficultyLower);
+
+    if (alreadyWonThisDifficulty) {
       score = 0;
       coinsEarned = 0;
     }
@@ -298,17 +303,28 @@ export default {
       where: { id: target.id },
       data: {
         completed: true,
-        completedAt: endDate,
+        completedAt: endDate.toISOString(),
         duration: durationSeconds,
         score,
         coinsEarned,
         history: { ...(target.history || {}), status },
       },
     });
+
     if (ul) {
+      // Update wonDifficulties if this difficulty was won for the first time
+      const updatedWonDifficulties =
+        won && !alreadyWonThisDifficulty
+          ? [...wonDifficulties, difficultyLower]
+          : wonDifficulties;
+
       await strapi.db.query(USER_LEVEL_UID).update({
         where: { id: ul.id },
-        data: { levelStatus: won ? "won" : "available", lastPlayed: endDate },
+        data: {
+          levelStatus: won ? "won" : ul.levelStatus,
+          lastPlayed: endDate.toISOString(),
+          wonDifficulties: updatedWonDifficulties,
+        },
       });
     }
 
@@ -322,17 +338,25 @@ export default {
       const highestScore = Math.max(ps.highestScore || 0, score);
       const newCoins = (ps.coins || 0) + coinsEarned;
       const newCoinsEarned = (ps.coinsEarned || 0) + coinsEarned;
-      await strapi.db.query(PLAYER_STAT_UID).update({
-        where: { id: ps.id },
-        data: {
-          gamesPlayed,
-          gamesWon,
-          gamesLost,
-          highestScore,
-          coins: newCoins,
-          coinsEarned: newCoinsEarned,
-          lastPlayedAt: endDate,
-        },
+      const newScore = (ps.score || 0) + score;
+      const newTotalPlayTime = (ps.totalPlayTime || 0) + durationSeconds;
+      const winRate =
+        gamesPlayed > 0 ? Math.round((gamesWon / gamesPlayed) * 100) : 0;
+      const dataToUpdate = {
+        gamesPlayed,
+        gamesWon,
+        gamesLost,
+        highestScore,
+        score: newScore,
+        winRate,
+        totalPlayTime: newTotalPlayTime,
+        coins: newCoins,
+        coinsEarned: newCoinsEarned,
+        lastPlayedAt: endDate.toISOString(),
+        publishedAt: new Date(),
+      };
+      await strapi.entityService.update(PLAYER_STAT_UID, ps.id, {
+        data: dataToUpdate,
       });
     }
 
@@ -348,12 +372,13 @@ export default {
       );
       const scoreInSession = (session.scoreInSession || 0) + score;
       const gamesPlayedInSession = (session.gamesPlayedInSession || 0) + 1;
-      const coinsEarnedInSession = (session.coinsEarnedInSession || 0) + coinsEarned;
+      const coinsEarnedInSession =
+        (session.coinsEarnedInSession || 0) + coinsEarned;
       await strapi.db.query(USER_SESSION_UID).update({
         where: { id: session.id },
         data: {
           isActive: false,
-          endedAt: endDate,
+          endedAt: endDate.toISOString(),
           duration,
           scoreInSession,
           gamesPlayedInSession,

@@ -44,7 +44,7 @@ describe("Game Session Controller - Replay Logic", () => {
     userGameHistoryQuery.findMany.mockResolvedValue([history]);
 
     // Mock UserLevel ALREADY WON
-    userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "won" });
+    userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "won", wonDifficulties: ["maestro"] });
 
     playerStatQuery.findOne.mockResolvedValue({ id: 20, coins: 1000 });
 

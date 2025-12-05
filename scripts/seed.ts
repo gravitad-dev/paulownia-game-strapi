@@ -361,36 +361,23 @@ async function seedDatabase(strapi: any) {
   }
   console.log(`✅ Creados ${levels.length} niveles con password '123456'`);
 
-  // 4.1 Crear User Levels
+  // 4.1 Crear User Levels - Todos bloqueados para testing limpio
   console.log("🎮 Asignando niveles a usuarios (UserLevels)...");
   for (const user of users) {
-    for (let i = 0; i < levels.length; i++) {
-      const level = levels[i];
-      let status = "blocked"; // Default
-
-      // Lógica simple para testing
-      // Nivel 1: available para todos
-      if (i === 0) {
-        status = "available";
-      }
-      // User1: Nivel 2 won, Nivel 3 available
-      else if (user.username === "user1") {
-        if (i === 1) status = "won";
-        if (i === 2) status = "available";
-      }
-
+    for (const level of levels) {
       await strapi.entityService.create("api::user-level.user-level", {
         data: {
           users_permissions_user: user.documentId,
           level: level.documentId,
-          levelStatus: status, // Verificar sin espacios
-          lastPlayed: status === "won" ? new Date() : null,
+          levelStatus: "blocked",
+          wonDifficulties: [],
+          lastPlayed: null,
           publishedAt: new Date(),
         },
       });
     }
   }
-  console.log(`✅ UserLevels creados para ${users.length} usuarios`);
+  console.log(`✅ UserLevels creados para ${users.length} usuarios (todos bloqueados)`);
 
   // 5. Crear Achievements
   console.log(`🏆 Creando logros definidos...`);

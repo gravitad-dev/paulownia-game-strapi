@@ -722,7 +722,7 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
     singularName: 'player-stat';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     averageSessionTime: Schema.Attribute.Float & Schema.Attribute.DefaultTo<0>;
@@ -1342,6 +1342,7 @@ export interface ApiUserLevelUserLevel extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     uuid: Schema.Attribute.UID;
+    wonDifficulties: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
   };
 }
 
