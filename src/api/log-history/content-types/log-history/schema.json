@@ -4,49 +4,24 @@
   "info": {
     "singularName": "log-history",
     "pluralName": "log-histories",
-    "displayName": "LogHistory"
+    "displayName": "LogHistory",
+    "description": "Log of user actions for auditing purposes"
   },
   "options": {
     "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
-    "uuid": {
-      "type": "uid"
+    "action": {
+      "type": "string",
+      "required": true
     },
-    "title": {
-      "type": "string"
+    "user": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
     },
-    "description": {
-      "type": "string"
-    },
-    "trace_id": {
-      "type": "string"
-    },
-    "timestamp": {
-      "type": "datetime"
-    },
-    "module": {
-      "type": "string"
-    },
-    "eventType": {
-      "type": "string"
-    },
-    "level": {
-      "type": "enumeration",
-      "enum": [
-        "info",
-        "warn",
-        "error"
-      ]
-    },
-    "statusCode": {
-      "type": "string"
-    },
-    "duration": {
-      "type": "string"
-    },
-    "payload": {
+    "details": {
       "type": "json"
     }
   }
