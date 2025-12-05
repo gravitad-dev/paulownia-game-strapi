@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 2025-12-05
 
+#### Changed - Game reward logic by difficulty
+
+- Updated game flow to allow replaying the same level with the same difficulty purely for fun, granting no score or coins.
+- Rewards are granted when winning a different difficulty for the same level.
+- First-time wins per difficulty are tracked via `wonDifficulties` on `UserLevel`.
+- Core implementation:
+  - Difficulty rewards table: `src/api/game-session/controllers/game-session.ts:12-19`.
+  - Anti-farming (no rewards if difficulty already won): `src/api/game-session/controllers/game-session.ts:293-301`.
+  - `wonDifficulties` update on first win: `src/api/game-session/controllers/game-session.ts:314-327`.
+
 #### Fixed - Player Stat on game end
 
 - Correctly updates `player-stat` when ending a game (`POST /api/game/end`).
