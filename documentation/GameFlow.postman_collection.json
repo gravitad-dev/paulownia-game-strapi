@@ -1,0 +1,546 @@
+{
+	"info": {
+		"_postman_id": "36c5a665-4040-41ba-91a1-ad0828a1bb69",
+		"name": "Paulownia Game API - User2 Flow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43592215"
+	},
+	"item": [
+		{
+			"name": "Register user2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"try {",
+							"  const json = pm.response.json();",
+							"  if (json && json.jwt) { pm.collectionVariables.set('jwt', json.jwt); }",
+							"} catch (e) {}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/local/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"local",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login user2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const json = pm.response.json();",
+							"if (json && json.jwt) { pm.collectionVariables.set('jwt', json.jwt); }"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"identifier\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/local",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"local"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "My Levels (capture first uuid)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"try {",
+							"  const json = pm.response.json();",
+							"  const arr = json && json.data;",
+							"  if (Array.isArray(arr) && arr.length > 0 && arr[0].uuid) {",
+							"    pm.collectionVariables.set('levelUuid', arr[0].uuid);",
+							"  }",
+							"} catch (e) {}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/levels/my-levels",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"levels",
+						"my-levels"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Unlock Level by uuid",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"password\": \"{{unlockPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/levels/uuid/{{levelUuid}}/unlock",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"levels",
+						"uuid",
+						"{{levelUuid}}",
+						"unlock"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game Start (maestro)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('startAt', new Date().toISOString());"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const json = pm.response.json();",
+							"if (json && json.data && json.data.hash) { pm.collectionVariables.set('hash', json.data.hash); }"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty}}\",\n  \"startAt\": \"{{startAt}}\",\n  \"seed\": \"{{seed1}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/start",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game End (maestro won)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('endAt', new Date().toISOString());"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty}}\",\n  \"endAt\": \"{{endAt}}\",\n  \"hash\": \"{{hash}}\",\n  \"bonusPoints\": 0,\n  \"status\": \"won\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/end",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"end"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game Start (maestro repeat)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('startAt', new Date().toISOString());"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const json = pm.response.json(); if (json && json.data && json.data.hash) { pm.collectionVariables.set('hash', json.data.hash); }"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty}}\",\n  \"startAt\": \"{{startAt}}\",\n  \"seed\": \"{{seed2}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/start",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game End (maestro repeat won no rewards)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('endAt', new Date().toISOString());"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty}}\",\n  \"endAt\": \"{{endAt}}\",\n  \"hash\": \"{{hash}}\",\n  \"bonusPoints\": 0,\n  \"status\": \"won\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/end",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"end"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game Start (leyenda)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('startAt', new Date().toISOString());"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const json = pm.response.json(); if (json && json.data && json.data.hash) { pm.collectionVariables.set('hash', json.data.hash); }"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty2}}\",\n  \"startAt\": \"{{startAt}}\",\n  \"seed\": \"{{seed3}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/start",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"start"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Game End (leyenda won with rewards)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.variables.set('endAt', new Date().toISOString());"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"levelUuid\": \"{{levelUuid}}\",\n  \"difficulty\": \"{{difficulty2}}\",\n  \"endAt\": \"{{endAt}}\",\n  \"hash\": \"{{hash}}\",\n  \"bonusPoints\": 0,\n  \"status\": \"won\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/game/end",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"game",
+						"end"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "My Levels (verify wonDifficulties)",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{jwt}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/levels/my-levels?filters[uuid][$eq]={{levelUuid}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"levels",
+						"my-levels"
+					],
+					"query": [
+						{
+							"key": "filters[uuid][$eq]",
+							"value": "{{levelUuid}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:1337"
+		},
+		{
+			"key": "username",
+			"value": "user2"
+		},
+		{
+			"key": "email",
+			"value": "user2@example.com"
+		},
+		{
+			"key": "password",
+			"value": "Password2"
+		},
+		{
+			"key": "jwt",
+			"value": ""
+		},
+		{
+			"key": "levelUuid",
+			"value": ""
+		},
+		{
+			"key": "hash",
+			"value": ""
+		},
+		{
+			"key": "unlockPassword",
+			"value": "123456"
+		},
+		{
+			"key": "difficulty",
+			"value": "maestro"
+		},
+		{
+			"key": "difficulty2",
+			"value": "leyenda"
+		},
+		{
+			"key": "seed1",
+			"value": "user2-seed-1"
+		},
+		{
+			"key": "seed2",
+			"value": "user2-seed-2"
+		},
+		{
+			"key": "seed3",
+			"value": "user2-seed-3"
+		},
+		{
+			"key": "startAt",
+			"value": ""
+		},
+		{
+			"key": "endAt",
+			"value": ""
+		}
+	]
+}
