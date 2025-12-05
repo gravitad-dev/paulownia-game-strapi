@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-12-05
+
+#### Fixed - Player Stat on game end
+
+- Correctly updates `player-stat` when ending a game (`POST /api/game/end`).
+- Properly increments and recalculates: `gamesPlayed`, `gamesWon`, `gamesLost`, `highestScore`, `score`, `winRate`, `totalPlayTime`, `coins`, `coinsEarned`, `lastPlayedAt`.
+- No coins or score are granted if the user wins a difficulty already won for the same level (anti-farming via `wonDifficulties`).
+- Implementation located in `src/api/game-session/controllers/game-session.ts:331-360` and anti-farming logic in `src/api/game-session/controllers/game-session.ts:293-301`.
+
 ### 2025-12-04
 
 #### Added - Level Unlocking
@@ -20,38 +29,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed - Level Unlocking Routes
 
-- **Dual Support**: ahora existen dos rutas para desbloquear niveles
+- **Dual Support**: there are now two routes to unlock levels
   - `POST /api/levels/:id/unlock`
   - `POST /api/levels/uuid/:uuid/unlock`
-- **Ubicación de rutas**: registradas en `src/api/level/routes/01-custom-level.ts` para reconocimiento correcto.
-- **Controlador**: `level.unlock` acepta `id` o `uuid` y valida `password` en el body.
+- **Routes location**: registered in `src/api/level/routes/01-custom-level.ts` for proper recognition.
+- **Controller**: `level.unlock` accepts `id` or `uuid` and validates `password` in the body.
 
 #### Fixed - My Levels status
 
-- `GET /api/levels/my-levels` ahora refleja el estado correcto por usuario
-  - `available  ` cuando el nivel está desbloqueado por el usuario
-  - `blocked ` cuando está bloqueado
-  - `disabled ` cuando el nivel está inactivo (`isActive=false`)
-- Implementación: consulta `UserLevel` por `users_permissions_user` y `level` para cada nivel.
+- `GET /api/levels/my-levels` now reflects the correct per-user status
+  - `available` when the level is unlocked by the user
+  - `blocked` when it is locked
+  - `disabled` when the level is inactive (`isActive=false`)
+- Implementation: queries `UserLevel` by `users_permissions_user` and `level` for each level.
 
 #### Added - Game Session
 
 - **New Endpoints**:
-  - `POST /api/game/start`: inicia partida y devuelve `hash`, `gridSize`, `startedAt`, `gameHistoryId`.
-  - `POST /api/game/end`: finaliza partida, actualiza estadísticas y retorna `status`, `score`, `duration`, `completedAt`, `levelStatus`.
-- **Idempotencia**: `end` retorna `alreadyCompleted: true` si el `hash` ya fue completado previamente.
-- **Seguridad**: requiere Bearer token; ownership validado por middleware.
+  - `POST /api/game/start`: starts a game and returns `hash`, `gridSize`, `startedAt`, `gameHistoryId`.
+  - `POST /api/game/end`: ends a game, updates stats, and returns `status`, `score`, `duration`, `completedAt`, `levelStatus`.
+- **Idempotency**: `end` returns `alreadyCompleted: true` if the `hash` was previously completed.
+- **Security**: requires Bearer token; ownership validated by middleware.
 
 #### Fixed - Game Session Controller
 
-- Acceso seguro a `strapi.config` en `start` para evitar `TypeError: Cannot read properties of undefined (reading 'get')`.
-- `end` ahora verifica histories completados por `hash` antes de procesar, devolviendo `alreadyCompleted` cuando corresponde.
-- Tests actualizados: suite `game-session` pasa completa; total general 136 tests pasando.
+- Safe access to `strapi.config` in `start` to avoid `TypeError: Cannot read properties of undefined (reading 'get')`.
+- `end` now checks completed histories by `hash` before processing, returning `alreadyCompleted` when appropriate.
+- Tests updated: `game-session` suite passing; overall total 136 tests passing.
 
 #### Documentation
 
-- Postman: agregados `POST /api/game/start` y `POST /api/game/end` al final de la colección.
- - Postman: agregados `POST /api/levels/uuid/:uuid/unlock`, `POST /api/levels/:id/unlock` y `GET /api/levels/my-levels` en la sección Levels.
+- Postman: added `POST /api/game/start` and `POST /api/game/end` at the end of the collection.
+- Postman: added `POST /api/levels/uuid/:uuid/unlock`, `POST /api/levels/:id/unlock`, and `GET /api/levels/my-levels` in the Levels section.
 
 ### 2025-12-02
 
