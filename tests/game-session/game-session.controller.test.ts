@@ -221,6 +221,8 @@ describe("Game Session Controller", () => {
       expect(userSessionQuery.update).toHaveBeenCalled();
       expect(res.data.duration).toBeGreaterThan(0);
       expect(res.data.score).toBeGreaterThan(0);
+      // Maestro difficulty should give 800 coins on win
+      expect(res.data.coins).toBe(800);
     });
 
     test("idempotente si el history ya está completado", async () => {
