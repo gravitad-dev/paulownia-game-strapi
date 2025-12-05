@@ -679,6 +679,7 @@ export interface ApiLevelLevel extends Struct.CollectionTypeSchema {
 export interface ApiLogHistoryLogHistory extends Struct.CollectionTypeSchema {
   collectionName: 'log_histories';
   info: {
+    description: 'Log of user actions for auditing purposes';
     displayName: 'LogHistory';
     pluralName: 'log-histories';
     singularName: 'log-history';
@@ -687,30 +688,25 @@ export interface ApiLogHistoryLogHistory extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    action: Schema.Attribute.String & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    description: Schema.Attribute.String;
-    duration: Schema.Attribute.String;
-    eventType: Schema.Attribute.String;
-    level: Schema.Attribute.Enumeration<['info', 'warn', 'error']>;
+    details: Schema.Attribute.JSON;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::log-history.log-history'
     > &
       Schema.Attribute.Private;
-    module: Schema.Attribute.String;
-    payload: Schema.Attribute.JSON;
     publishedAt: Schema.Attribute.DateTime;
-    statusCode: Schema.Attribute.String;
-    timestamp: Schema.Attribute.DateTime;
-    title: Schema.Attribute.String;
-    trace_id: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    uuid: Schema.Attribute.UID;
+    user: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
   };
 }
 
