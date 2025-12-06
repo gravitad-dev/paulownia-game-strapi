@@ -6,6 +6,13 @@ async function listAdminRoutes() {
 
   console.log("--- Plugin Routes ---");
   const plugins = strapi.plugins;
+  const enabledPlugins = strapi.config.get('enabledPlugins') as any;
+  console.log('Enabled plugins keys:', Object.keys(enabledPlugins || {}));
+  if (enabledPlugins && enabledPlugins['game-dashboard']) {
+    const p = enabledPlugins['game-dashboard'];
+    console.log('game-dashboard pathToPlugin:', p.pathToPlugin);
+    console.log('game-dashboard resolved export:', p);
+  }
 
   if (plugins["game-dashboard"]) {
     console.log("Game Dashboard plugin found!");
