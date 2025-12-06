@@ -15,9 +15,10 @@
       "default": "./admin/src/index.tsx"
     },
     "./strapi-server": {
-      "source": "./server/src/index.ts",
-      "require": "./server/src/index.ts",
-      "default": "./server/src/index.ts"
+      "source": "./strapi-server.ts",
+      "require": "./strapi-server.js",
+      "import": "./strapi-server.js",
+      "default": "./strapi-server.js"
     }
   },
   "dependencies": {},

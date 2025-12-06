@@ -1,8 +1,8 @@
-import path from 'path';
+import path from "path";
 
 export default () => ({
-  'game-dashboard': {
+  "game-dashboard": {
     enabled: true,
-    resolve: path.resolve(process.cwd(), 'src', 'plugins', 'game-dashboard'),
+    resolve: path.resolve(process.cwd(), "src", "plugins", "game-dashboard"),
   },
 });

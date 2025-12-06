@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Flex,
@@ -8,15 +8,21 @@ import {
   SingleSelectOption,
   DatePicker,
   Button,
-} from '@strapi/design-system';
-import { User, Clock, Play, ArrowUp } from '@strapi/icons';
-import styled from 'styled-components';
+} from "@strapi/design-system";
+import { User, Clock, Play, ArrowUp } from "@strapi/icons";
+import styled from "styled-components";
 
-import { useStatsApi, type OverviewStats, type SessionData, type TopPlayer, type EconomyStats } from '../api/stats';
-import { StatsCard } from '../components/StatsCard';
-import { TopPlayersTable } from '../components/TopPlayersTable';
-import { SessionsChart } from '../components/SessionsChart';
-import { EconomyCard } from '../components/EconomyCard';
+import {
+  useStatsApi,
+  type OverviewStats,
+  type SessionData,
+  type TopPlayer,
+  type EconomyStats,
+} from "../api/stats";
+import { StatsCard } from "../components/StatsCard";
+import { TopPlayersTable } from "../components/TopPlayersTable";
+import { SessionsChart } from "../components/SessionsChart";
+import { EconomyCard } from "../components/EconomyCard";
 
 const DashboardWrapper = styled(Box)`
   padding: 32px;
@@ -41,13 +47,14 @@ const SelectWrapper = styled(Box)`
 `;
 
 const REFRESH_OPTIONS = [
-  { value: '0', label: 'Manual' },
-  { value: '60000', label: '1 minuto' },
-  { value: '300000', label: '5 minutos' },
-  { value: '600000', label: '10 minutos' },
-  { value: '1800000', label: '30 minutos' },
+  { value: "0", label: "Manual" },
+  { value: "60000", label: "1 minuto" },
+  { value: "300000", label: "5 minutos" },
+  { value: "600000", label: "10 minutos" },
+  { value: "1800000", label: "30 minutos" },
 ];
 
+// Dashboard component
 export const Dashboard = () => {
   const api = useStatsApi();
 
@@ -66,17 +73,21 @@ export const Dashboard = () => {
     return date;
   });
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [refreshInterval, setRefreshInterval] = useState('300000'); // 5 min default
+  const [refreshInterval, setRefreshInterval] = useState("300000"); // 5 min default
 
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const [overviewData, sessionsData, playersData, economyData] = await Promise.all([
-        api.fetchOverview(),
-        api.fetchSessionsOverTime(startDate.toISOString(), endDate.toISOString()),
-        api.fetchTopPlayers(10),
-        api.fetchEconomyStats(),
-      ]);
+      const [overviewData, sessionsData, playersData, economyData] =
+        await Promise.all([
+          api.fetchOverview(),
+          api.fetchSessionsOverTime(
+            startDate.toISOString(),
+            endDate.toISOString(),
+          ),
+          api.fetchTopPlayers(10),
+          api.fetchEconomyStats(),
+        ]);
 
       setOverview(overviewData);
       setSessions(sessionsData);
@@ -84,7 +95,7 @@ export const Dashboard = () => {
       setEconomy(economyData);
       setLastRefresh(new Date());
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
@@ -133,7 +144,9 @@ export const Dashboard = () => {
 
         <Flex gap={4} alignItems="center">
           <Flex gap={2} alignItems="center">
-            <Typography variant="pi" textColor="neutral600">Desde:</Typography>
+            <Typography variant="pi" textColor="neutral600">
+              Desde:
+            </Typography>
             <DatePicker
               value={startDate}
               onChange={(date) => date && setStartDate(date)}
@@ -142,7 +155,9 @@ export const Dashboard = () => {
           </Flex>
 
           <Flex gap={2} alignItems="center">
-            <Typography variant="pi" textColor="neutral600">Hasta:</Typography>
+            <Typography variant="pi" textColor="neutral600">
+              Hasta:
+            </Typography>
             <DatePicker
               value={endDate}
               onChange={(date) => date && setEndDate(date)}
@@ -164,14 +179,19 @@ export const Dashboard = () => {
             </SingleSelect>
           </SelectWrapper>
 
-          <Button onClick={fetchAllData} loading={loading} size="S" variant="secondary">
+          <Button
+            onClick={fetchAllData}
+            loading={loading}
+            size="S"
+            variant="secondary"
+          >
             Actualizar
           </Button>
         </Flex>
       </Header>
 
-      <RefreshIndicator textColor="neutral500" style={{ marginBottom: '16px' }}>
-        Última actualización: {lastRefresh.toLocaleTimeString('es-ES')}
+      <RefreshIndicator textColor="neutral500" style={{ marginBottom: "16px" }}>
+        Última actualización: {lastRefresh.toLocaleTimeString("es-ES")}
       </RefreshIndicator>
 
       {/* KPI Cards */}
@@ -197,7 +217,7 @@ export const Dashboard = () => {
           <Grid.Item col={3} s={6}>
             <StatsCard
               title="Total Partidas"
-              value={overview?.totalGamesPlayed?.toLocaleString() || '0'}
+              value={overview?.totalGamesPlayed?.toLocaleString() || "0"}
               icon={<ArrowUp />}
               color="#EE5E52"
             />
@@ -226,7 +246,7 @@ export const Dashboard = () => {
           <Grid.Item col={4} s={12}>
             <StatsCard
               title="Partidas Ganadas"
-              value={overview?.totalGamesWon?.toLocaleString() || '0'}
+              value={overview?.totalGamesWon?.toLocaleString() || "0"}
               color="#27AE60"
             />
           </Grid.Item>

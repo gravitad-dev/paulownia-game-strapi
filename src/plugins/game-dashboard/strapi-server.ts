@@ -1,3 +1,3 @@
-import plugin from './server/src/index';
+import plugin from "./server/index";
 
 export default plugin;

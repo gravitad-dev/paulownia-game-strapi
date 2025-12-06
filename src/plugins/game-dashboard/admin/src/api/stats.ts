@@ -1,7 +1,8 @@
-// import { useFetchClient } from "@strapi/strapi/admin";
+import { useFetchClient } from "@strapi/strapi/admin";
 import { PLUGIN_ID } from "../pluginId";
 
-interface OverviewStats {
+// Interfaces for dashboard statistics
+export interface OverviewStats {
   totalUsers: number;
   activeSessions: number;
   totalGamesPlayed: number;
@@ -12,7 +13,7 @@ interface OverviewStats {
   totalGamesWon: number;
 }
 
-interface SessionData {
+export interface SessionData {
   date: string;
   sessions: number;
   games: number;
@@ -20,7 +21,7 @@ interface SessionData {
   coins: number;
 }
 
-interface TopPlayer {
+export interface TopPlayer {
   rank: number;
   username: string;
   score: number;
@@ -30,7 +31,7 @@ interface TopPlayer {
   coins: number;
 }
 
-interface EconomyStats {
+export interface EconomyStats {
   totalCoins: number;
   totalCoinsEarned: number;
   totalCoinsSpent: number;
@@ -43,55 +44,56 @@ interface EconomyStats {
 }
 
 export const useStatsApi = () => {
-  // Using native fetch to access Custom API (public or token based)
-  // Bypassing useFetchClient to avoid /admin prefix and strict auth for now.
+  const { get } = useFetchClient();
 
   const fetchOverview = async (): Promise<OverviewStats> => {
-    const response = await fetch(`/api/gamedashboarddata/overview`);
-    if (!response.ok) {
-      console.error("[GameDashboard] fetchOverview failed:", response.status, response.statusText);
+    try {
+      const { data } = await get(`/${PLUGIN_ID}/overview`);
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchOverview failed:", error);
       throw new Error("Failed to fetch overview");
     }
-    const data = await response.json();
-    return data;
   };
 
   const fetchSessionsOverTime = async (
     startDate?: string,
     endDate?: string,
   ): Promise<SessionData[]> => {
-    const params = new URLSearchParams();
-    if (startDate) params.append("startDate", startDate);
-    if (endDate) params.append("endDate", endDate);
-    const queryString = params.toString();
-    
-    const response = await fetch(`/api/gamedashboarddata/sessions-over-time${queryString ? `?${queryString}` : ""}`);
-    if (!response.ok) {
-       throw new Error("Failed to fetch sessions");
-    }
-    const data = await response.json();
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      const queryString = params.toString();
 
-    return data;
+      const { data } = await get(
+        `/${PLUGIN_ID}/sessions-over-time${queryString ? `?${queryString}` : ""}`,
+      );
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchSessionsOverTime failed:", error);
+      throw new Error("Failed to fetch sessions");
+    }
   };
 
   const fetchTopPlayers = async (limit = 10): Promise<TopPlayer[]> => {
-    const response = await fetch(`/api/gamedashboarddata/top-players?limit=${limit}`);
-    if (!response.ok) {
-       throw new Error("Failed to fetch top players");
+    try {
+      const { data } = await get(`/${PLUGIN_ID}/top-players?limit=${limit}`);
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchTopPlayers failed:", error);
+      throw new Error("Failed to fetch top players");
     }
-    const data = await response.json();
-
-    return data;
   };
 
   const fetchEconomyStats = async (): Promise<EconomyStats> => {
-    const response = await fetch(`/api/gamedashboarddata/economy`);
-    if (!response.ok) {
-       throw new Error("Failed to fetch economy");
+    try {
+      const { data } = await get(`/${PLUGIN_ID}/economy`);
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchEconomyStats failed:", error);
+      throw new Error("Failed to fetch economy");
     }
-    const data = await response.json();
-
-    return data;
   };
 
   return {
@@ -101,5 +103,3 @@ export const useStatsApi = () => {
     fetchEconomyStats,
   };
 };
-
-export type { OverviewStats, SessionData, TopPlayer, EconomyStats };
