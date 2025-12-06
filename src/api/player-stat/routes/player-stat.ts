@@ -9,11 +9,11 @@ export default factories.createCoreRouter("api::player-stat.player-stat", {
   only: ["find", "findOne"],
   config: {
     find: {
-      policies: [],
+      policies: ["global::is-admin"],
       middlewares: [],
     },
     findOne: {
-      policies: [],
+      policies: ["global::is-admin"],
       middlewares: [],
     },
   },
