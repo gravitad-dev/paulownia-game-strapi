@@ -29,6 +29,7 @@ export interface TopPlayer {
   gamesWon: number;
   winRate: number;
   coins: number;
+  tickets: number;
 }
 
 export interface EconomyStats {
@@ -41,6 +42,24 @@ export interface EconomyStats {
   avgCoinsPerPlayer: number;
   avgTicketsPerPlayer: number;
   circulationRate: number;
+}
+
+export interface LogEntry {
+  id: number;
+  action: string;
+  user: string;
+  details: any;
+  createdAt: string;
+}
+
+export interface PendingClaim {
+  documentId: number;
+  claimCode: string;
+  user: string;
+  fullName: string;
+  rewardName: string;
+  createdAt: string;
+  requiresIdentityVerification: boolean;
 }
 
 export const useStatsApi = () => {
@@ -96,10 +115,32 @@ export const useStatsApi = () => {
     }
   };
 
+  const fetchLogs = async (limit = 10): Promise<LogEntry[]> => {
+    try {
+      const { data } = await get(`/${PLUGIN_ID}/logs?limit=${limit}`);
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchLogs failed:", error);
+      throw new Error("Failed to fetch logs");
+    }
+  };
+
+  const fetchPendingClaims = async (): Promise<PendingClaim[]> => {
+    try {
+      const { data } = await get(`/${PLUGIN_ID}/pending-claims`);
+      return data;
+    } catch (error) {
+      console.error("[GameDashboard] fetchPendingClaims failed:", error);
+      throw new Error("Failed to fetch pending claims");
+    }
+  };
+
   return {
     fetchOverview,
     fetchSessionsOverTime,
     fetchTopPlayers,
     fetchEconomyStats,
+    fetchLogs,
+    fetchPendingClaims,
   };
 };

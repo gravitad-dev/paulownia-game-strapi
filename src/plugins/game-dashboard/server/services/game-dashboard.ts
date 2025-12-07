@@ -120,6 +120,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       gamesWon: player.gamesWon || 0,
       winRate: player.winRate || 0,
       coins: player.coins || 0,
+      tickets: player.tickets || 0,
     }));
   },
 
@@ -179,5 +180,51 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
           ? Math.round((totalCoinsSpent / totalCoinsEarned) * 100)
           : 0,
     };
+  },
+
+  async getLogs(query: any) {
+    const { limit = 10 } = query;
+    const logs = (await strapi.db
+      .query("api::log-history.log-history")
+      .findMany({
+        populate: ["user"],
+        orderBy: { createdAt: "desc" },
+        limit: Number(limit),
+      })) as any[];
+
+    return logs.map((log: any) => ({
+      id: log.id,
+      action: log.action,
+      user: log.user ? log.user.username : "Unknown",
+      details: log.details,
+      createdAt: log.createdAt,
+    }));
+  },
+
+  async getPendingRewardClaims() {
+    const pendingClaims = (await strapi.db
+      .query("api::reward-claim.reward-claim")
+      .findMany({
+        where: { claimStatus: "pending" },
+        populate: {
+          users_permissions_user: true,
+          user_reward: {
+            populate: {
+              reward: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      })) as any[];
+
+    return pendingClaims.map((claim: any) => ({
+      documentId: claim.documentId,
+      claimCode: claim.claimCode,
+      user: claim.users_permissions_user?.username || "Unknown",
+      fullName: claim.fullName,
+      rewardName: claim.user_reward?.reward?.name || "Unknown Reward",
+      createdAt: claim.createdAt,
+      requiresIdentityVerification: claim.requiresIdentityVerification,
+    }));
   },
 });

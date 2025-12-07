@@ -18,11 +18,15 @@ import {
   type SessionData,
   type TopPlayer,
   type EconomyStats,
+  type LogEntry,
+  type PendingClaim,
 } from "../api/stats";
 import { StatsCard } from "../components/StatsCard";
 import { TopPlayersTable } from "../components/TopPlayersTable";
 import { SessionsChart } from "../components/SessionsChart";
 import { EconomyCard } from "../components/EconomyCard";
+import { RecentLogsCard } from "../components/RecentLogsCard";
+import { PendingClaimsCard } from "../components/PendingClaimsCard";
 
 const DashboardWrapper = styled(Box)`
   padding: 32px;
@@ -32,6 +36,12 @@ const DashboardWrapper = styled(Box)`
 
 const Header = styled(Flex)`
   margin-bottom: 32px;
+`;
+
+const TitleBlock = styled(Box)`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 `;
 
 const Section = styled(Box)`
@@ -63,6 +73,8 @@ export const Dashboard = () => {
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [topPlayers, setTopPlayers] = useState<TopPlayer[]>([]);
   const [economy, setEconomy] = useState<EconomyStats | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [pendingClaims, setPendingClaims] = useState<PendingClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
@@ -78,21 +90,31 @@ export const Dashboard = () => {
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const [overviewData, sessionsData, playersData, economyData] =
-        await Promise.all([
-          api.fetchOverview(),
-          api.fetchSessionsOverTime(
-            startDate.toISOString(),
-            endDate.toISOString(),
-          ),
-          api.fetchTopPlayers(10),
-          api.fetchEconomyStats(),
-        ]);
+      const [
+        overviewData,
+        sessionsData,
+        playersData,
+        economyData,
+        logsData,
+        pendingClaimsData,
+      ] = await Promise.all([
+        api.fetchOverview(),
+        api.fetchSessionsOverTime(
+          startDate.toISOString(),
+          endDate.toISOString(),
+        ),
+        api.fetchTopPlayers(10),
+        api.fetchEconomyStats(),
+        api.fetchLogs(10),
+        api.fetchPendingClaims(),
+      ]);
 
       setOverview(overviewData);
       setSessions(sessionsData);
       setTopPlayers(playersData);
       setEconomy(economyData);
+      setLogs(logsData);
+      setPendingClaims(pendingClaimsData);
       setLastRefresh(new Date());
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -133,14 +155,22 @@ export const Dashboard = () => {
   return (
     <DashboardWrapper>
       <Header justifyContent="space-between" alignItems="center">
-        <Box>
-          <Typography variant="alpha" textColor="neutral800">
+        <TitleBlock>
+          <Typography
+            variant="alpha"
+            textColor="neutral800"
+            style={{ display: "block" }}
+          >
             🎮 Game Dashboard
           </Typography>
-          <Typography variant="epsilon" textColor="neutral600">
+          <Typography
+            variant="epsilon"
+            textColor="neutral600"
+            style={{ display: "block" }}
+          >
             Estadísticas y análisis del juego
           </Typography>
-        </Box>
+        </TitleBlock>
 
         <Flex gap={4} alignItems="center">
           <Flex gap={2} alignItems="center">
@@ -260,21 +290,38 @@ export const Dashboard = () => {
         </Grid.Root>
       </Section>
 
-      {/* Charts Row */}
+      {/* Main Content Row */}
       <Section>
         <Grid.Root gap={4}>
-          <Grid.Item col={8} s={12}>
-            <SessionsChart data={sessions} loading={loading} />
+          <Grid.Item col={5} s={12}>
+            <TopPlayersTable
+              players={topPlayers}
+              loading={loading}
+              compact={false}
+            />
           </Grid.Item>
           <Grid.Item col={4} s={12}>
-            <EconomyCard stats={economy} loading={loading} />
+            <PendingClaimsCard claims={pendingClaims} loading={loading} />
+          </Grid.Item>
+          <Grid.Item col={3} s={12}>
+            <RecentLogsCard logs={logs} loading={loading} />
           </Grid.Item>
         </Grid.Root>
       </Section>
 
-      {/* Top Players */}
       <Section>
-        <TopPlayersTable players={topPlayers} loading={loading} />
+        <Grid.Root gap={4}>
+          <Grid.Item col={6} s={12}>
+            <SessionsChart data={sessions} loading={loading} />
+          </Grid.Item>
+          <Grid.Item col={6} s={12}>
+            <EconomyCard
+              stats={economy}
+              sessions={sessions}
+              loading={loading}
+            />
+          </Grid.Item>
+        </Grid.Root>
       </Section>
     </DashboardWrapper>
   );

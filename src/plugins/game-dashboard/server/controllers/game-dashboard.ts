@@ -52,4 +52,30 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       ctx.badRequest("Failed to fetch economy stats", { error });
     }
   },
+
+  async getLogs(ctx: any) {
+    try {
+      const data = await strapi
+        .plugin("game-dashboard")
+        .service("gameDashboard")
+        .getLogs(ctx.query);
+      ctx.body = data;
+    } catch (error) {
+      console.error("GameDashboard getLogs Error:", error);
+      ctx.badRequest("Failed to fetch logs", { error });
+    }
+  },
+
+  async getPendingRewardClaims(ctx: any) {
+    try {
+      const data = await strapi
+        .plugin("game-dashboard")
+        .service("gameDashboard")
+        .getPendingRewardClaims();
+      ctx.body = data;
+    } catch (error) {
+      console.error("GameDashboard getPendingRewardClaims Error:", error);
+      ctx.badRequest("Failed to fetch pending reward claims", { error });
+    }
+  },
 });

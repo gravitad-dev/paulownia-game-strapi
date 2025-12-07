@@ -21,7 +21,10 @@
       "default": "./strapi-server.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "react-chartjs-2": "^5.3.1"
+  },
   "peerDependencies": {
     "@strapi/strapi": "^5.0.0"
   }

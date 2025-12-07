@@ -14,8 +14,8 @@ const CardWrapper = styled(Box)`
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 1px 4px rgba(33, 33, 52, 0.1);
-  min-width: 200px;
   flex: 1;
+  height: 100%;
 `;
 
 const IconWrapper = styled(Box)<{ $color?: string }>`
@@ -38,6 +38,9 @@ const ValueText = styled(Typography)`
   font-size: 28px;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.neutral800};
+  margin-top: 8px;
+  display: block;
+  word-break: break-word;
 `;
 
 export const StatsCard = ({
@@ -50,7 +53,7 @@ export const StatsCard = ({
   return (
     <CardWrapper>
       <Flex justifyContent="space-between" alignItems="flex-start">
-        <Box>
+        <Box style={{ paddingRight: 12 }}>
           <Typography
             variant="pi"
             textColor="neutral600"
@@ -62,7 +65,11 @@ export const StatsCard = ({
             {value !== undefined && value !== null ? value : "0"}
           </ValueText>
           {subtitle && (
-            <Typography variant="pi" textColor="neutral500">
+            <Typography
+              variant="pi"
+              textColor="neutral500"
+              style={{ marginTop: 6 }}
+            >
               {subtitle}
             </Typography>
           )}
