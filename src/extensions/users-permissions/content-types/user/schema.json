@@ -165,6 +165,10 @@
       "relation": "oneToMany",
       "target": "api::user-level.user-level",
       "mappedBy": "users_permissions_user"
+    },
+    "isPremium": {
+      "type": "boolean",
+      "default": false
     }
   }
 }

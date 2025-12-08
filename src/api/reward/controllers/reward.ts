@@ -14,6 +14,14 @@ export default factories.createCoreController(
         return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
       }
 
+      // 1.5 Check if user is Premium
+      // @ts-ignore
+      if (!user.isPremium) {
+        return ctx.forbidden("This feature is reserved for Premium members", {
+          reason: "premium_required",
+        });
+      }
+
       // 2. Check if user has at least 1 ticket
       const playerStat = await strapi.db
         .query("api::player-stat.player-stat")

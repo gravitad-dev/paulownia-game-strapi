@@ -839,6 +839,77 @@ export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPremiumCodeConfigPremiumCodeConfig
+  extends Struct.SingleTypeSchema {
+  collectionName: 'premium_code_configs';
+  info: {
+    description: 'Tool to bulk import premium codes';
+    displayName: 'Premium Code Import';
+    pluralName: 'premium-code-configs';
+    singularName: 'premium-code-config';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    codesInput: Schema.Attribute.Text;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    lastImportReport: Schema.Attribute.JSON;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::premium-code-config.premium-code-config'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiPremiumCodePremiumCode extends Struct.CollectionTypeSchema {
+  collectionName: 'premium_codes';
+  info: {
+    description: 'Pool of premium activation codes';
+    displayName: 'Premium Code';
+    pluralName: 'premium-codes';
+    singularName: 'premium-code';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique &
+      Schema.Attribute.SetMinMaxLength<{
+        minLength: 29;
+      }>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    isUsed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::premium-code.premium-code'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    usedAt: Schema.Attribute.DateTime;
+    usedBy: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiRankingRanking extends Struct.CollectionTypeSchema {
   collectionName: 'rankings';
   info: {
@@ -1996,6 +2067,7 @@ export interface PluginUsersPermissionsUser
       'oneToMany',
       'api::guardiand.guardiand'
     >;
+    isPremium: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     lastname: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -2089,6 +2161,8 @@ declare module '@strapi/strapi' {
       'api::level.level': ApiLevelLevel;
       'api::log-history.log-history': ApiLogHistoryLogHistory;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
+      'api::premium-code-config.premium-code-config': ApiPremiumCodeConfigPremiumCodeConfig;
+      'api::premium-code.premium-code': ApiPremiumCodePremiumCode;
       'api::ranking.ranking': ApiRankingRanking;
       'api::reward-claim.reward-claim': ApiRewardClaimRewardClaim;
       'api::reward.reward': ApiRewardReward;

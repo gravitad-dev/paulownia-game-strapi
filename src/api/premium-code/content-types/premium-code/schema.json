@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "premium_codes",
+  "info": {
+    "singularName": "premium-code",
+    "pluralName": "premium-codes",
+    "displayName": "Premium Code",
+    "description": "Pool of premium activation codes"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "minLength": 29
+    },
+    "isUsed": {
+      "type": "boolean",
+      "default": false
+    },
+    "usedBy": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "usedAt": {
+      "type": "datetime"
+    }
+  }
+}
