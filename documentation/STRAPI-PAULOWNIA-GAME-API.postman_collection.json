@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a6006e03-3490-4406-9c4c-392ef38207a0",
+		"_postman_id": "e273e38a-671f-42ef-a5d9-d15db5100a3a",
 		"name": "STRAPI-PAULOWNIA-GAME-API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "43592215"
@@ -40,7 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"identifier\": \"user2@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
+							"raw": "{\n    \"identifier\": \"user1@example.com\",\n    \"password\": \"Password1\"\n}\n// admin\n//  {\n//   \"identifier\": \"synergiart.websupp@gmail.com\",\n//   \"password\": \"Password1\"\n// }"
 						},
 						"url": {
 							"raw": "{{STRAPI_URL_LOCAL}}/api/auth/local",
@@ -6180,6 +6180,39 @@
 						}
 					],
 					"description": "## Reward Claims API\n\nComplete flow for claiming consumable rewards (physical prizes).\n\n### Status Flow:\n```\npending → processing → delivered\n                     ↘ rejected\n                     ↘ cancelled\n```\n\n### User Flow:\n1. **Create claim** → POST /reward-claims\n2. **Upload documents** → POST /upload-documents\n   - Adults: own ID (front + back)\n   - Minors: own ID + guardian ID + guardian info\n3. **Wait for admin review**\n4. **Receive reward** (delivered) or **fix issues** (rejected)\n\n### rewardStatus Flow:\n```\navailable → in_claim → claimed (delivered)\n                     → available (rejected/cancelled)\n```"
+				},
+				{
+					"name": "Premium Codes",
+					"item": [
+						{
+							"name": "Put Premium Code",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"code\": \"8ZC9-JAHW-3R6K-2Q4X-MF0D-15BP\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{STRAPI_URL_LOCAL}}/api/premium-codes/redeem",
+									"host": [
+										"{{STRAPI_URL_LOCAL}}"
+									],
+									"path": [
+										"api",
+										"premium-codes",
+										"redeem"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

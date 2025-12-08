@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 2025-12-08
 
+#### Added - Premium User System
+
+- **Premium Code Collection**: Created `api::premium-code.premium-code` to manage activation codes.
+- **User Schema Update**: Added `isPremium` boolean field to `plugin::users-permissions.user` to track premium status.
+- **New Endpoint**: `PUT /api/premium-codes/redeem`
+  - Allows authenticated users to redeem a 24-character code.
+  - Automatically updates the user's `isPremium` status to `true`.
+  - Marks the code as used, sets `usedAt` timestamp, and links it to the user.
+- **Seeder Update**: Added generation of 20 random premium codes during the seed process for testing purposes.
+- **Code Format**: Updated code format to `XXXX-XXXX-XXXX-XXXX-XXXX-XXXX` (29 chars) for better readability.
+- **Response Update**: `GET /api/users/me` now includes the `isPremium` field in the response.
+- **Bulk Importer**: Added a Single Type `PremiumCodeConfig` in the Admin Panel to bulk import codes by pasting them from a text file.
+- **Security**: Disabled public core routes (find, create, etc.) for `premium-code` and `premium-code-config` to ensure they are only managed via Admin Panel or specific endpoints.
+
+#### Changed - Roulette Spin Restriction
+
+- **Premium Only**: Restricted `POST /api/rewards/spin` to Premium users only.
+  - Non-premium users will receive a `403 Forbidden` response.
+  - Error details: `{ reason: "premium_required" }`.
+
 #### Added - Custom Game Dashboard Plugin
 
 - Created a dedicated Strapi Admin plugin `game-dashboard` for internal analytics and management.

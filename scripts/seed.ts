@@ -1,5 +1,22 @@
 import { createStrapi } from "@strapi/strapi";
 
+function generateCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const segments = 6;
+  const segmentLength = 4;
+
+  let code = [];
+  for (let i = 0; i < segments; i++) {
+    let segment = "";
+    for (let j = 0; j < segmentLength; j++) {
+      segment += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    code.push(segment);
+  }
+
+  return code.join("-");
+}
+
 // Configuración de cantidad de registros
 const COUNTS = {
   USERS: 5,
@@ -36,6 +53,7 @@ async function cleanDatabase(strapi: any) {
     "api::achievement.achievement",
     "api::level.level",
     "api::guardiand.guardiand",
+    "api::premium-code.premium-code",
   ];
 
   for (const uid of types) {
@@ -377,7 +395,9 @@ async function seedDatabase(strapi: any) {
       });
     }
   }
-  console.log(`✅ UserLevels creados para ${users.length} usuarios (todos bloqueados)`);
+  console.log(
+    `✅ UserLevels creados para ${users.length} usuarios (todos bloqueados)`,
+  );
 
   // 5. Crear Achievements
   console.log(`🏆 Creando logros definidos...`);
@@ -872,12 +892,16 @@ async function seedDatabase(strapi: any) {
     // Log History
     await strapi.entityService.create("api::log-history.log-history", {
       data: {
-        title: "User Login",
-        description: `User ${user.username} logged in`,
-        level: "info",
-        timestamp: new Date(),
-        module: "auth",
-        eventType: "login",
+        action: "login",
+        user: user.documentId,
+        details: {
+          title: "User Login",
+          description: `User ${user.username} logged in`,
+          level: "info",
+          timestamp: new Date(),
+          module: "auth",
+          eventType: "login",
+        },
       },
     });
   }
@@ -1248,6 +1272,23 @@ async function seedDatabase(strapi: any) {
     console.log("✅ Rankings de ejemplo creados");
   } catch (e) {
     console.error("⚠️ Error creando rankings de ejemplo:", e);
+  }
+
+  // 12. Create Premium Codes
+  console.log("🎟️ Creating Premium Codes...");
+  try {
+    const premiumCodesCount = 20;
+    for (let i = 0; i < premiumCodesCount; i++) {
+      await strapi.entityService.create("api::premium-code.premium-code", {
+        data: {
+          code: generateCode(),
+          isUsed: false,
+        },
+      });
+    }
+    console.log(`✅ Created ${premiumCodesCount} premium codes.`);
+  } catch (e) {
+    console.error("⚠️ Error creating premium codes:", e);
   }
 
   console.log("✅ Seeder completado exitosamente.");
