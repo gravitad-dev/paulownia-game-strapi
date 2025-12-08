@@ -32,12 +32,14 @@ module.exports = (plugin) => {
       return ctx.unauthorized();
     }
 
-    const user = await strapi
+    // @ts-ignore
+    const user: any = await strapi
       .documents("plugin::users-permissions.user")
       .findFirst({
         filters: {
           id: ctx.state.user.id,
         },
+        // @ts-ignore
         fields: [
           "id",
           "documentId",
@@ -55,6 +57,7 @@ module.exports = (plugin) => {
           "zipcode",
           "country",
           "age",
+          "isPremium",
         ],
         populate: {
           avatar: {

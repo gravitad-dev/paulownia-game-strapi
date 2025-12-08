@@ -1,0 +1,24 @@
+{
+  "kind": "singleType",
+  "collectionName": "premium_code_configs",
+  "info": {
+    "singularName": "premium-code-config",
+    "pluralName": "premium-code-configs",
+    "displayName": "Premium Code Import",
+    "description": "Tool to bulk import premium codes"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "codesInput": {
+      "type": "text",
+      "description": "Paste codes here (one per line). They will be processed upon Save."
+    },
+    "lastImportReport": {
+      "type": "json",
+      "description": "Result of the last import operation."
+    }
+  }
+}
