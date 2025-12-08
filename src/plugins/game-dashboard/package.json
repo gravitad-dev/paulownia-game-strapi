@@ -1,0 +1,31 @@
+{
+  "name": "game-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard de estadísticas del juego para Strapi Admin",
+  "strapi": {
+    "name": "game-dashboard",
+    "description": "Dashboard de estadísticas del juego",
+    "kind": "plugin"
+  },
+  "exports": {
+    "./strapi-admin": {
+      "source": "./admin/src/index.tsx",
+      "import": "./admin/src/index.tsx",
+      "require": "./admin/src/index.tsx",
+      "default": "./admin/src/index.tsx"
+    },
+    "./strapi-server": {
+      "source": "./strapi-server.ts",
+      "require": "./strapi-server.js",
+      "import": "./strapi-server.js",
+      "default": "./strapi-server.js"
+    }
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "react-chartjs-2": "^5.3.1"
+  },
+  "peerDependencies": {
+    "@strapi/strapi": "^5.0.0"
+  }
+}

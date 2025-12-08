@@ -11,11 +11,11 @@ export default factories.createCoreRouter(USER_SESSION_UID, {
   only: ["find", "findOne"],
   config: {
     find: {
-      policies: [],
+      policies: ["global::is-admin"],
       middlewares: [],
     },
     findOne: {
-      policies: [],
+      policies: ["global::is-admin"],
       middlewares: [],
     },
   },
