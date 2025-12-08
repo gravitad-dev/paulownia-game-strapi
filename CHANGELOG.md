@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-12-08
+
+#### Added - Custom Game Dashboard Plugin
+
+- Created a dedicated Strapi Admin plugin `game-dashboard` for internal analytics and management.
+- **Security**: Plugin endpoints are internal and restricted to logged-in Admin Panel users only, ensuring data is inaccessible to public API consumers.
+- **Dashboard UI**: Custom React-based page integrated into the Strapi Admin sidebar.
+
+#### Added - Dashboard Features
+
+- **Initial Component Set**: Designed and implemented the complete set of dashboard widgets from scratch.
+- **Pending Claims Management**: Dedicated card to list `api::reward-claim.reward-claim` entries, enabling efficient Admin review of user documentation.
+- **Top Players**: Interactive table displaying ranking, scores, and win rates.
+- **Real-time Stats**: KPI cards for Total Games, Average Duration, Daily Sessions, and Win Rates.
+- **Charts & Logs**: Visualizations for Session trends, Economy balance, and Recent System Logs.
+
+#### Changed - Dashboard Layout & Responsiveness
+
+- **Mobile Optimization**: Replaced Grid layouts with Flexbox wrapping to prevent content overlap on smaller screens (mobile/tablet).
+- **Compact View**: Enabled compact mode for the Top Players table in the dashboard view to optimize space usage.
+- **Consistent Design**: Standardized card heights (500px) with internal scrolling to maintain a clean layout regardless of content volume.
+
 ### 2025-12-05
 
 #### Changed - Game reward logic by difficulty
