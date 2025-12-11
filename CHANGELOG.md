@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2025-12-11
+
+#### Changed - Email System Refactor & Customization
+
+- **Enhancement**: Overrode `sendConfirmationEmail` service in `users-permissions`.
+  - Automatic registration emails now use the custom template (`templates/email-confirmation-email.html`) instead of the default Strapi message.
+  - Ensures consistent branding (logo, styles) across all email flows (manual resend and auto-send).
+- **Fix**: Resolved variable collision in `strapi-server.ts` where the helper import `email` conflicted with the `email` field from the request body. Renamed helper import to `emailHelper`.
+- **Standardization**: Unified template variable usage (e.g., `confirmUrl`) to robustly support.
+
+### 2025-12-10
+
+#### Added - Email Authentication Features
+
+- **Email Provider**: Integrated `@strapi/provider-email-nodemailer` for transactional emails.
+- **Environment Configuration**: Added support for `SMTP_*` variables and `AUTH_*` redirection URLs in `.env`.
+- **Automatic Configuration**: Implemented automatic sync of redirection URLs (`AUTH_RESET_PASSWORD_PAGE`, `AUTH_EMAIL_CONFIRMATION_REDIRECT`) from `.env` to Strapi Advanced Settings on server bootstrap (`src/index.ts`).
+- **Postman Collection**: Updated documentation with new Auth endpoints:
+  - `POST /api/auth/forgot-password` (Request reset link)
+  - `POST /api/auth/reset-password` (Set new password)
+  - `POST /api/auth/send-email-confirmation` (Resend verification email)
+- **Documentation**: Added `AUTH_IMPLEMENTATION_GUIDE.md` for Frontend developers.
+
 ### 2025-12-08
 
 #### Added - Premium User System
