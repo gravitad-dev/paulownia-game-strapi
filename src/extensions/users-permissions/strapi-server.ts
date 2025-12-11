@@ -1,4 +1,8 @@
 const utils = require("@strapi/utils");
+const { generateUuid } = require("../../helpers/uuidGenerator");
+const path = require("path");
+const fs = require("fs");
+const emailHelper = require("../../helpers/email");
 const { ApplicationError } = utils.errors;
 
 module.exports = (plugin) => {
@@ -113,6 +117,247 @@ module.exports = (plugin) => {
     }
 
     ctx.body = user;
+  };
+
+  // --------------------------------------------------------------------------------
+  // OVERRIDE: Auth Controller (Forgot Password & Reset Password with Expiration)
+  // --------------------------------------------------------------------------------
+
+  // V5: controllers are factories; wrap and extend the returned controller
+  const originalAuthFactory = plugin.controllers.auth;
+  plugin.controllers.auth = ({ strapi }) => {
+    const originalAuth = originalAuthFactory({ strapi });
+
+    // 1. Customize forgotPassword: validar usuario, generar token, enviar email y responder rápido
+    originalAuth.forgotPassword = async (ctx) => {
+      const { email } = ctx.request.body;
+
+      const user = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: email.toLowerCase() } });
+
+      if (!user) {
+        return ctx.badRequest("User not found");
+      }
+
+      if (user.blocked) {
+        return ctx.badRequest("User is blocked");
+      }
+
+      const resetPasswordToken = generateUuid(64);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+
+      await strapi.query("plugin::users-permissions.user").update({
+        where: { id: user.id },
+        data: {
+          resetPasswordToken,
+          resetPasswordExpires: expiresAt,
+        },
+      });
+
+      const resetPageUrl =
+        process.env.AUTH_RESET_PASSWORD_PAGE || strapi.config.get("server.url");
+      const templatesDir = emailHelper.getTemplatesDir();
+      const resetTplPath =
+        process.env.RESET_PASSWORD_TEMPLATE_PATH ||
+        path.resolve(templatesDir, "reset-password-email.html");
+      let htmlSource = emailHelper.readTemplate(
+        resetTplPath,
+        `<!doctype html><html><body><a href="<%= URL %>?code=<%= TOKEN %>">Reset</a></body></html>`,
+      );
+      htmlSource = emailHelper.normalizeTemplateImagesToCid(htmlSource);
+      let html = emailHelper.applyVariables(htmlSource, {
+        URL: resetPageUrl,
+        TOKEN: resetPasswordToken,
+        CODE: resetPasswordToken,
+        resetUrl: `${resetPageUrl}?code=${resetPasswordToken}`,
+        userName: emailHelper.getUserDisplayName(user),
+        appName: emailHelper.getAppName(),
+        supportEmail: emailHelper.getSupportEmail(),
+        expiresIn: "1 hora",
+        logoUrl: "cid:logo",
+        year: String(new Date().getFullYear()),
+      });
+
+      const to = email;
+      const subject = "Restablecer contraseña";
+      const from = process.env.EMAIL_FROM || "no-reply@example.com";
+      const replyTo = process.env.EMAIL_REPLY_TO || from;
+
+      const attachments = emailHelper.getLogoAttachments(templatesDir);
+      try {
+        void emailHelper.sendEmail(strapi, {
+          to,
+          from,
+          replyTo,
+          subject,
+          html,
+          attachments,
+        });
+      } catch (err) {
+        strapi.log.error("Failed to send reset password email", err);
+      }
+
+      ctx.send({ ok: true });
+    };
+
+    originalAuth.sendEmailConfirmation = async (ctx) => {
+      const { email } = ctx.request.body;
+      const user = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { email: email.toLowerCase() } });
+      if (!user) {
+        return ctx.badRequest("User not found");
+      }
+      if (user.confirmed) {
+        return ctx.badRequest("Already confirmed");
+      }
+      if (user.blocked) {
+        return ctx.badRequest("User is blocked");
+      }
+      const confirmationToken = generateUuid(64);
+      await strapi.query("plugin::users-permissions.user").update({
+        where: { id: user.id },
+        data: { confirmationToken },
+      });
+      const confirmUrl =
+        process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT ||
+        strapi.config.get("server.url");
+      const templatesDir = emailHelper.getTemplatesDir();
+      const confirmTplPath =
+        process.env.EMAIL_CONFIRMATION_TEMPLATE_PATH ||
+        path.resolve(templatesDir, "email-confirmation-email.html");
+      let htmlSource = emailHelper.readTemplate(
+        confirmTplPath,
+        `<!doctype html><html><body><a href="<%= URL %>?code=<%= CODE %>">Confirm</a></body></html>`,
+      );
+      htmlSource = emailHelper.normalizeTemplateImagesToCid(htmlSource);
+      let html = emailHelper.applyVariables(htmlSource, {
+        URL: confirmUrl,
+        CODE: confirmationToken,
+        TOKEN: confirmationToken,
+        confirmUrl: `${confirmUrl}?code=${confirmationToken}`,
+        userName: emailHelper.getUserDisplayName(user),
+        appName: emailHelper.getAppName(),
+        supportEmail: emailHelper.getSupportEmail(),
+        logoUrl: "cid:logo",
+        year: String(new Date().getFullYear()),
+      });
+      const to = email;
+      const subject = "Confirmar cuenta";
+      const from = process.env.EMAIL_FROM || "no-reply@example.com";
+      const replyTo = process.env.EMAIL_REPLY_TO || from;
+      const attachments = emailHelper.getLogoAttachments(templatesDir);
+      try {
+        void emailHelper.sendEmail(strapi, {
+          to,
+          from,
+          replyTo,
+          subject,
+          html,
+          attachments,
+        });
+      } catch (err) {
+        strapi.log.error("Failed to send confirmation email", err);
+      }
+      ctx.send({ ok: true });
+    };
+
+    // 2. Customize resetPassword to check expiration
+    const superResetPassword = originalAuth.resetPassword;
+    originalAuth.resetPassword = async (ctx) => {
+      const { code } = ctx.request.body;
+
+      // Find user with this token
+      const user = await strapi
+        .query("plugin::users-permissions.user")
+        .findOne({ where: { resetPasswordToken: code } });
+
+      if (!user) {
+        return ctx.badRequest("Incorrect code provided");
+      }
+
+      // Check expiration
+      if (user.resetPasswordExpires) {
+        const now = new Date();
+        const expiresAt = new Date(user.resetPasswordExpires);
+
+        if (now > expiresAt) {
+          return ctx.badRequest(
+            "Reset token has expired. Please request a new one.",
+          );
+        }
+      }
+
+      // If valid, proceed with original reset
+      await superResetPassword(ctx);
+
+      // Clear expiration after successful reset
+      await strapi.query("plugin::users-permissions.user").update({
+        where: { id: user.id },
+        data: {
+          resetPasswordExpires: null,
+        },
+      });
+    };
+
+    return originalAuth;
+  };
+
+  const originalUserServiceFactory = plugin.services.user;
+  plugin.services.user = ({ strapi }) => {
+    const originalUserService = originalUserServiceFactory({ strapi });
+    originalUserService.sendConfirmationEmail = async (user) => {
+      const confirmationToken = generateUuid(64);
+      await strapi
+        .query("plugin::users-permissions.user")
+        .update({ where: { id: user.id }, data: { confirmationToken } });
+
+      const apiPrefix = strapi.config.get("api.rest.prefix");
+      const defaultApiConfirmUrl = `${strapi.config.get("server.absoluteUrl")}${apiPrefix}/auth/email-confirmation`;
+      const baseUrl =
+        process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT || defaultApiConfirmUrl;
+      const confirmUrl = process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT
+        ? `${baseUrl}?code=${confirmationToken}`
+        : `${baseUrl}?confirmation=${confirmationToken}`;
+
+      const templatesDir = emailHelper.getTemplatesDir();
+      const confirmTplPath =
+        process.env.EMAIL_CONFIRMATION_TEMPLATE_PATH ||
+        path.resolve(templatesDir, "email-confirmation-email.html");
+      let htmlSource = emailHelper.readTemplate(
+        confirmTplPath,
+        `<!doctype html><html><body><a href="<%= URL %>?confirmation=<%= CODE %>">Confirm</a></body></html>`,
+      );
+      htmlSource = emailHelper.normalizeTemplateImagesToCid(htmlSource);
+      const html = emailHelper.applyVariables(htmlSource, {
+        URL: baseUrl,
+        CODE: confirmationToken,
+        TOKEN: confirmationToken,
+        confirmUrl,
+        userName: emailHelper.getUserDisplayName(user),
+        appName: emailHelper.getAppName(),
+        supportEmail: emailHelper.getSupportEmail(),
+        logoUrl: "cid:logo",
+        year: String(new Date().getFullYear()),
+      });
+
+      const to = user.email;
+      const subject = "Confirmar cuenta";
+      const from = process.env.EMAIL_FROM || "no-reply@example.com";
+      const replyTo = process.env.EMAIL_REPLY_TO || from;
+      const attachments = emailHelper.getLogoAttachments(templatesDir);
+      await emailHelper.sendEmail(strapi, {
+        to,
+        from,
+        replyTo,
+        subject,
+        html,
+        attachments,
+      });
+    };
+    return originalUserService;
   };
 
   return plugin;

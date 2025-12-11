@@ -19,6 +19,78 @@ export default {
     strapi.log.info(`CRON_RESET_DAY ${process.env.CRON_RESET_DAY ?? '1'}`)
     strapi.db.lifecycles.subscribe(autoUuid);
 
+    // Update Users-Permissions Email Templates from ENV (Sender)
+    try {
+      const pluginStore = strapi.store({
+        type: 'plugin',
+        name: 'users-permissions',
+        key: 'email',
+      });
+
+      const emailConfig = await pluginStore.get();
+      
+      if (emailConfig && process.env.EMAIL_FROM) {
+        // Update sender for Reset Password
+        if (emailConfig.reset_password.options.from !== process.env.EMAIL_FROM) {
+          emailConfig.reset_password.options.from = process.env.EMAIL_FROM;
+          emailConfig.reset_password.options.replyTo = process.env.EMAIL_REPLY_TO || process.env.EMAIL_FROM;
+          strapi.log.info(`Updated Reset Password Email Sender to: ${process.env.EMAIL_FROM}`);
+        }
+        
+        // Update sender for Email Confirmation
+        if (emailConfig.email_confirmation.options.from !== process.env.EMAIL_FROM) {
+          emailConfig.email_confirmation.options.from = process.env.EMAIL_FROM;
+          emailConfig.email_confirmation.options.replyTo = process.env.EMAIL_REPLY_TO || process.env.EMAIL_FROM;
+          strapi.log.info(`Updated Email Confirmation Email Sender to: ${process.env.EMAIL_FROM}`);
+        }
+
+        await pluginStore.set({ value: emailConfig });
+      }
+    } catch (err) {
+        strapi.log.error('Failed to update users-permissions email templates from env', err);
+    }
+
+    // Update Users-Permissions Advanced Settings from ENV
+    try {
+      const pluginStore = strapi.store({
+        type: 'plugin',
+        name: 'users-permissions',
+        key: 'advanced',
+      });
+
+      const config = await pluginStore.get();
+
+      if (config) {
+        let changed = false;
+        
+        if (process.env.AUTH_RESET_PASSWORD_PAGE && config.email_reset_password !== process.env.AUTH_RESET_PASSWORD_PAGE) {
+          config.email_reset_password = process.env.AUTH_RESET_PASSWORD_PAGE;
+          changed = true;
+          strapi.log.info(`Updated Reset Password Page to: ${process.env.AUTH_RESET_PASSWORD_PAGE}`);
+        }
+
+        if (process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT && config.email_confirmation_redirection !== process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT) {
+          config.email_confirmation_redirection = process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT;
+          changed = true;
+          strapi.log.info(`Updated Email Confirmation Redirect to: ${process.env.AUTH_EMAIL_CONFIRMATION_REDIRECT}`);
+        }
+
+        // Force enable email confirmation if not already enabled
+        if (config.email_confirmation !== true) {
+          config.email_confirmation = true;
+          changed = true;
+          strapi.log.info('Force enabled Email Confirmation setting.');
+        }
+
+        if (changed) {
+          await pluginStore.set({ value: config });
+          strapi.log.info('Users-Permissions advanced settings updated from environment variables.');
+        }
+      }
+    } catch (err) {
+      strapi.log.error('Failed to update users-permissions settings from env', err);
+    }
+
     // Seed Daily Rewards if empty
     const count = await strapi.entityService.count('api::daily-reward.daily-reward');
     if (count === 0) {

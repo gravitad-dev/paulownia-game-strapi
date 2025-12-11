@@ -2088,6 +2088,7 @@ export interface PluginUsersPermissionsUser
     >;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    resetPasswordExpires: Schema.Attribute.DateTime & Schema.Attribute.Private;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     reward_claims: Schema.Attribute.Relation<
       'oneToMany',
