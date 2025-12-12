@@ -1,5 +1,5 @@
 services:
-  strapi:
+  paulownia-strapi:
     container_name: paulownia-strapi
     build:
       context: .
