@@ -205,7 +205,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     const pendingClaims = (await strapi.db
       .query("api::reward-claim.reward-claim")
       .findMany({
-        where: { claimStatus: "pending" },
+        where: { claimStatus: "processing" },
         populate: {
           users_permissions_user: true,
           user_reward: {

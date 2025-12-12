@@ -1,6 +1,7 @@
 /**
  * Lifecycle hooks for user-reward content type
  * Automatically initializes canBeClaimed and hasClaim fields for consumable rewards
+ * Creates notifications when rewards are created or updated
  */
 
 export default {
@@ -48,6 +49,44 @@ export default {
         }
       } catch (error) {
         strapi.log.error("[UserReward Lifecycle] Error initializing claim fields:", error);
+      }
+    }
+  },
+
+  /**
+   * After create: Create notification for new consumable rewards
+   */
+  async afterCreate(event) {
+    const { result } = event;
+
+    try {
+      // Create notification if it's a consumable reward
+      await strapi
+        .service('api::notification.notification')
+        .createRewardAvailableNotification(result);
+      
+      strapi.log.info(`[UserReward Lifecycle] Notification check for new user-reward ${result.id}`);
+    } catch (error) {
+      strapi.log.error('[UserReward Lifecycle] Error in afterCreate notification:', error);
+    }
+  },
+
+  /**
+   * After update: Create notification when rewardStatus changes
+   */
+  async afterUpdate(event) {
+    const { result, params } = event;
+
+    // Only if rewardStatus was updated
+    if (params.data.rewardStatus && result) {
+      try {
+        await strapi
+          .service('api::notification.notification')
+          .handleRewardStatusChange(result);
+        
+        strapi.log.info(`[UserReward Lifecycle] Notification created/checked for user-reward ${result.id} - status: ${result.rewardStatus}`);
+      } catch (error) {
+        strapi.log.error('[UserReward Lifecycle] Error in afterUpdate notification:', error);
       }
     }
   },
