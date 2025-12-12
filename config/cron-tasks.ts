@@ -407,6 +407,45 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
 
   tasks[rankingExpr] = generateRanking;
 
+  const cleanupOldNotifications = async ({ strapi }: { strapi: any }) => {
+    console.log("🧹 Running old notifications cleanup...");
+    try {
+      const daysToKeep = 365; // Retention period: 1 year
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() - daysToKeep);
+
+      const deleted = await strapi.db
+        .query("api::notification.notification")
+        .deleteMany({
+          where: {
+            createdAt: {
+              $lt: expirationDate.toISOString(),
+            },
+          },
+        });
+
+      if (deleted.count > 0) {
+        console.log(
+          `✅ Deleted ${deleted.count} notifications older than ${daysToKeep} days.`,
+        );
+      } else {
+        console.log("✨ No old notifications to clean up.");
+      }
+    } catch (error) {
+      console.error("❌ Error cleaning up old notifications:", error);
+    }
+  };
+
+  // Tarea de limpieza de notificaciones antiguas (Run weekly, Sunday at 3:30 AM)
+  const notificationsCleanupConfig = env(
+    "CRON_NOTIFICATIONS_CLEANUP_SCHEDULE",
+    "30 3 * * 0",
+  );
+  console.log(
+    `Notifications Cleanup Cron configured with schedule: ${notificationsCleanupConfig}`,
+  );
+  tasks[notificationsCleanupConfig] = cleanupOldNotifications;
+
   // Tarea de limpieza de imágenes huérfanas
   const cleanupConfig = env("CRON_CLEANUP_SCHEDULE", "0 4 * * 0"); // Default: weekly, Sunday 4 AM
   console.log(`Cleanup Cron configured with schedule: ${cleanupConfig}`);

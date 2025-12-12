@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+  
+### 2025-12-12
+
+#### Added - Persistent Notifications System
+
+- **New Content Type**: `api::notification.notification`
+  - Stores user notifications with support for types, priorities, and read status.
+  - Fields: `type`, `title`, `message`, `priority`, `read`, `readAt`, `metadata`, `relatedEntity`.
+- **New Content Type**: `api::user-notification-read.user-notification-read`
+  - Tracks read receipts for efficient querying.
+- **Automated Lifecycle Hooks**:
+  - `user-reward`: Triggers `REWARD_AVAILABLE` notification when a consumable reward is created.
+  - `reward-claim`: Triggers `REWARD_STATUS_UPDATE` notifications on status changes (`pending`, `processing`, `delivered`, `rejected`, `cancelled`).
+  - `user`: Triggers `WELCOME` notification when email is confirmed.
+- **REST API Endpoints**:
+  - `GET /api/notifications`: Returns paginated notifications separated by `read`/`unread`.
+  - `POST /api/notifications/:id/mark-read`: Marks a single notification as read.
+  - `POST /api/notifications/mark-all-read`: Marks all unread notifications as read.
+- **Cron Job**: Added `notifications-cleanup` task to automatically delete notifications older than 365 days.
 
 ### 2025-12-11
 

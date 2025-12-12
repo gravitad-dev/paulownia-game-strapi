@@ -5339,6 +5339,83 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{STRAPI_URL_LOCAL}}/api/notifications?page=1&pageSize=25",
+              "host": ["{{STRAPI_URL_LOCAL}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número de página (default: 1)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "25",
+                  "description": "Notificaciones por página (default: 25)"
+                }
+              ]
+            },
+            "description": "Obtiene notificaciones PERSISTENTES del usuario autenticado.\n\n**Sistema persistente**: Las notificaciones se crean automáticamente mediante lifecycle hooks cuando:\n- Cambia el estado de una reclamación (reward-claim)\n- Se crea un nuevo premio consumable (user-reward)\n- Se actualiza el estado de un premio\n\n**Paginación y Ordenamiento**:\n- page: Número de página (default: 1)\n- pageSize: Items por página (default: 25)\n- Ordenadas por createdAt DESC automáticamente\n- Separadas en data.unread y data.read\n\n**Response**:\n```json\n{\n  \"data\": {\n    \"unread\": [...],\n    \"read\": [...]\n  },\n  \"meta\": {\n    \"hasNotifications\": true,\n    \"unreadCount\": 5,\n    \"readCount\": 3,\n    \"totalCount\": 8,\n    \"pagination\": {\n      \"page\": 1,\n      \"pageSize\": 25,\n      \"pageCount\": 1,\n      \"total\": 8\n    }\n  }\n}\n```\n\n**Tipos de notificaciones**:\n- REWARD_AVAILABLE: Premio consumable disponible\n- REWARD_STATUS_UPDATE: Cambios en reclamaciones (pending, processing, delivered, rejected, cancelled)\n- PROFILE_INCOMPLETE: Perfil incompleto\n- WELCOME: Mensaje de bienvenida\n- SYSTEM_ANNOUNCEMENT: Anuncios del sistema"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{STRAPI_URL_LOCAL}}/api/notifications/:id/mark-read",
+              "host": ["{{STRAPI_URL_LOCAL}}"],
+              "path": ["api", "notifications", ":id", "mark-read"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "profile_incomplete",
+                  "description": "ID de la notificación (ej: profile_incomplete, reward_claim_delivered_123)"
+                }
+              ]
+            },
+            "description": "Marca una notificación específica como leída para el usuario autenticado.\n\nEl ID de notificación debe ser uno del array 'unread' retornado por GET /api/notifications."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{STRAPI_URL_LOCAL}}/api/notifications/mark-all-read",
+              "host": ["{{STRAPI_URL_LOCAL}}"],
+              "path": ["api", "notifications", "mark-all-read"]
+            },
+            "description": "Marca todas las notificaciones actuales como leídas para el usuario autenticado.\n\nEsto marcará todas las notificaciones retornadas por GET /api/notifications como leídas."
+          },
+          "response": []
+        }
+      ],
+      "description": "## API de Notificaciones\n\nSistema dinámico de notificaciones que genera alertas basándose en el estado del sistema.\n\n### Características:\n- **Generación dinámica**: Notificaciones creadas bajo demanda, no almacenadas en BD\n- **Rastreo de lectura**: Solo el estado de lectura se persiste\n- **Específico por usuario**: Cada usuario ve solo sus notificaciones\n- **Respuesta completa**: Un solo endpoint retorna todos los datos\n\n### Tipos de Notificaciones:\n- `REWARD_STATUS_UPDATE`: Cambios de estado de reclamación\n- `REWARD_AVAILABLE`: Premios disponibles\n- `PROFILE_INCOMPLETE`: Datos de perfil faltantes\n- `ACHIEVEMENT_UNLOCKED`: Logros recientes (48h)\n- `WELCOME`: Nuevos usuarios (<7 días)\n- `SYSTEM_ANNOUNCEMENT`: Mensajes del sistema"
     }
   ],
   "auth": {

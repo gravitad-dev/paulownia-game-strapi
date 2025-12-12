@@ -710,6 +710,62 @@ export interface ApiLogHistoryLogHistory extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiNotificationNotification
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'notifications';
+  info: {
+    description: 'User notifications - persistent storage for all notification events';
+    displayName: 'Notification';
+    pluralName: 'notifications';
+    singularName: 'notification';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::notification.notification'
+    > &
+      Schema.Attribute.Private;
+    message: Schema.Attribute.Text & Schema.Attribute.Required;
+    metadata: Schema.Attribute.JSON;
+    priority: Schema.Attribute.Enumeration<['LOW', 'MEDIUM', 'HIGH']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'MEDIUM'>;
+    publishedAt: Schema.Attribute.DateTime;
+    read: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    readAt: Schema.Attribute.DateTime;
+    relatedEntity: Schema.Attribute.String;
+    relatedEntityId: Schema.Attribute.Integer;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<
+      [
+        'REWARD_AVAILABLE',
+        'REWARD_STATUS_UPDATE',
+        'PROFILE_INCOMPLETE',
+        'WELCOME',
+        'SYSTEM_ANNOUNCEMENT',
+      ]
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Required;
+  };
+}
+
 export interface ApiPlayerStatPlayerStat extends Struct.CollectionTypeSchema {
   collectionName: 'player_stats';
   info: {
@@ -2161,6 +2217,7 @@ declare module '@strapi/strapi' {
       'api::guardiand.guardiand': ApiGuardiandGuardiand;
       'api::level.level': ApiLevelLevel;
       'api::log-history.log-history': ApiLogHistoryLogHistory;
+      'api::notification.notification': ApiNotificationNotification;
       'api::player-stat.player-stat': ApiPlayerStatPlayerStat;
       'api::premium-code-config.premium-code-config': ApiPremiumCodeConfigPremiumCodeConfig;
       'api::premium-code.premium-code': ApiPremiumCodePremiumCode;

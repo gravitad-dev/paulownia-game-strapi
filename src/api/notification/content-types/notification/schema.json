@@ -1,0 +1,64 @@
+{
+  "kind": "collectionType",
+  "collectionName": "notifications",
+  "info": {
+    "singularName": "notification",
+    "pluralName": "notifications",
+    "displayName": "Notification",
+    "description": "User notifications - persistent storage for all notification events"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "REWARD_AVAILABLE",
+        "REWARD_STATUS_UPDATE",
+        "PROFILE_INCOMPLETE",
+        "WELCOME",
+        "SYSTEM_ANNOUNCEMENT"
+      ],
+      "required": true
+    },
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "message": {
+      "type": "text",
+      "required": true
+    },
+    "priority": {
+      "type": "enumeration",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "default": "MEDIUM",
+      "required": true
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
+    "readAt": {
+      "type": "datetime"
+    },
+    "metadata": {
+      "type": "json"
+    },
+    "relatedEntity": {
+      "type": "string"
+    },
+    "relatedEntityId": {
+      "type": "integer"
+    }
+  }
+}

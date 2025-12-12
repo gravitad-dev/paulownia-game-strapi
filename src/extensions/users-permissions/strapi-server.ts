@@ -29,6 +29,25 @@ module.exports = (plugin) => {
         validateUsername(data.username);
       }
     },
+
+    async afterUpdate(event) {
+      if (originalLifecycles.afterUpdate) {
+        await originalLifecycles.afterUpdate(event);
+      }
+      
+      const { result, params } = event;
+      
+      // If user is being confirmed, send welcome notification
+      if (params.data && params.data.confirmed === true) {
+        try {
+           // @ts-ignore
+           await strapi.service('api::notification.notification').createWelcomeNotification(result);
+           strapi.log.info(`Welcome notification created for confirmed user ${result.id}`);
+        } catch (error) {
+           strapi.log.error("Failed to create welcome notification", error);
+        }
+      }
+    },
   };
 
   plugin.controllers.user.me = async (ctx) => {
