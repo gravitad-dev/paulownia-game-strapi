@@ -28,6 +28,8 @@ services:
       - '1337:1337'
     depends_on:
       - paulowniaDB
+    networks:
+      - strapi
 
   paulowniaDB:
     container_name: paulowniaDB
@@ -42,11 +44,15 @@ services:
     volumes:
       - paulownia-strapi:/var/lib/postgresql/data/ #using a volume
       #- ./data:/var/lib/postgresql/data/ # if you want to use a bind folder
-
+    networks:
+      - strapi
 #    ports:
 #      - '5432:5432'
 
-
+networks:
+  strapi:
+    name: Strapi
+    driver: bridge
 
 volumes:
   paulownia-strapi:
