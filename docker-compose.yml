@@ -24,10 +24,8 @@ services:
 #      - ./package-lock.json:/opt/package-lock.json
 #      - ./.env:/opt/app/.env
 #      - ./public/uploads:/opt/app/public/uploads
-    ports:
-      - '1337:1337'
-    networks:
-      - strapi
+#    ports:
+#      - '1337:1337'
     depends_on:
       - paulowniaDB
 
@@ -47,14 +45,10 @@ services:
 
 #    ports:
 #      - '5432:5432'
-    networks:
-      - strapi
+
 
 
 volumes:
   paulownia-strapi:
 
-networks:
-  strapi:
-    name: Strapi
-    driver: bridge
+
