@@ -1,6 +1,6 @@
 services:
   strapi:
-    container_name: paulownia
+    container_name: paulownia-strapi
     build:
       context: .
       dockerfile: ${DOCKERFILE}
