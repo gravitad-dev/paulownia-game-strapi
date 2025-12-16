@@ -354,9 +354,11 @@ export default factories.createCoreController(
                 : "monthly";
         }
       } else {
-        return ctx.badRequest("Settings not configured", {
-          reason: "settings_not_configured",
-        });
+        // Use default values when settings are not published
+        // rate: 1000, limit: 10 monthly (already set as defaults above)
+        strapi.log.warn(
+          "Settings not configured or not published - using defaults for exchangeCoinsToTickets",
+        );
       }
 
       // Calculate period dates
@@ -692,9 +694,12 @@ export default factories.createCoreController(
                 : "monthly";
         }
       } else {
-        return ctx.badRequest("Settings not configured", {
-          reason: "settings_not_configured",
-        });
+        // Use default values when settings are not published
+        // rate: 1000, limit: 10 monthly (already set as defaults above)
+        strapi.log.warn(
+          "Settings not configured or not published - using defaults for exchangeCoinsToTicketsStatus",
+        );
+        limitCount = 10; // Default limit when settings not available
       }
       const ps = await strapi.db
         .query("api::player-stat.player-stat")
