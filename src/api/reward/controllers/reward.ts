@@ -22,227 +22,265 @@ export default factories.createCoreController(
         });
       }
 
-      // 2. Check if user has at least 1 ticket
-      const playerStat = await strapi.db
-        .query("api::player-stat.player-stat")
-        .findOne({
-          where: { users_permissions_user: user.id },
-        });
+      try {
+        // Start Database Transaction
+        return await strapi.db.transaction(async ({ trx }) => {
+          // A. Lock Player Stats Row (Pessimistic Lock)
+          // We assume 'api::player-stat.player-stat' maps to a table.
+          // We first find the ID to lock efficiently.
+          const initialPs = await strapi.db
+            .query("api::player-stat.player-stat")
+            .findOne({
+              where: { users_permissions_user: user.id },
+              select: ["id"],
+            });
 
-      if (!playerStat || (playerStat.tickets || 0) < 1) {
-        return ctx.badRequest("Insufficient tickets", {
-          reason: "insufficient_tickets",
-          ticketsAvailable: playerStat?.tickets || 0,
-        });
-      }
+          if (!initialPs) {
+            throw new Error("PLAYER_STAT_NOT_FOUND");
+          }
 
-      // 3. Get available rewards
-      const allRewards = await strapi.entityService.findMany(
-        "api::reward.reward",
-        {
-          filters: {
-            isActive: true,
-            quantity: { $gt: 0 },
-          },
-          populate: ["image"],
-        },
-      );
+          const psMetadata = strapi.db.metadata.get(
+            "api::player-stat.player-stat",
+          );
+          const psTableName = psMetadata.tableName;
 
-      if (!allRewards || allRewards.length === 0) {
-        return ctx.badRequest("No rewards available", {
-          reason: "no_rewards_available",
-        });
-      }
+          // Perform SELECT ... FOR UPDATE using Knex (trx)
+          const lockedStatsArray = await trx(psTableName)
+            .where("id", initialPs.id)
+            .forUpdate()
+            .select("*");
 
-      // 4. Filter out unique rewards already obtained
-      const userRewards = await strapi.entityService.findMany(
-        "api::user-reward.user-reward",
-        {
-          filters: {
+          const lockedStats = lockedStatsArray[0];
+
+          // 2. Check tickets from LOCKED row
+          // Note: using Number() to ensure safety
+          const currentTickets = Number(lockedStats.tickets || 0);
+
+          if (currentTickets < 1) {
+            throw new Error("INSUFFICIENT_TICKETS");
+          }
+
+          // 3. Get available rewards (Standard read, no lock needed on rewards listing yet)
+          // We use entityService here as we don't need transactional write yet
+          const allRewards = await strapi.entityService.findMany(
+            "api::reward.reward",
+            {
+              filters: {
+                isActive: true,
+                quantity: { $gt: 0 },
+              },
+              populate: ["image"],
+            },
+          );
+
+          if (!allRewards || allRewards.length === 0) {
+            throw new Error("NO_REWARDS_AVAILABLE");
+          }
+
+          // 4. Filter out unique rewards already obtained
+          // Read user-rewards inside transaction (optional but better) or standard read
+          const userRewards = await strapi.db
+            .query("api::user-reward.user-reward")
+            .findMany({
+              where: { users_permissions_user: user.id },
+              populate: ["reward"],
+            });
+
+          const obtainedUniqueRewardIds = new Set(
+            userRewards
+              .filter((ur: any) => ur.reward?.isUnique)
+              .map((ur: any) => ur.reward.id),
+          );
+
+          const availableRewards = allRewards.filter((reward: any) => {
+            if (reward.isUnique && obtainedUniqueRewardIds.has(reward.id)) {
+              return false;
+            }
+            return true;
+          });
+
+          if (availableRewards.length === 0) {
+            throw new Error("ALL_UNIQUE_OBTAINED");
+          }
+
+          // 5. Select reward
+          const selectedReward = weightedRandomSelection(
+            availableRewards,
+            (reward: any) => reward.probability || 0,
+          );
+
+          if (!selectedReward) {
+            throw new Error("SELECTION_FAILED");
+          }
+
+          // 6. Process reward and update stats IN TRANSACTION
+          const now = new Date();
+          const isCoin =
+            selectedReward.typeReward === "currency" &&
+            selectedReward.name?.toLowerCase().includes("coin");
+
+          const ticketRewardValue =
+            selectedReward.typeReward === "currency" && !isCoin
+              ? selectedReward.value || 0
+              : 0;
+          const coinRewardValue = isCoin ? selectedReward.value || 0 : 0;
+
+          const newTickets = currentTickets - 1 + ticketRewardValue;
+          const currentCoins = Number(lockedStats.coins || 0);
+
+          // 6. Process reward and apply atomic player-stat update IN TRANSACTION
+          // @ts-ignore
+          await (strapi.db.query("api::player-stat.player-stat") as any).update(
+            {
+              where: { id: initialPs.id },
+              data: {
+                tickets: newTickets,
+                ticketsSpent: (Number(lockedStats.tickets_spent) || 0) + 1,
+                ticketsEarned:
+                  (Number(lockedStats.tickets_earned) ||
+                    Number(lockedStats.ticketsEarned) ||
+                    0) + ticketRewardValue,
+                ...(coinRewardValue > 0
+                  ? {
+                      coins: currentCoins + coinRewardValue,
+                      coinsEarned:
+                        (Number(lockedStats.coins_earned) ||
+                          Number(lockedStats.coinsEarned) ||
+                          0) + coinRewardValue,
+                    }
+                  : {}),
+              },
+            },
+            { transacting: trx },
+          );
+
+          // 7. Update reward stock
+          // @ts-ignore
+          await (strapi.db.query("api::reward.reward") as any).update(
+            {
+              where: { id: selectedReward.id },
+              data: {
+                quantity: selectedReward.quantity - 1,
+              },
+            },
+            { transacting: trx },
+          );
+
+          // 8. Create user-reward
+          const userRewardData: any = {
             users_permissions_user: user.id,
-          },
-          populate: ["reward"],
-        },
-      );
+            reward: selectedReward.id,
+            obtainedAt: now,
+            quantity: 1,
+          };
 
-      const obtainedUniqueRewardIds = new Set(
-        userRewards
-          .filter((ur: any) => ur.reward?.isUnique)
-          .map((ur: any) => ur.reward.id),
-      );
+          if (selectedReward.typeReward === "currency") {
+            userRewardData.rewardStatus = "claimed";
+            userRewardData.claimed = true;
+            userRewardData.claimedAt = now;
+            userRewardData.quantity = selectedReward.value || 0;
+          } else if (selectedReward.typeReward === "consumable") {
+            userRewardData.rewardStatus = "available";
+            userRewardData.claimed = false;
+            userRewardData.canBeClaimed = true;
+            userRewardData.hasClaim = false;
+          } else {
+            userRewardData.rewardStatus = "available";
+            userRewardData.claimed = false;
+          }
 
-      const availableRewards = allRewards.filter((reward: any) => {
-        if (reward.isUnique && obtainedUniqueRewardIds.has(reward.id)) {
-          return false;
+          // @ts-ignore
+          const userReward = await (
+            strapi.db.query("api::user-reward.user-reward") as any
+          ).create(
+            {
+              data: userRewardData,
+            },
+            { transacting: trx },
+          );
+
+          if (
+            selectedReward.typeReward === "cosmetic" &&
+            !userRewardData.claimed // Just checking flow
+          ) {
+            // We allow creation but might warn or handled by frontend
+            // Original code returned Not Implemented. We keep it working but secure.
+          }
+
+          // 9. History
+          // @ts-ignore
+          await (
+            strapi.db.query("api::roulette-history.roulette-history") as any
+          ).create(
+            {
+              data: {
+                users_permissions_user: user.id,
+                reward: selectedReward.id,
+                timestamp: now,
+              },
+            },
+            { transacting: trx },
+          );
+
+          // 10. Return Response
+          // Re-fetch updated stats? Or just use what we calculated. Safe to use calculated.
+          return {
+            reward: {
+              uuid: selectedReward.uuid,
+              name: selectedReward.name,
+              description: selectedReward.description,
+              image: selectedReward.image,
+              typeReward: selectedReward.typeReward,
+              value: selectedReward.value,
+              quantity: selectedReward.quantity - 1,
+            },
+            userReward: {
+              uuid: userReward.uuid,
+              rewardStatus: userReward.rewardStatus,
+              claimed: userReward.claimed,
+              obtainedAt: userReward.obtainedAt,
+              claimedAt: userReward.claimedAt,
+              quantity: userReward.quantity,
+            },
+            playerStats: {
+              coins:
+                coinRewardValue > 0
+                  ? currentCoins + coinRewardValue
+                  : currentCoins,
+              tickets: newTickets,
+            },
+          };
+        });
+      } catch (error: any) {
+        // Handle Errors properly
+        const msg = error.message;
+        if (msg === "INSUFFICIENT_TICKETS") {
+          return ctx.badRequest("Insufficient tickets", {
+            reason: "insufficient_tickets",
+            ticketsAvailable: 0,
+          });
         }
-        return true;
-      });
+        if (msg === "NO_REWARDS_AVAILABLE") {
+          return ctx.badRequest("No rewards available", {
+            reason: "no_rewards_available",
+          });
+        }
+        if (msg === "ALL_UNIQUE_OBTAINED") {
+          return ctx.badRequest(
+            "No rewards available (all unique rewards obtained)",
+            { reason: "all_unique_rewards_obtained" },
+          );
+        }
+        if (msg === "SELECTION_FAILED") {
+          return ctx.badRequest("Failed to select reward", {
+            reason: "probability_selection_failed",
+          });
+        }
 
-      if (availableRewards.length === 0) {
-        return ctx.badRequest(
-          "No rewards available (all unique rewards obtained)",
-          {
-            reason: "all_unique_rewards_obtained",
-          },
-        );
+        // Default error
+        strapi.log.error(error);
+        throw error;
       }
-
-      // 5. Select reward using weighted probability
-      const selectedReward = weightedRandomSelection(
-        availableRewards,
-        (reward: any) => reward.probability || 0,
-      );
-
-      if (!selectedReward) {
-        return ctx.badRequest("Failed to select reward", {
-          reason: "probability_selection_failed",
-        });
-      }
-
-      // 6. Process reward and apply atomic player-stat update
-      let userReward: any = null;
-      const now = new Date();
-
-      const isCoin =
-        selectedReward.typeReward === "currency" &&
-        selectedReward.name?.toLowerCase().includes("coin");
-
-      const ticketRewardValue =
-        selectedReward.typeReward === "currency" && !isCoin
-          ? selectedReward.value || 0
-          : 0;
-      const coinRewardValue = isCoin ? selectedReward.value || 0 : 0;
-
-      await strapi.entityService.update(
-        "api::player-stat.player-stat",
-        playerStat.id,
-        {
-          data: {
-            // Always spend 1 ticket per spin
-            tickets: (playerStat.tickets || 0) - 1 + ticketRewardValue,
-            ticketsSpent: (playerStat.ticketsSpent || 0) + 1,
-            ticketsEarned: (playerStat.ticketsEarned || 0) + ticketRewardValue,
-            // Apply coin rewards if applicable
-            ...(coinRewardValue > 0
-              ? {
-                  coins: (playerStat.coins || 0) + coinRewardValue,
-                  coinsEarned: (playerStat.coinsEarned || 0) + coinRewardValue,
-                }
-              : {}),
-          },
-        },
-      );
-
-      // 7. Update reward stock
-      await strapi.entityService.update(
-        "api::reward.reward",
-        selectedReward.id,
-        {
-          data: {
-            quantity: selectedReward.quantity - 1,
-          },
-        },
-      );
-
-      if (selectedReward.typeReward === "currency") {
-        // Create user-reward with claimed status
-        userReward = await strapi.entityService.create(
-          "api::user-reward.user-reward",
-          {
-            data: {
-              users_permissions_user: user.documentId ?? user.id,
-              reward: selectedReward.documentId ?? selectedReward.id,
-              rewardStatus: "claimed",
-              claimed: true,
-              obtainedAt: now,
-              claimedAt: now,
-              quantity: selectedReward.value || 0,
-            },
-          },
-        );
-      } else if (selectedReward.typeReward === "consumable") {
-        // Create user-reward with pending status (needs to be claimed with admin)
-        userReward = await strapi.entityService.create(
-          "api::user-reward.user-reward",
-          {
-            data: {
-              users_permissions_user: user.documentId ?? user.id,
-              reward: selectedReward.documentId ?? selectedReward.id,
-              rewardStatus: "available",
-              claimed: false,
-              obtainedAt: now,
-              claimedAt: null,
-              quantity: 1,
-              canBeClaimed: true,
-              hasClaim: false,
-            },
-          },
-        );
-      } else if (selectedReward.typeReward === "cosmetic") {
-        // Create user-reward for future implementation
-        userReward = await strapi.entityService.create(
-          "api::user-reward.user-reward",
-          {
-            data: {
-              users_permissions_user: user.documentId ?? user.id,
-              reward: selectedReward.documentId ?? selectedReward.id,
-              rewardStatus: "available",
-              claimed: false,
-              obtainedAt: now,
-              claimedAt: null,
-              quantity: 1,
-            },
-          },
-        );
-
-        return ctx.notImplemented("Cosmetic rewards not yet implemented", {
-          reason: "cosmetic_not_implemented",
-        });
-      }
-
-      // 9. Create roulette history entry
-      await strapi.entityService.create(
-        "api::roulette-history.roulette-history",
-        {
-          data: {
-            users_permissions_user: user.documentId ?? user.id,
-            reward: selectedReward.documentId ?? selectedReward.id,
-            timestamp: now,
-          },
-        },
-      );
-
-      // 10. Get updated player stats
-      const updatedPlayerStat = await strapi.db
-        .query("api::player-stat.player-stat")
-        .findOne({
-          where: { users_permissions_user: user.id },
-        });
-
-      // 11. Return response
-      return {
-        reward: {
-          uuid: selectedReward.uuid,
-          name: selectedReward.name,
-          description: selectedReward.description,
-          image: selectedReward.image,
-          typeReward: selectedReward.typeReward,
-          value: selectedReward.value,
-          quantity: selectedReward.quantity - 1, // Already updated
-        },
-        userReward: {
-          uuid: userReward.uuid,
-          rewardStatus: userReward.rewardStatus,
-          claimed: userReward.claimed,
-          obtainedAt: userReward.obtainedAt,
-          claimedAt: userReward.claimedAt,
-          quantity: userReward.quantity,
-        },
-        playerStats: {
-          coins: updatedPlayerStat?.coins || 0,
-          tickets: updatedPlayerStat?.tickets || 0,
-        },
-      };
     },
   }),
 );

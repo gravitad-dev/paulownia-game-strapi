@@ -72,47 +72,57 @@ export default {
       return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
     }
 
-    const { levelUuid, difficulty, startAt, seed } = ctx.request.body || {};
-    if (!levelUuid || !difficulty || !startAt || !seed) {
+    const { levelUuid, startAt, seed } = ctx.request.body || {};
+    // Ignore body.difficulty for security (Difficulty Forgery Fix)
+
+    if (!levelUuid || !startAt || !seed) {
       return ctx.badRequest("Missing required fields", {
         reason: "missing_required_fields",
-        required: ["levelUuid", "difficulty", "startAt", "seed"],
+        required: ["levelUuid", "startAt", "seed"],
       });
     }
 
+    // 1. Load Level FIRST to enforce server-side difficulty
+    const level = await strapi.db
+      .query(LEVEL_UID)
+      .findOne({ where: { uuid: levelUuid } });
+
+    if (!level) {
+      return ctx.notFound("Level not found", { reason: "level_not_found" });
+    }
+
+    // 2. Use REAL difficulty
+    const difficulty = level.difficulty || "easy";
     const gridSize = difficultyToGrid(difficulty);
+
     const salt = String(
       (strapi as any)?.config?.get?.("server.puzzleSeedSalt") ??
         process.env.PUZZLE_SEED_SALT ??
         "",
     );
+
+    // 3. Generate Valid Hash
     const hash = makeHash(levelUuid, difficulty, startAt, seed, user.id, salt);
 
-    const level = await strapi.db
-      .query(LEVEL_UID)
-      .findOne({ where: { uuid: levelUuid } });
-    if (!level) {
-      // Check if already completed with same hash before returning not found
-      const anyByHash = await strapi.db.query(USER_GAME_HISTORY_UID).findMany({
-        where: {
-          users_permissions_user: user.id,
-          completed: true,
+    // 4. Check for duplicates (using the computed hash)
+    const anyByHash = await strapi.db.query(USER_GAME_HISTORY_UID).findMany({
+      where: {
+        users_permissions_user: user.id,
+        completed: true,
+      },
+    });
+    const dup = (anyByHash || []).find(
+      (h: any) => h.history && h.history.hash === hash,
+    );
+    if (dup) {
+      return {
+        data: {
+          alreadyCompleted: true,
+          score: dup.score,
+          duration: dup.duration,
+          completedAt: dup.completedAt,
         },
-      });
-      const dup = (anyByHash || []).find(
-        (h: any) => h.history && h.history.hash === hash,
-      );
-      if (dup) {
-        return {
-          data: {
-            alreadyCompleted: true,
-            score: dup.score,
-            duration: dup.duration,
-            completedAt: dup.completedAt,
-          },
-        };
-      }
-      return ctx.notFound("Level not found", { reason: "level_not_found" });
+      };
     }
 
     let playerStat = await strapi.db
@@ -193,12 +203,14 @@ export default {
       return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
     }
 
-    const { levelUuid, difficulty, endAt, hash, bonusPoints, status } =
+    const { levelUuid, endAt, hash, bonusPoints, status } =
       ctx.request.body || {};
-    if (!levelUuid || !difficulty || !endAt || !hash || !status) {
+    // Ignore difficulty from body for security
+
+    if (!levelUuid || !endAt || !hash || !status) {
       return ctx.badRequest("Missing required fields", {
         reason: "missing_required_fields",
-        required: ["levelUuid", "difficulty", "endAt", "hash", "status"],
+        required: ["levelUuid", "endAt", "hash", "status"],
       });
     }
 
@@ -275,7 +287,11 @@ export default {
       0,
       Math.floor((endDate.getTime() - startAt.getTime()) / 1000),
     );
-    const gridSize = difficultyToGrid(difficulty);
+
+    // FIX: Use stored difficulty from history (Trusted by Server)
+    const storedDifficulty = target.history?.difficulty || "easy";
+
+    const gridSize = difficultyToGrid(storedDifficulty);
     const base = gridSize === "8x8x8" ? 5120 : 2160;
     const penalty = Math.floor(durationSeconds / 5);
     const extra = Number(bonusPoints || 0);
@@ -283,7 +299,7 @@ export default {
 
     // Calculate coins earned based on difficulty and win status
     const won = String(status).toLowerCase() === "won";
-    let coinsEarned = getCoinsReward(difficulty, won);
+    let coinsEarned = getCoinsReward(storedDifficulty, won);
 
     // Check if THIS DIFFICULTY was already won to prevent farming
     const ul = await strapi.db
@@ -291,7 +307,7 @@ export default {
       .findOne({ where: { users_permissions_user: user.id, level: level.id } });
 
     const wonDifficulties: string[] = ul?.wonDifficulties || [];
-    const difficultyLower = String(difficulty).toLowerCase();
+    const difficultyLower = String(storedDifficulty).toLowerCase();
     const alreadyWonThisDifficulty = wonDifficulties.includes(difficultyLower);
 
     if (alreadyWonThisDifficulty) {
