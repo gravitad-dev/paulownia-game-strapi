@@ -45,7 +45,10 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
           )
         : 0;
 
-    const totalGamesWon = gameHistory.filter((g: any) => g.completed).length;
+    // FIX: Count games where status is "won", not just completed
+    const totalGamesWon = gameHistory.filter(
+      (g: any) => g.completed && g.history?.status?.toLowerCase() === "won",
+    ).length;
     const avgWinRate =
       totalGamesPlayed > 0
         ? Math.round((totalGamesWon / totalGamesPlayed) * 100)
