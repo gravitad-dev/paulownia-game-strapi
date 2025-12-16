@@ -226,6 +226,19 @@ export default {
       .filter((h: any) => h && h.completed === true)
       .find((h: any) => h.history && h.history.hash === hash);
     if (dupByHash) {
+      // FIX: Still count the game as played even if it's a duplicate
+      const ps = await strapi.db
+        .query(PLAYER_STAT_UID)
+        .findOne({ where: { users_permissions_user: user.id } });
+      if (ps) {
+        await strapi.db.query(PLAYER_STAT_UID).update({
+          where: { id: ps.id },
+          data: {
+            gamesPlayed: (ps.gamesPlayed || 0) + 1,
+            lastPlayedAt: new Date().toISOString(),
+          },
+        });
+      }
       return {
         data: {
           alreadyCompleted: true,
@@ -265,6 +278,19 @@ export default {
         (h: any) => h.history && h.history.hash === hash,
       );
       if (dup) {
+        // FIX: Still count the game as played even if it's a duplicate
+        const ps = await strapi.db
+          .query(PLAYER_STAT_UID)
+          .findOne({ where: { users_permissions_user: user.id } });
+        if (ps) {
+          await strapi.db.query(PLAYER_STAT_UID).update({
+            where: { id: ps.id },
+            data: {
+              gamesPlayed: (ps.gamesPlayed || 0) + 1,
+              lastPlayedAt: new Date().toISOString(),
+            },
+          });
+        }
         return {
           data: {
             alreadyCompleted: true,
@@ -300,6 +326,11 @@ export default {
     // Calculate coins earned based on difficulty and win status
     const won = String(status).toLowerCase() === "won";
     let coinsEarned = getCoinsReward(storedDifficulty, won);
+
+    // FIX: If player lost, no score points
+    if (!won) {
+      score = 0;
+    }
 
     // Check if THIS DIFFICULTY was already won to prevent farming
     const ul = await strapi.db
