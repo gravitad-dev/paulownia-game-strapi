@@ -311,11 +311,15 @@ export default factories.createCoreController(
       if (!user) {
         return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
       }
+
       const body = ctx.request.body?.data || {};
       const ticketsRequested = Number(body.ticketsRequested);
+
       if (!Number.isInteger(ticketsRequested) || ticketsRequested <= 0) {
         return ctx.badRequest("Invalid request", { reason: "invalid_request" });
       }
+
+      // 1. Get Settings (Standard read, rarely changes)
       const settingsRes = await strapi.entityService.findMany(
         "api::setting.setting",
         {
@@ -328,10 +332,12 @@ export default factories.createCoreController(
       const settings = (
         Array.isArray(settingsRes) ? settingsRes[0] : settingsRes
       ) as any | undefined;
+
       let rateSource = 1000;
       let limitDisabled = false;
-      let limitCount: number | null = null;
+      let limitCount: number = 10;
       let periodLabel: string = "monthly";
+
       if (settings) {
         rateSource = Number(settings.coinsPerTicket) || rateSource;
         limitDisabled = settings.exchangeLimitEnabled === false;
@@ -352,250 +358,301 @@ export default factories.createCoreController(
           reason: "settings_not_configured",
         });
       }
-      let ticketsUsed = 0;
-      let nextResetDate: string | null = null;
-      if (!limitDisabled) {
-        const now = new Date();
-        const nowMadrid = utcToZonedTime(now, TIMEZONE);
-        let periodStartMadrid: Date;
-        let nextResetMadrid: Date;
 
-        if (periodLabel === "daily") {
-          periodStartMadrid = startOfDay(nowMadrid);
-          nextResetMadrid = startOfDay(addDays(nowMadrid, 1));
-        } else if (periodLabel === "yearly") {
-          periodStartMadrid = startOfYear(nowMadrid);
-          nextResetMadrid = startOfYear(addYears(nowMadrid, 1));
-        } else {
-          periodStartMadrid = startOfMonth(nowMadrid);
-          nextResetMadrid = startOfMonth(addMonths(nowMadrid, 1));
-        }
+      // Calculate period dates
+      const now = new Date();
+      const nowMadrid = utcToZonedTime(now, TIMEZONE);
+      let periodStartMadrid: Date;
+      let nextResetMadrid: Date;
 
-        const periodStart = zonedTimeToUtc(periodStartMadrid, TIMEZONE);
-        nextResetDate = zonedTimeToUtc(nextResetMadrid, TIMEZONE).toISOString();
+      if (periodLabel === "daily") {
+        periodStartMadrid = startOfDay(nowMadrid);
+        nextResetMadrid = startOfDay(addDays(nowMadrid, 1));
+      } else if (periodLabel === "yearly") {
+        periodStartMadrid = startOfYear(nowMadrid);
+        nextResetMadrid = startOfYear(addYears(nowMadrid, 1));
+      } else {
+        periodStartMadrid = startOfMonth(nowMadrid);
+        nextResetMadrid = startOfMonth(addMonths(nowMadrid, 1));
+      }
 
-        const periodTx = await strapi.entityService.findMany(
+      const periodStart = zonedTimeToUtc(periodStartMadrid, TIMEZONE);
+      const nextResetDate = zonedTimeToUtc(
+        nextResetMadrid,
+        TIMEZONE,
+      ).toISOString();
+
+      try {
+        // === START TRANSACTION ===
+        const transactionResult = await strapi.db.transaction(
+          async ({ trx }) => {
+            // 2. Lock Player Stats (Critical: Serializes user requests)
+            const initialPs = await strapi.db
+              .query("api::player-stat.player-stat")
+              .findOne({
+                where: { users_permissions_user: user.id },
+                select: ["id"],
+              });
+
+            if (!initialPs) {
+              // Create if not exists (atomically safe if unique constraint exists, likely does)
+              // But for locking, we need it to exist.
+              // If it doesn't exist, user has 0 coins anyway.
+              throw new Error("INSUFFICIENT_COINS");
+            }
+
+            const psMetadata = strapi.db.metadata.get(
+              "api::player-stat.player-stat",
+            );
+            const psTableName = psMetadata.tableName;
+
+            // PESSIMISTIC LOCK: FOR UPDATE
+            const lockedStatsArray = await trx(psTableName)
+              .where("id", initialPs.id)
+              .forUpdate()
+              .select("*");
+
+            const lockedStats = lockedStatsArray[0];
+            const currentCoins = Number(lockedStats.coins || 0);
+            const currentTickets = Number(lockedStats.tickets || 0);
+
+            // 3. Check Limits (inside Validated Transaction state)
+            let ticketsUsed = 0;
+            if (!limitDisabled) {
+              const thMetadata = strapi.db.metadata.get(
+                "api::user-transaction-history.user-transaction-history",
+              );
+              // Use standard count inside transaction
+              // Fetch history & Filter in memory to ensure Date precision matches JS runtime
+              // @ts-ignore
+              const periodTx = await (
+                strapi.db.query(
+                  "api::user-transaction-history.user-transaction-history",
+                ) as any
+              ).findMany(
+                {
+                  where: {
+                    users_permissions_user: user.id,
+                    transactionType: "coins_to_tickets",
+                  },
+                  select: ["amountDelivered", "executedAt"],
+                },
+                { transacting: trx },
+              );
+
+              ticketsUsed = (periodTx || [])
+                .filter((tx: any) => {
+                  const txDate = new Date(tx.executedAt);
+                  return txDate >= periodStart;
+                })
+                .reduce(
+                  (acc: number, it: any) => acc + (it.amountDelivered || 0),
+                  0,
+                );
+
+              const ticketsRemaining = Math.max(0, limitCount - ticketsUsed);
+
+              if (
+                ticketsRemaining <= 0 ||
+                ticketsRequested > ticketsRemaining
+              ) {
+                throw new Error("EXCHANGE_LIMIT_REACHED");
+              }
+            }
+
+            // 4. Check Coins
+            const coinsNeeded = ticketsRequested * rateSource;
+
+            if (currentCoins < coinsNeeded) {
+              throw new Error("INSUFFICIENT_COINS");
+            }
+
+            // 5. Update Player Stats (use trx)
+            // @ts-ignore
+            await (
+              strapi.db.query("api::player-stat.player-stat") as any
+            ).update(
+              {
+                where: { id: initialPs.id },
+                data: {
+                  coins: currentCoins - coinsNeeded,
+                  tickets: currentTickets + ticketsRequested,
+                  coinsSpent:
+                    (Number(lockedStats.coins_spent) || 0) + coinsNeeded,
+                  ticketsEarned:
+                    (Number(lockedStats.tickets_earned) ||
+                      Number(lockedStats.ticketsEarned) ||
+                      0) + ticketsRequested,
+                },
+              },
+              { transacting: trx },
+            );
+
+            // 6. Create Transaction History (use trx)
+            // @ts-ignore
+            await (
+              strapi.db.query(
+                "api::user-transaction-history.user-transaction-history",
+              ) as any
+            ).create(
+              {
+                data: {
+                  users_permissions_user: user.id,
+                  transactionType: "coins_to_tickets",
+                  currency: "coins",
+                  statusTransaction: "completed",
+                  coinsExchanged: coinsNeeded,
+                  amountDelivered: ticketsRequested,
+                  executedAt: new Date(),
+                },
+              },
+              { transacting: trx },
+            );
+
+            // Return necessary data to construct response outside
+            return {
+              success: true,
+              ticketsUsed: ticketsUsed + ticketsRequested,
+              coinsSpent: coinsNeeded,
+              updatedCoins: currentCoins - coinsNeeded,
+              updatedTickets: currentTickets + ticketsRequested,
+            };
+          },
+        );
+
+        // === TRANSACTION COMMITTED ===
+
+        // 7. Calculate Aggregations for UI (Read-only, non-critical consistency)
+        // re-calc now for aggregation windows using Madrid timezone
+        const now2 = new Date();
+        const startOfWeekMadrid = startOfWeek(nowMadrid, { weekStartsOn: 1 });
+        const startOfMonthMadrid = startOfMonth(nowMadrid);
+        const startOfYearMadrid = startOfYear(nowMadrid);
+
+        const startOfWeekUtc = zonedTimeToUtc(startOfWeekMadrid, TIMEZONE);
+        const startOfMonthUtc = zonedTimeToUtc(startOfMonthMadrid, TIMEZONE);
+        const startOfYearUtc = zonedTimeToUtc(startOfYearMadrid, TIMEZONE);
+
+        // This queries can be slow, doing them outside trx is better for concurrency
+        const history = await strapi.entityService.findMany(
           "api::user-transaction-history.user-transaction-history",
           {
             filters: {
               users_permissions_user: user.id,
               transactionType: "coins_to_tickets",
-              executedAt: { $gte: periodStart },
             },
+            sort: { executedAt: "desc" },
+            limit: 10,
           },
         );
-        ticketsUsed = (periodTx || []).reduce(
-          (acc: number, it: any) => acc + (it.amountDelivered || 0),
-          0,
+
+        // We can optimize these sums using DB aggregation if Strapi supports it,
+        // but sticking to existing logic for now.
+        const allTx = await strapi.entityService.findMany(
+          "api::user-transaction-history.user-transaction-history",
+          {
+            filters: {
+              users_permissions_user: user.id,
+              transactionType: "coins_to_tickets",
+            },
+            fields: ["coinsExchanged", "amountDelivered", "executedAt"],
+          },
         );
-        const ticketsRemaining = Math.max(
-          0,
-          (limitCount as number) - ticketsUsed,
+
+        // Helper aggregation
+        const calcSum = (items: any[]) =>
+          items.reduce(
+            (acc, it) => ({
+              coinsExchanged: acc.coinsExchanged + (it.coinsExchanged || 0),
+              amountDelivered: acc.amountDelivered + (it.amountDelivered || 0),
+            }),
+            { coinsExchanged: 0, amountDelivered: 0 },
+          );
+
+        const weekSum = calcSum(
+          allTx.filter((t: any) => new Date(t.executedAt) >= startOfWeekUtc),
         );
-        if (ticketsRemaining <= 0 || ticketsRequested > ticketsRemaining) {
+        const monthSum = calcSum(
+          allTx.filter((t: any) => new Date(t.executedAt) >= startOfMonthUtc),
+        );
+        const yearSum = calcSum(
+          allTx.filter((t: any) => new Date(t.executedAt) >= startOfYearUtc),
+        );
+        const totalSum = calcSum(allTx);
+
+        return {
+          ticketsExchanged: ticketsRequested,
+          coinsSpent: transactionResult.coinsSpent,
+          playerStats: {
+            coins: transactionResult.updatedCoins,
+            tickets: transactionResult.updatedTickets,
+          },
+          limit: limitDisabled
+            ? { unlimited: true }
+            : {
+                limitTickets: limitCount,
+                period: periodLabel,
+                ticketsUsed: transactionResult.ticketsUsed,
+                ticketsRemaining: Math.max(
+                  0,
+                  limitCount - transactionResult.ticketsUsed,
+                ),
+                nextResetDate,
+              },
+          stats: {
+            week: {
+              ticketsExchanged: weekSum.amountDelivered,
+              coinsSpent: weekSum.coinsExchanged,
+            },
+            month: {
+              ticketsExchanged: monthSum.amountDelivered,
+              coinsSpent: monthSum.coinsExchanged,
+            },
+            year: {
+              ticketsExchanged: yearSum.amountDelivered,
+              coinsSpent: yearSum.coinsExchanged,
+            },
+            total: {
+              ticketsExchanged: totalSum.amountDelivered,
+              coinsSpent: totalSum.coinsExchanged,
+            },
+          },
+          history: (history || []).map((h: any) => ({
+            executedAt: h.executedAt,
+            coinsExchanged: h.coinsExchanged,
+            amountDelivered: h.amountDelivered,
+            statusTransaction: h.statusTransaction,
+          })),
+        };
+      } catch (error: any) {
+        if (error.message === "INSUFFICIENT_COINS") {
+          const ps = await strapi.db
+            .query("api::player-stat.player-stat")
+            .findOne({ where: { users_permissions_user: user.id } });
+
+          const maxTicketsPossible = Math.floor((ps?.coins || 0) / rateSource);
+          return ctx.badRequest("Insufficient coins", {
+            reason: "insufficient_coins",
+            maxTicketsPossible,
+          });
+        }
+        if (error.message === "EXCHANGE_LIMIT_REACHED") {
+          // Re-calculate details for error response (outside trx)
+          // ... simplistic version for error response ...
           return ctx.badRequest("Exchange limit reached", {
             reason: "exchange_limit_reached",
             limitTickets: limitCount,
             period: periodLabel,
-            ticketsUsed,
-            ticketsRemaining,
+            // ticketsUsed: ??? (hard to get exactly without re-query, but user knows)
             nextResetDate,
           });
         }
-      }
-      const ps = await strapi.db
-        .query("api::player-stat.player-stat")
-        .findOne({ where: { users_permissions_user: user.id } });
-      const rate = rateSource;
-      const coinsNeeded = ticketsRequested * rate;
-      const availableCoins = ps?.coins || 0;
-      if (!ps || availableCoins < coinsNeeded) {
-        const maxTicketsPossible = Math.floor(availableCoins / rate);
-        return ctx.badRequest("Insufficient coins", {
-          reason: "insufficient_coins",
-          maxTicketsPossible,
+
+        strapi.log.error(error);
+        return ctx.badRequest("Exchange failed", {
+          reason: "transaction_failed",
         });
       }
-      const prev = { ...ps };
-      await strapi.entityService.update("api::player-stat.player-stat", ps.id, {
-        data: {
-          coins: availableCoins - coinsNeeded,
-          tickets: (ps.tickets || 0) + ticketsRequested,
-          coinsSpent: (ps.coinsSpent || 0) + coinsNeeded,
-          ticketsEarned: (ps.ticketsEarned || 0) + ticketsRequested,
-        },
-      });
-      try {
-        await strapi.entityService.create(
-          "api::user-transaction-history.user-transaction-history",
-          {
-            data: {
-              users_permissions_user: user.id,
-              transactionType: "coins_to_tickets",
-              currency: "coins",
-              statusTransaction: "completed",
-              coinsExchanged: coinsNeeded,
-              amountDelivered: ticketsRequested,
-              executedAt: new Date(),
-            },
-          },
-        );
-      } catch (e) {
-        await strapi.entityService.update(
-          "api::player-stat.player-stat",
-          ps.id,
-          {
-            data: {
-              coins: prev.coins ?? 0,
-              tickets: prev.tickets ?? 0,
-              coinsSpent: prev.coinsSpent ?? 0,
-              ticketsEarned: prev.ticketsEarned ?? 0,
-            },
-          },
-        );
-        return ctx.badRequest("Failed to log transaction", {
-          reason: "transaction_log_failed",
-        });
-      }
-      const updated = await strapi.db
-        .query("api::player-stat.player-stat")
-        .findOne({ where: { users_permissions_user: user.id } });
-
-      // re-calc now for aggregation windows using Madrid timezone
-      const now2 = new Date();
-      const nowMadrid = utcToZonedTime(now2, TIMEZONE);
-
-      const startOfWeekMadrid = startOfWeek(nowMadrid, { weekStartsOn: 1 });
-      const startOfMonthMadrid = startOfMonth(nowMadrid);
-      const startOfYearMadrid = startOfYear(nowMadrid);
-
-      const startOfWeekUtc = zonedTimeToUtc(startOfWeekMadrid, TIMEZONE);
-      const startOfMonthUtc = zonedTimeToUtc(startOfMonthMadrid, TIMEZONE);
-      const startOfYearUtc = zonedTimeToUtc(startOfYearMadrid, TIMEZONE);
-
-      const weekTx = await strapi.entityService.findMany(
-        "api::user-transaction-history.user-transaction-history",
-        {
-          filters: {
-            users_permissions_user: user.id,
-            transactionType: "coins_to_tickets",
-            executedAt: { $gte: startOfWeekUtc },
-          },
-        },
-      );
-      const monthTx = await strapi.entityService.findMany(
-        "api::user-transaction-history.user-transaction-history",
-        {
-          filters: {
-            users_permissions_user: user.id,
-            transactionType: "coins_to_tickets",
-            executedAt: { $gte: startOfMonthUtc },
-          },
-        },
-      );
-      const yearTx = await strapi.entityService.findMany(
-        "api::user-transaction-history.user-transaction-history",
-        {
-          filters: {
-            users_permissions_user: user.id,
-            transactionType: "coins_to_tickets",
-            executedAt: { $gte: startOfYearUtc },
-          },
-        },
-      );
-      const totalTx = await strapi.entityService.findMany(
-        "api::user-transaction-history.user-transaction-history",
-        {
-          filters: {
-            users_permissions_user: user.id,
-            transactionType: "coins_to_tickets",
-          },
-        },
-      );
-      const sum = (arr: any[]) =>
-        arr.reduce(
-          (acc, it) => ({
-            coinsExchanged: acc.coinsExchanged + (it.coinsExchanged || 0),
-            amountDelivered: acc.amountDelivered + (it.amountDelivered || 0),
-          }),
-          { coinsExchanged: 0, amountDelivered: 0 },
-        );
-      const weekSum = sum(weekTx || []);
-      const monthSum = sum(monthTx || []);
-      const yearSum = sum(yearTx || []);
-      const totalSum = sum(totalTx || []);
-      const history = await strapi.entityService.findMany(
-        "api::user-transaction-history.user-transaction-history",
-        {
-          filters: {
-            users_permissions_user: user.id,
-            transactionType: "coins_to_tickets",
-          },
-          sort: { executedAt: "desc" },
-          limit: 10,
-        },
-      );
-      return {
-        ticketsExchanged: ticketsRequested,
-        coinsSpent: coinsNeeded,
-        playerStats: {
-          coins: updated?.coins || 0,
-          tickets: updated?.tickets || 0,
-        },
-        limit: limitDisabled
-          ? { unlimited: true }
-          : {
-              limitTickets: limitCount as number,
-              period: periodLabel,
-              ticketsUsed: ticketsUsed + ticketsRequested,
-              ticketsRemaining: Math.max(
-                0,
-                (limitCount as number) - (ticketsUsed + ticketsRequested),
-              ),
-              nextResetDate: !limitDisabled
-                ? (() => {
-                    const now = new Date();
-                    const nowMadrid = utcToZonedTime(now, TIMEZONE);
-                    let nextResetMadrid: Date;
-                    if (periodLabel === "daily") {
-                      nextResetMadrid = startOfDay(addDays(nowMadrid, 1));
-                    } else if (periodLabel === "yearly") {
-                      nextResetMadrid = startOfYear(addYears(nowMadrid, 1));
-                    } else {
-                      nextResetMadrid = startOfMonth(addMonths(nowMadrid, 1));
-                    }
-                    return zonedTimeToUtc(
-                      nextResetMadrid,
-                      TIMEZONE,
-                    ).toISOString();
-                  })()
-                : null,
-            },
-        stats: {
-          week: {
-            ticketsExchanged: weekSum.amountDelivered,
-            coinsSpent: weekSum.coinsExchanged,
-          },
-          month: {
-            ticketsExchanged: monthSum.amountDelivered,
-            coinsSpent: monthSum.coinsExchanged,
-          },
-          year: {
-            ticketsExchanged: yearSum.amountDelivered,
-            coinsSpent: yearSum.coinsExchanged,
-          },
-          total: {
-            ticketsExchanged: totalSum.amountDelivered,
-            coinsSpent: totalSum.coinsExchanged,
-          },
-        },
-        history: (history || []).map((h: any) => ({
-          executedAt: h.executedAt,
-          coinsExchanged: h.coinsExchanged,
-          amountDelivered: h.amountDelivered,
-          statusTransaction: h.statusTransaction,
-        })),
-      };
     },
 
     async exchangeCoinsToTicketsStatus(ctx) {

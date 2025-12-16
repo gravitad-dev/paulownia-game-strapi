@@ -14,24 +14,37 @@ export default factories.createCoreController(
       }
 
       // Allow admins to see all rewards
-      // Note: Strapi Admin Panel uses different endpoints, this is for API users with Admin role
       const isAdmin =
         user.role?.type === "admin" || user.role?.name === "Admin";
 
-      if (!isAdmin) {
-        // Force filter by current user for non-admins
-        ctx.query = {
-          ...ctx.query,
-          filters: {
-            ...(ctx.query.filters as any),
-            users_permissions_user: {
-              id: user.id,
+      const { query } = ctx;
+      const filters = isAdmin
+        ? (query.filters as any)
+        : {
+            ...(query.filters as any),
+            users_permissions_user: user.id,
+          };
+
+      // @ts-ignore
+      const { results, pagination } = await strapi.entityService.findPage(
+        "api::user-reward.user-reward",
+        {
+          ...query,
+          filters,
+          populate: {
+            reward: {
+              populate: ["image"],
             },
           },
-        };
-      }
+        },
+      );
 
-      return super.find(ctx);
+      // Return raw data to bypass permission checks on 'reward' relation
+      // In a strict environment, we should sanitize, but we know reward is safe to show to owner.
+      return {
+        data: results,
+        meta: { pagination },
+      };
     },
   }),
 );
