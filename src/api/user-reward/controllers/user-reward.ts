@@ -26,11 +26,17 @@ export default factories.createCoreController(
           };
 
       // @ts-ignore
+      const paginationParams = (query.pagination || {}) as any;
+      const page = parseInt(paginationParams.page) || 1;
+      const limit = parseInt(paginationParams.pageSize) || 10;
+
       const { results, pagination } = await strapi.entityService.findPage(
         "api::user-reward.user-reward",
         {
           ...query,
           filters,
+          page,
+          pageSize: limit, // Strapi v5 uses pageSize in findPage
           populate: {
             reward: {
               populate: ["image"],

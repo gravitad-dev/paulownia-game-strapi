@@ -1018,7 +1018,6 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
         maxLength: 500;
       }>;
     adminNotes: Schema.Attribute.Text &
-      Schema.Attribute.Private &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 2000;
       }>;
@@ -1104,6 +1103,10 @@ export interface ApiRewardClaimRewardClaim extends Struct.CollectionTypeSchema {
         maxLength: 100;
       }>;
     publishedAt: Schema.Attribute.DateTime;
+    rejectionReason: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 1000;
+      }>;
     requiresIdentityVerification: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
     rewardSnapshot: Schema.Attribute.JSON;
@@ -1169,7 +1172,7 @@ export interface ApiRewardReward extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     quantity: Schema.Attribute.Integer;
     typeReward: Schema.Attribute.Enumeration<
-      ['currency', 'consumable', 'cosmetic']
+      ['currency', 'ticket', 'consumable', 'cosmetic']
     >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -1230,7 +1233,7 @@ export interface ApiSettingSetting extends Struct.SingleTypeSchema {
     singularName: 'setting';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
     coinsPerTicket: Schema.Attribute.Integer &

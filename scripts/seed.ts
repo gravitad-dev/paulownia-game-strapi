@@ -114,18 +114,22 @@ async function seedDatabase(strapi: any) {
 
   // Perfiles de usuarios con edades variadas
   const userProfiles = [
-    { age: 25, country: "US" }, // user1: Adulto
-    { age: 16, country: "ES" }, // user2: Menor (16 años)
-    { age: 30, country: "MX" }, // user3: Adulto
-    { age: 15, country: "AR" }, // user4: Menor (15 años)
-    { age: 22, country: "CO" }, // user5: Adulto
+    { age: 25, country: "US", isPremium: true }, // user1: Adulto
+    { age: 16, country: "ES", isPremium: false }, // user2: Menor (16 años)
+    { age: 30, country: "MX", isPremium: true }, // user3: Adulto
+    { age: 15, country: "AR", isPremium: false }, // user4: Menor (15 años)
+    { age: 22, country: "CO", isPremium: true }, // user5: Adulto
   ];
 
   const users = [];
   for (let i = 1; i <= COUNTS.USERS; i++) {
     const username = `user${i}`;
     const email = `user${i}@example.com`;
-    const profile = userProfiles[i - 1] || { age: 25, country: "US" };
+    const profile = userProfiles[i - 1] || {
+      age: 25,
+      country: "US",
+      isPremium: false,
+    };
 
     const existing = await strapi.db
       .query("plugin::users-permissions.user")
@@ -154,6 +158,7 @@ async function seedDatabase(strapi: any) {
             provider: "local",
             country: profile.country,
             age: birthDate.toISOString().split("T")[0], // Formato YYYY-MM-DD para campo tipo date
+            isPremium: profile.isPremium, // Add isPremium from profile
           },
         },
       );
@@ -531,7 +536,7 @@ async function seedDatabase(strapi: any) {
     {
       name: "5 Tickets",
       description: "Algunos tickets para más giros",
-      typeReward: "currency",
+      typeReward: "ticket",
       value: 5,
       probability: 10,
       quantity: 25,
@@ -540,7 +545,7 @@ async function seedDatabase(strapi: any) {
     {
       name: "10 Tickets",
       description: "¡Muchos tickets!",
-      typeReward: "currency",
+      typeReward: "ticket",
       value: 10,
       probability: 5,
       quantity: 15,
@@ -825,16 +830,23 @@ async function seedDatabase(strapi: any) {
     // User Rewards (Inventario)
     // Crear diferentes tipos de rewards para testing
     if (rewards.length > 0) {
-      // Crear un reward aleatorio
+      // Crear un reward basado en el tipo correcto
       const userRewardItem = rewards[i % rewards.length];
+      const isCurrencyOrTicket =
+        userRewardItem.typeReward === "currency" ||
+        userRewardItem.typeReward === "ticket";
+
       await strapi.entityService.create("api::user-reward.user-reward", {
         data: {
           users_permissions_user: user.documentId,
           reward: userRewardItem.documentId,
           obtainedAt: new Date(),
-          rewardStatus: "available",
-          claimed: false,
-          quantity: 1,
+          // Currency/Ticket = claimed automatically, others = available
+          rewardStatus: isCurrencyOrTicket ? "claimed" : "available",
+          claimed: isCurrencyOrTicket,
+          claimedAt: isCurrencyOrTicket ? new Date() : null,
+          quantity: isCurrencyOrTicket ? userRewardItem.value : 1,
+          canBeClaimed: !isCurrencyOrTicket,
         },
       });
 
@@ -852,14 +864,17 @@ async function seedDatabase(strapi: any) {
               users_permissions_user: user.documentId,
               reward: consumable.documentId,
               obtainedAt: new Date(),
-              rewardStatus: "pending",
+              // Consumables start as "available" (ready to initiate claim process)
+              rewardStatus: "available",
               claimed: false,
               quantity: 1,
               canBeClaimed: true,
               hasClaim: false,
             },
           });
-          console.log(`  💎 user${i}: Gift Card $10 agregada (consumable)`);
+          console.log(
+            `  💎 user${i + 1}: Gift Card $10 agregada (consumable - available)`,
+          );
         }
       }
     }

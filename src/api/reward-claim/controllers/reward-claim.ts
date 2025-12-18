@@ -91,6 +91,8 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
           requiresIdentityVerification: claim.requiresIdentityVerification,
           verificationAttempts: claim.verificationAttempts,
           guardianEmailConfirmed: claim.guardianEmailConfirmed,
+          rejectionReason: claim.rejectionReason, // Add rejection reason
+          adminNotes: claim.adminNotes, // Add admin notes
           createdAt: claim.createdAt,
           processedAt: claim.processedAt,
           userReward: claim.user_reward
@@ -338,10 +340,13 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
       } as any,
     });
 
-    // Update user-reward to mark as having a claim
+    // Update user-reward to mark as having a claim and change status to pending
     await strapi.db.query(USER_REWARD_UID).update({
       where: { id: userReward.id },
-      data: { hasClaim: true },
+      data: {
+        hasClaim: true,
+        rewardStatus: "pending", // Changed from "available" to "pending"
+      },
     });
 
     // Fetch the created claim with relations
@@ -577,7 +582,10 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     // Update user-reward
     await strapi.db.query(USER_REWARD_UID).update({
       where: { id: userReward.id },
-      data: { hasClaim: true },
+      data: {
+        hasClaim: true,
+        rewardStatus: "pending",
+      },
     });
 
     return {

@@ -159,8 +159,11 @@
     },
     "adminNotes": {
       "type": "text",
-      "maxLength": 2000,
-      "private": true
+      "maxLength": 2000
+    },
+    "rejectionReason": {
+      "type": "text",
+      "maxLength": 1000
     },
     "trackingNumber": {
       "type": "string",

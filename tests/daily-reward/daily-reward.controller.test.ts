@@ -117,7 +117,7 @@ describe("Daily Reward Controller", () => {
       expect(res.canClaim).toBe(false);
       const available = res.rewards.find((r: any) => r.status === "available");
       expect(available).toBeUndefined();
-      
+
       // nextClaimDate should be tomorrow at 5 AM
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -145,7 +145,10 @@ describe("Daily Reward Controller", () => {
       const res = await controller.myStatus(mockCtx(user));
       expect(res.canClaim).toBe(true);
       // nextClaimDate should be now (available immediately)
-      expect(new Date(res.nextClaimDate).getTime()).toBeCloseTo(now.getTime(), -3); // within 1s
+      expect(new Date(res.nextClaimDate).getTime()).toBeCloseTo(
+        now.getTime(),
+        -3,
+      ); // within 1s
     });
 
     test("ignora registros corruptos sin daily_reward y calcula nextDay", async () => {
@@ -224,43 +227,54 @@ describe("Daily Reward Controller", () => {
 
   describe("claim", () => {
     test("entrega recompensa del día 1, crea player-stat y bloquea reclamo del día", async () => {
-      setAllRewards(7);
-      strapi.entityService.findMany.mockImplementation(
-        (uid: string, opts?: any) => {
-          if (uid === "api::user-daily-reward.user-daily-reward") return [];
-          if (uid === "api::daily-reward.daily-reward") {
-            if (opts && opts.filters && typeof opts.filters.day === "number")
-              return [makeDailyReward(1, "coins", 100)];
-            return [
-              makeDailyReward(1, "coins", 100),
-              makeDailyReward(2, "tickets", 200),
-            ];
-          }
-          return [];
-        },
-      );
-      const psQuery2 = strapi.db.query("api::player-stat.player-stat") as any;
-      psQuery2.findOne.mockResolvedValueOnce(null);
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+      const txQuery = strapi.db.query(
+        "api::user-transaction-history.user-transaction-history",
+      ) as any;
+
+      const rewardDay1 = makeDailyReward(1, "coins", 100);
+      const rewardDay2 = makeDailyReward(2, "tickets", 200);
+
+      // Inside transaction
+      psQuery.findOne.mockResolvedValue(null);
+      strapi.db.mockTrx.select.mockResolvedValue([
+        { id: 1, coins: 0, tickets: 0, coins_earned: 0, tickets_earned: 0 },
+      ]);
+      udrQuery.findMany.mockResolvedValue([]);
+      drQuery.findMany.mockResolvedValue([rewardDay1]);
+
       const now = new Date();
-      strapi.entityService.create.mockResolvedValueOnce({
-        id: 111,
-        claimedAt: now,
+      const newClaim = { id: 111, claimedAt: now };
+      psQuery.create.mockResolvedValue({ id: 1, coins: 0, tickets: 0 });
+      udrQuery.create.mockResolvedValue(newClaim);
+      psQuery.update.mockResolvedValue({ id: 1, coins: 100, tickets: 0 });
+      txQuery.create.mockResolvedValue({});
+
+      // After transaction - for UI response
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::daily-reward.daily-reward")
+          return [rewardDay1, rewardDay2];
+        return [];
       });
-      strapi.entityService.create.mockResolvedValueOnce({});
-      const afterStat = makePlayerStat(user.id, 100, 0, 100, 0);
-      psQuery2.findOne.mockResolvedValueOnce(afterStat);
+
       const res = await controller.claim(mockCtx(user));
       expect(res.claimedReward.day).toBe(1);
       expect(res.claimedReward.claimedAt).toBeDefined();
       expect(res.playerStats.coins).toBe(100);
       expect(res.status.canClaim).toBe(false);
       expect(res.status.nextDay).toBe(2);
-      
+
       // Check nextClaimDate is tomorrow at 5 AM
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(5, 0, 0, 0);
-      expect(new Date(res.status.nextClaimDate).getTime()).toBe(tomorrow.getTime());
+      expect(new Date(res.status.nextClaimDate).getTime()).toBe(
+        tomorrow.getTime(),
+      );
     });
 
     test("rechaza doble reclamo el mismo día con 400 y devuelve nextClaimDate", async () => {
@@ -268,23 +282,43 @@ describe("Daily Reward Controller", () => {
       const oneHourAgo = new Date(now.getTime() - 1 * 60 * 60 * 1000);
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       const claimed = makeUserDailyReward(user.id, rewardDay1, oneHourAgo);
-      strapi.entityService.findMany.mockImplementation((uid: string) => {
-        if (uid === "api::user-daily-reward.user-daily-reward")
-          return [claimed];
-        if (uid === "api::daily-reward.daily-reward") return [rewardDay1];
-        return [];
-      });
+
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+
+      psQuery.findOne.mockResolvedValue({ id: 1, coins: 100, tickets: 0 });
+      strapi.db.mockTrx.select.mockResolvedValue([
+        { id: 1, coins: 100, tickets: 0 },
+      ]);
+
+      // Return last claim - this triggers ALREADY_CLAIMED because it was after last 5 AM
+      udrQuery.findMany.mockResolvedValue([
+        {
+          ...claimed,
+          daily_reward: rewardDay1,
+          claimedAt: oneHourAgo,
+        },
+      ]);
+
+      // The next day reward exists
+      drQuery.findMany.mockResolvedValue([makeDailyReward(2, "tickets", 200)]);
+
       const res = await controller.claim(mockCtx(user));
       expect(res.status).toBe(400);
       expect(res.message).toMatch(/already claimed today/i);
       expect(res.data?.reason).toBe("already_claimed_today");
-      
+
       // Verify nextClaimDate is tomorrow at 5 AM
       expect(res.data?.nextClaimDate).toBeDefined();
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(5, 0, 0, 0);
-      expect(new Date(res.data.nextClaimDate).getTime()).toBe(tomorrow.getTime());
+      expect(new Date(res.data.nextClaimDate).getTime()).toBe(
+        tomorrow.getTime(),
+      );
     });
 
     test("entrega recompensa del día 2 al día siguiente y actualiza tickets", async () => {
@@ -292,30 +326,52 @@ describe("Daily Reward Controller", () => {
       const rewardDay1 = makeDailyReward(1, "coins", 100);
       const rewardDay2 = makeDailyReward(2, "tickets", 200);
       const claimed = makeUserDailyReward(user.id, rewardDay1, yesterday);
-      strapi.entityService.findMany.mockImplementation(
-        (uid: string, opts?: any) => {
-          if (uid === "api::user-daily-reward.user-daily-reward")
-            return [claimed];
-          if (uid === "api::daily-reward.daily-reward") {
-            if (opts && opts.filters && typeof opts.filters.day === "number")
-              return [rewardDay2];
-            return [rewardDay1, rewardDay2];
-          }
-          return [];
-        },
-      );
+
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+      const txQuery = strapi.db.query(
+        "api::user-transaction-history.user-transaction-history",
+      ) as any;
+
       const beforeStat = makePlayerStat(user.id, 100, 0, 100, 0);
-      const psQuery3 = strapi.db.query("api::player-stat.player-stat") as any;
-      psQuery3.findOne.mockResolvedValueOnce(beforeStat);
-      strapi.entityService.update.mockResolvedValue({});
-      const afterStat = makePlayerStat(user.id, 100, 200, 100, 200);
-      psQuery3.findOne.mockResolvedValueOnce(afterStat);
-      // Mock create para devolver un objeto con claimedAt
+      psQuery.findOne.mockResolvedValue(beforeStat);
+      strapi.db.mockTrx.select.mockResolvedValue([
+        {
+          id: beforeStat.id,
+          coins: 100,
+          tickets: 0,
+          coins_earned: 100,
+          tickets_earned: 0,
+        },
+      ]);
+
+      // Last claim was yesterday's day 1
+      udrQuery.findMany.mockResolvedValue([
+        {
+          ...claimed,
+          daily_reward: rewardDay1,
+          claimedAt: yesterday,
+        },
+      ]);
+
+      // Day 2 reward
+      drQuery.findMany.mockResolvedValue([rewardDay2]);
+
       const now = new Date();
-      strapi.entityService.create.mockResolvedValueOnce({
-        id: 999,
-        claimedAt: now,
+      udrQuery.create.mockResolvedValue({ id: 999, claimedAt: now });
+      psQuery.update.mockResolvedValue({});
+      txQuery.create.mockResolvedValue({});
+
+      // After transaction
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::daily-reward.daily-reward")
+          return [rewardDay1, rewardDay2];
+        return [];
       });
+
       const res = await controller.claim(mockCtx(user));
       expect(res.claimedReward.day).toBe(2);
       expect(res.playerStats.tickets).toBe(200);
@@ -333,24 +389,29 @@ describe("Daily Reward Controller", () => {
       const yesterday = new Date(Date.now() - 24 * 3600 * 1000);
       const lastReward = makeDailyReward(7, "coins", 700);
       const claimed = makeUserDailyReward(user.id, lastReward, yesterday);
-      strapi.entityService.findMany.mockImplementation(
-        (uid: string, opts?: any) => {
-          if (uid === "api::user-daily-reward.user-daily-reward")
-            return [claimed];
-          if (uid === "api::daily-reward.daily-reward") {
-            if (opts && opts.filters && typeof opts.filters.day === "number")
-              return [];
-            return Array.from({ length: 7 }, (_, i) =>
-              makeDailyReward(
-                i + 1,
-                i % 2 === 0 ? "coins" : "tickets",
-                (i + 1) * 100,
-              ),
-            );
-          }
-          return [];
+
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+
+      psQuery.findOne.mockResolvedValue({ id: 1, coins: 700, tickets: 0 });
+      strapi.db.mockTrx.select.mockResolvedValue([
+        { id: 1, coins: 700, tickets: 0 },
+      ]);
+
+      udrQuery.findMany.mockResolvedValue([
+        {
+          ...claimed,
+          daily_reward: lastReward,
+          claimedAt: yesterday,
         },
-      );
+      ]);
+
+      // No reward for day 8
+      drQuery.findMany.mockResolvedValue([]);
+
       const res = await controller.claim(mockCtx(user));
       expect(res.status).toBe(400);
       expect(res.data?.reason).toBe("cycle_complete");
@@ -361,25 +422,29 @@ describe("Daily Reward Controller", () => {
       const now = new Date();
       const lastReward = makeDailyReward(7, "coins", 700);
       const claimed = makeUserDailyReward(user.id, lastReward, now); // Claimed just now
-      strapi.entityService.findMany.mockImplementation(
-        (uid: string, opts?: any) => {
-          if (uid === "api::user-daily-reward.user-daily-reward")
-            return [claimed];
-          if (uid === "api::daily-reward.daily-reward") {
-            // Day 8 does not exist
-            if (opts && opts.filters && typeof opts.filters.day === "number" && opts.filters.day === 8)
-              return [];
-            return Array.from({ length: 7 }, (_, i) =>
-              makeDailyReward(
-                i + 1,
-                i % 2 === 0 ? "coins" : "tickets",
-                (i + 1) * 100,
-              ),
-            );
-          }
-          return [];
+
+      const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+
+      psQuery.findOne.mockResolvedValue({ id: 1, coins: 700, tickets: 0 });
+      strapi.db.mockTrx.select.mockResolvedValue([
+        { id: 1, coins: 700, tickets: 0 },
+      ]);
+
+      udrQuery.findMany.mockResolvedValue([
+        {
+          ...claimed,
+          daily_reward: lastReward,
+          claimedAt: now,
         },
-      );
+      ]);
+
+      // Day 8 does not exist
+      drQuery.findMany.mockResolvedValue([]);
+
       const res = await controller.claim(mockCtx(user));
       expect(res.status).toBe(400);
       expect(res.data?.reason).toBe("cycle_complete");
@@ -389,47 +454,49 @@ describe("Daily Reward Controller", () => {
     });
 
     test("registra transacción con datos correctos para coins", async () => {
-      setAllRewards(7);
-      strapi.entityService.findMany.mockImplementation(
-        (uid: string, opts?: any) => {
-          if (uid === "api::user-daily-reward.user-daily-reward") return [];
-          if (uid === "api::daily-reward.daily-reward") {
-            if (opts && opts.filters && typeof opts.filters.day === "number")
-              return [makeDailyReward(1, "coins", 100)];
-            return [
-              makeDailyReward(1, "coins", 100),
-              makeDailyReward(2, "tickets", 200),
-            ];
-          }
-          return [];
-        },
-      );
+      const udrQuery = strapi.db.query(
+        "api::user-daily-reward.user-daily-reward",
+      ) as any;
       const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
-      psQuery.findOne.mockResolvedValueOnce(
-        makePlayerStat(user.id, 50, 0, 0, 0),
-      );
-      strapi.entityService.update.mockResolvedValue({});
-      psQuery.findOne.mockResolvedValueOnce(
-        makePlayerStat(user.id, 150, 0, 0, 0),
-      );
-      strapi.entityService.create.mockClear();
-      strapi.entityService.create.mockResolvedValueOnce({
-        id: 999,
-        claimedAt: new Date(),
+      const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+      const txQuery = strapi.db.query(
+        "api::user-transaction-history.user-transaction-history",
+      ) as any;
+
+      const rewardDay1 = makeDailyReward(1, "coins", 100);
+
+      psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 50, 0, 0, 0));
+      strapi.db.mockTrx.select.mockResolvedValue([
+        { id: 1, coins: 50, tickets: 0, coins_earned: 0, tickets_earned: 0 },
+      ]);
+      udrQuery.findMany.mockResolvedValue([]);
+      drQuery.findMany.mockResolvedValue([rewardDay1]);
+
+      const now = new Date();
+      udrQuery.create.mockResolvedValue({ id: 999, claimedAt: now });
+      psQuery.update.mockResolvedValue({});
+      txQuery.create.mockClear();
+      txQuery.create.mockResolvedValue({});
+
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::daily-reward.daily-reward")
+          return [rewardDay1, makeDailyReward(2, "tickets", 200)];
+        return [];
       });
+
       const res = await controller.claim(mockCtx(user));
       expect(res.playerStats.coins).toBe(150);
-      const calls = strapi.entityService.create.mock.calls;
-      const txCall = calls.find(
-        (c: any) =>
-          c[0] === "api::user-transaction-history.user-transaction-history",
-      );
-      expect(txCall[1].data.users_permissions_user).toBe(user.id);
-      expect(txCall[1].data.amount).toBe(100);
-      expect(txCall[1].data.currency).toBe("coins");
-      expect(txCall[1].data.type).toBe("daily_reward");
+
+      // Verify transaction was logged
+      const txCalls = txQuery.create.mock.calls;
+      expect(txCalls.length).toBe(1);
+      expect(txCalls[0][0].data.users_permissions_user).toBe(user.id);
+      expect(txCalls[0][0].data.amountDelivered).toBe(100);
+      expect(txCalls[0][0].data.currency).toBe("coins");
+      expect(txCalls[0][0].data.transactionType).toBe("daily_reward");
     });
   });
+
   test.each([
     { gapHours: 25, lastDay: 2, expectedNextDay: 3 },
     { gapHours: 24.1, lastDay: 1, expectedNextDay: 2 },
@@ -479,97 +546,78 @@ describe("Daily Reward Controller", () => {
     const yesterday = new Date(Date.now() - 24 * 3600 * 1000);
     const rewardDay1 = makeDailyReward(1, "coins", 100);
     const claimed = makeUserDailyReward(user.id, rewardDay1, yesterday);
-    strapi.entityService.findMany.mockImplementation(
-      (uid: string, opts?: any) => {
-        if (uid === "api::user-daily-reward.user-daily-reward")
-          return [claimed];
-        if (uid === "api::daily-reward.daily-reward") {
-          if (opts && opts.filters && typeof opts.filters.day === "number")
-            return [];
-          return [rewardDay1];
-        }
-        return [];
+
+    const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const udrQuery = strapi.db.query(
+      "api::user-daily-reward.user-daily-reward",
+    ) as any;
+    const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+
+    psQuery.findOne.mockResolvedValue({ id: 1, coins: 100, tickets: 0 });
+    strapi.db.mockTrx.select.mockResolvedValue([
+      { id: 1, coins: 100, tickets: 0 },
+    ]);
+
+    udrQuery.findMany.mockResolvedValue([
+      {
+        ...claimed,
+        daily_reward: rewardDay1,
+        claimedAt: yesterday,
       },
-    );
+    ]);
+
+    // No reward for next day
+    drQuery.findMany.mockResolvedValue([]);
+
     const res = await controller.claim(mockCtx(user));
     expect(res.status).toBe(400);
     expect(res.message).toMatch(/No reward available/i);
   });
 
   test("bloquea reclamo si falla el registro de la transacción y hace rollback", async () => {
-    const createdClaimId = 999;
-    let claimCreated = false;
-    let playerStatReverted = false;
-
     const rewardDay1 = makeDailyReward(1, "coins", 100);
-    const rewardDay2 = makeDailyReward(2, "tickets", 200);
 
-    strapi.entityService.findMany.mockImplementation(
-      (uid: string, opts?: any) => {
-        if (uid === "api::user-daily-reward.user-daily-reward") return [];
-        if (uid === "api::daily-reward.daily-reward") {
-          if (opts && opts.filters && typeof opts.filters.day === "number")
-            return [rewardDay1];
-          return [rewardDay1, rewardDay2];
-        }
-        return [];
-      },
-    );
-
-    const psQueryRollback = strapi.db.query(
-      "api::player-stat.player-stat",
+    const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const udrQuery = strapi.db.query(
+      "api::user-daily-reward.user-daily-reward",
     ) as any;
+    const drQuery = strapi.db.query("api::daily-reward.daily-reward") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 100, 0, 100, 0);
-    psQueryRollback.findOne.mockResolvedValueOnce(beforeStat);
-    const afterStat = makePlayerStat(user.id, 200, 0, 200, 0);
-    psQueryRollback.findOne.mockResolvedValueOnce(afterStat);
-
-    strapi.entityService.create.mockImplementation(
-      (uid: string, opts?: any) => {
-        if (uid === "api::user-daily-reward.user-daily-reward") {
-          claimCreated = true;
-          return { id: createdClaimId, claimedAt: new Date() };
-        }
-        if (uid === "api::user-transaction-history.user-transaction-history") {
-          throw new Error("create transaction history failed");
-        }
-        return {};
+    psQuery.findOne.mockResolvedValue(beforeStat);
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 100,
+        tickets: 0,
+        coins_earned: 100,
+        tickets_earned: 0,
       },
-    );
+    ]);
 
-    strapi.entityService.delete.mockImplementation(
-      (uid: string, id: number) => {
-        if (
-          uid === "api::user-daily-reward.user-daily-reward" &&
-          id === createdClaimId
-        ) {
-          claimCreated = false;
-        }
-        return {};
-      },
-    );
+    udrQuery.findMany.mockResolvedValue([]);
+    drQuery.findMany.mockResolvedValue([rewardDay1]);
 
-    strapi.entityService.update.mockImplementation(
-      (uid: string, id: number, opts?: any) => {
-        if (uid === "api::player-stat.player-stat") {
-          playerStatReverted = true;
-        }
-        return {};
-      },
+    const createdClaimId = 999;
+    udrQuery.create.mockResolvedValue({
+      id: createdClaimId,
+      claimedAt: new Date(),
+    });
+    psQuery.update.mockResolvedValue({});
+
+    // Make transaction log fail
+    txQuery.create.mockRejectedValue(
+      new Error("create transaction history failed"),
     );
 
     const res = await controller.claim(mockCtx(user));
 
+    // Transaction error is caught and rolled back automatically by Strapi's transaction
     expect(res.status).toBe(400);
-    expect(res.data?.reason).toBe("transaction_log_failed");
-    expect(res.message).toMatch(/Failed to log daily reward transaction/i);
-
-    // Verificar que se hizo rollback
-    expect(claimCreated).toBe(false); // El claim fue eliminado
-    expect(playerStatReverted).toBe(true); // El playerStat fue revertido
-    expect(strapi.entityService.delete).toHaveBeenCalledWith(
-      "api::user-daily-reward.user-daily-reward",
-      createdClaimId,
-    );
+    // The error is now generic since Strapi's transaction handles rollback
+    expect(res.data?.reason).toBe("transaction_error");
   });
 });

@@ -35,16 +35,29 @@ describe("Game Session Controller - Replay Logic", () => {
     const startAt = new Date(Date.now() - 120000).toISOString();
     const history = {
       id: 40,
-      history: { hash: "H123", startAt },
+      history: {
+        hash: "H123",
+        startAt,
+        difficulty: "maestro",
+        gridSize: "8x8x8",
+      },
       completed: false,
     };
 
-    levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+    levelQuery.findOne.mockResolvedValue({
+      id: 10,
+      uuid: "LEVEL-UUID",
+      difficulty: "maestro",
+    });
     // Mock existing history (game in progress)
     userGameHistoryQuery.findMany.mockResolvedValue([history]);
 
     // Mock UserLevel ALREADY WON
-    userLevelQuery.findOne.mockResolvedValue({ id: 30, levelStatus: "won", wonDifficulties: ["maestro"] });
+    userLevelQuery.findOne.mockResolvedValue({
+      id: 30,
+      levelStatus: "won",
+      wonDifficulties: ["maestro"],
+    });
 
     playerStatQuery.findOne.mockResolvedValue({ id: 20, coins: 1000 });
 
@@ -97,11 +110,20 @@ describe("Game Session Controller - Replay Logic", () => {
     const startAt = new Date(Date.now() - 120000).toISOString();
     const history = {
       id: 40,
-      history: { hash: "H123", startAt },
+      history: {
+        hash: "H123",
+        startAt,
+        difficulty: "maestro",
+        gridSize: "8x8x8",
+      },
       completed: false,
     };
 
-    levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+    levelQuery.findOne.mockResolvedValue({
+      id: 10,
+      uuid: "LEVEL-UUID",
+      difficulty: "maestro",
+    });
     userGameHistoryQuery.findMany.mockResolvedValue([history]);
 
     // Mock UserLevel AVAILABLE (not won yet)

@@ -115,14 +115,12 @@ export default factories.createCoreController(
 
           // 6. Process reward and update stats IN TRANSACTION
           const now = new Date();
-          const isCoin =
-            selectedReward.typeReward === "currency" &&
-            selectedReward.name?.toLowerCase().includes("coin");
 
-          const ticketRewardValue =
-            selectedReward.typeReward === "currency" && !isCoin
-              ? selectedReward.value || 0
-              : 0;
+          // Logic update: use explicit typeReward
+          const isCoin = selectedReward.typeReward === "currency";
+          const isTicket = selectedReward.typeReward === "ticket";
+
+          const ticketRewardValue = isTicket ? selectedReward.value || 0 : 0;
           const coinRewardValue = isCoin ? selectedReward.value || 0 : 0;
 
           const newTickets = currentTickets - 1 + ticketRewardValue;
@@ -174,7 +172,10 @@ export default factories.createCoreController(
             quantity: 1,
           };
 
-          if (selectedReward.typeReward === "currency") {
+          if (
+            selectedReward.typeReward === "currency" ||
+            selectedReward.typeReward === "ticket"
+          ) {
             userRewardData.rewardStatus = "claimed";
             userRewardData.claimed = true;
             userRewardData.claimedAt = now;
@@ -254,7 +255,7 @@ export default factories.createCoreController(
       } catch (error: any) {
         // Handle Errors properly
         const msg = error.message;
-        if (msg === "INSUFFICIENT_TICKETS") {
+        if (msg === "INSUFFICIENT_TICKETS" || msg === "PLAYER_STAT_NOT_FOUND") {
           return ctx.badRequest("Insufficient tickets", {
             reason: "insufficient_tickets",
             ticketsAvailable: 0,
