@@ -13,10 +13,6 @@ module.exports = {
       await strapi
         .service("api::notification.notification")
         .createRewardClaimNotification(result);
-
-      strapi.log.info(
-        `Notification created for new claim ${result.id} - status: ${result.claimStatus}`,
-      );
     } catch (error) {
       strapi.log.error("Error in reward-claim afterCreate lifecycle:", error);
     }
@@ -46,10 +42,6 @@ module.exports = {
                 claimedAt: new Date(),
               },
             });
-
-            strapi.log.info(
-              `UserReward ${claim.user_reward.id} marked as claimed (claim ${result.id} approved)`,
-            );
           }
         }
 
@@ -57,10 +49,6 @@ module.exports = {
         await strapi
           .service("api::notification.notification")
           .createRewardClaimNotification(result);
-
-        strapi.log.info(
-          `Notification created for claim ${result.id} - status: ${result.claimStatus}`,
-        );
       } catch (error) {
         strapi.log.error("Error in reward-claim lifecycle:", error);
       }

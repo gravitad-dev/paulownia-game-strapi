@@ -51,9 +51,6 @@ export default (config, { strapi }: { strapi: any }) => {
                 publishedAt: new Date(), // Publish immediately
               },
             });
-            strapi.log.info(
-              `Audit log created for action: ${action} by user: ${user.id}`,
-            );
           } else {
             // Optional: log or ignore if no user is authenticated (e.g. public actions, though these shouldn't be public)
             // strapi.log.warn(`Audit log skipped for action: ${action} - No user found in state.`);
