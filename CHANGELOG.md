@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 2025-12-18
 
+#### Added - Reward Claim Email Notifications
+
+- **Automated Email System**: Implemented transactional emails for reward claim status changes.
+  - **Unified Template**: Single template (`templates/reward-claim-status-email.html`) with dynamic content based on status.
+  - **Design Consistency**: Styled to match existing email templates (confirmation, password reset) with clean white/gray design.
+  - **Status-specific Emails**:
+    | Status | Subject | Description |
+    |--------|---------|-------------|
+    | `pending` | "Tu reclamación ha sido recibida" | Prompts user to upload required documents |
+    | `processing` | "Tu reclamación está siendo procesada" | Confirms team is reviewing documentation |
+    | `delivered` | "¡Tu premio ha sido aprobado!" | Notifies approval, admin will contact for delivery |
+    | `rejected` | "Actualización sobre tu reclamación" | Includes rejection reason and next steps |
+  - **Technical Implementation**:
+    - Lifecycle hooks (`reward-claim/lifecycles.ts`) trigger emails on `afterCreate` and `afterUpdate`.
+    - Uses existing `emailHelper` for template processing, logo attachments, and SMTP delivery.
+    - Email sent to claim email address (not user account email) to ensure delivery to correct recipient.
+  - **No Email for Cancellation**: User-initiated cancellations don't trigger email (user already knows they cancelled).
+
+### 2025-12-18
+
 #### Changed - Rewards Synchronization
 
 - **Reward Logic**: Unified `typeReward` enums between backend and frontend to ensure consistent filtering (unifying `currency` and `ticket`).
