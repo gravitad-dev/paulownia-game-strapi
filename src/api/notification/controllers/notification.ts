@@ -11,7 +11,7 @@ export default {
   async getAll(ctx) {
     try {
       if (!ctx.state.user) {
-        return ctx.unauthorized('You must be logged in to view notifications');
+        return ctx.unauthorized("You must be logged in to view notifications");
       }
 
       const userId = ctx.state.user.id;
@@ -20,23 +20,23 @@ export default {
 
       // Get notifications from database
       const [notifications, totalCount] = await Promise.all([
-        strapi.db.query('api::notification.notification').findMany({
+        strapi.db.query("api::notification.notification").findMany({
           where: { user: userId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           limit: pageSize,
           offset: (page - 1) * pageSize,
         }),
-        strapi.db.query('api::notification.notification').count({
+        strapi.db.query("api::notification.notification").count({
           where: { user: userId },
         }),
       ]);
 
       // Get counts
       const [unreadCount, readCount] = await Promise.all([
-        strapi.db.query('api::notification.notification').count({
+        strapi.db.query("api::notification.notification").count({
           where: { user: userId, read: false },
         }),
-        strapi.db.query('api::notification.notification').count({
+        strapi.db.query("api::notification.notification").count({
           where: { user: userId, read: true },
         }),
       ]);
@@ -67,8 +67,8 @@ export default {
         },
       };
     } catch (error) {
-      strapi.log.error('Error fetching notifications:', error);
-      ctx.badRequest('Failed to fetch notifications');
+      strapi.log.error("Error fetching notifications:", error);
+      ctx.badRequest("Failed to fetch notifications");
     }
   },
 
@@ -79,29 +79,29 @@ export default {
   async markAsRead(ctx) {
     try {
       if (!ctx.state.user) {
-        return ctx.unauthorized('You must be logged in');
+        return ctx.unauthorized("You must be logged in");
       }
 
       const userId = ctx.state.user.id;
       const notificationId = ctx.params.id;
 
       if (!notificationId) {
-        return ctx.badRequest('Notification ID is required');
+        return ctx.badRequest("Notification ID is required");
       }
 
       // Verify notification belongs to user
       const notification = await strapi.db
-        .query('api::notification.notification')
+        .query("api::notification.notification")
         .findOne({
           where: { id: notificationId, user: userId },
         });
 
       if (!notification) {
-        return ctx.notFound('Notification not found');
+        return ctx.notFound("Notification not found");
       }
 
       // Update notification
-      await strapi.db.query('api::notification.notification').update({
+      await strapi.db.query("api::notification.notification").update({
         where: { id: notificationId },
         data: {
           read: true,
@@ -111,11 +111,11 @@ export default {
 
       ctx.body = {
         ok: true,
-        message: 'Notification marked as read',
+        message: "Notification marked as read",
       };
     } catch (error) {
-      strapi.log.error('Error marking notification as read:', error);
-      ctx.badRequest('Failed to mark notification as read');
+      strapi.log.error("Error marking notification as read:", error);
+      ctx.badRequest("Failed to mark notification as read");
     }
   },
 
@@ -126,19 +126,19 @@ export default {
   async markAllAsRead(ctx) {
     try {
       if (!ctx.state.user) {
-        return ctx.unauthorized('You must be logged in');
+        return ctx.unauthorized("You must be logged in");
       }
 
       const userId = ctx.state.user.id;
 
       // Update all unread notifications
-      await strapi.db.query('api::notification.notification').updateMany({
+      await strapi.db.query("api::notification.notification").updateMany({
         where: { user: userId, read: false },
         data: { read: true, readAt: new Date() },
       });
 
       const totalCount = await strapi.db
-        .query('api::notification.notification')
+        .query("api::notification.notification")
         .count({ where: { user: userId } });
 
       ctx.body = {
@@ -147,8 +147,8 @@ export default {
         count: totalCount,
       };
     } catch (error) {
-      strapi.log.error('Error marking all notifications as read:', error);
-      ctx.badRequest('Failed to mark all notifications as read');
+      strapi.log.error("Error marking all notifications as read:", error);
+      ctx.badRequest("Failed to mark all notifications as read");
     }
   },
 };

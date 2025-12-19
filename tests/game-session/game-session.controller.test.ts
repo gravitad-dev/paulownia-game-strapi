@@ -75,7 +75,11 @@ describe("Game Session Controller", () => {
         "api::user-session.user-session",
       );
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
       userLevelQuery.findOne.mockResolvedValue({
         id: 30,
@@ -108,7 +112,11 @@ describe("Game Session Controller", () => {
       const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
       const userLevelQuery = strapi.db.query("api::user-level.user-level");
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
       userLevelQuery.findOne.mockResolvedValue(null);
 
@@ -132,7 +140,11 @@ describe("Game Session Controller", () => {
       const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
       const userLevelQuery = strapi.db.query("api::user-level.user-level");
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       playerStatQuery.findOne.mockResolvedValue({ id: 20 });
       userLevelQuery.findOne.mockResolvedValue({
         id: 30,
@@ -177,11 +189,20 @@ describe("Game Session Controller", () => {
       const startAt = new Date(Date.now() - 120000).toISOString();
       const history = {
         id: 40,
-        history: { hash: "H123", startAt },
+        history: {
+          hash: "H123",
+          startAt,
+          difficulty: "maestro",
+          gridSize: "8x8x8",
+        },
         completed: false,
       };
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       userGameHistoryQuery.findMany.mockResolvedValue([history]);
       userGameHistoryQuery.update.mockResolvedValue({});
       userLevelQuery.findOne.mockResolvedValue({ id: 30, wonDifficulties: [] });
@@ -247,11 +268,20 @@ describe("Game Session Controller", () => {
       const startAt = new Date(Date.now() - 120000).toISOString();
       const history = {
         id: 40,
-        history: { hash: "H123", startAt },
+        history: {
+          hash: "H123",
+          startAt,
+          difficulty: "maestro",
+          gridSize: "8x8x8",
+        },
         completed: false,
       };
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       userGameHistoryQuery.findMany.mockResolvedValue([history]);
       userGameHistoryQuery.update.mockResolvedValue({});
       // User already won "maestro" difficulty
@@ -307,11 +337,20 @@ describe("Game Session Controller", () => {
       const startAt = new Date(Date.now() - 120000).toISOString();
       const history = {
         id: 40,
-        history: { hash: "H123", startAt },
+        history: {
+          hash: "H123",
+          startAt,
+          difficulty: "maestro",
+          gridSize: "8x8x8",
+        },
         completed: false,
       };
 
-      levelQuery.findOne.mockResolvedValue({ id: 10, uuid: "LEVEL-UUID" });
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "maestro",
+      });
       userGameHistoryQuery.findMany.mockResolvedValue([history]);
       userGameHistoryQuery.update.mockResolvedValue({});
       // User won "aprendiz" but not "maestro"

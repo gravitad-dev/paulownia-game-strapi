@@ -4,7 +4,7 @@ export default (_config: any, { strapi }: { strapi: any }) => {
   return async (ctx: Context, next: () => Promise<void>) => {
     const path = ctx.request.path;
 
-    if (!path.startsWith("/api")) {
+    if (!path.startsWith("/api") || path.startsWith("/api/upload")) {
       return next();
     }
 
@@ -97,10 +97,10 @@ export default (_config: any, { strapi }: { strapi: any }) => {
     const openRead = isOpenRead(uid);
 
     // Fallback: extract UUID from path if not in params
-    if (!uuidParam && path.includes('/uuid/')) {
-      const parts = path.split('/uuid/');
+    if (!uuidParam && path.includes("/uuid/")) {
+      const parts = path.split("/uuid/");
       if (parts.length > 1) {
-        uuidParam = parts[1].split('/')[0]; // Get the segment after /uuid/
+        uuidParam = parts[1].split("/")[0]; // Get the segment after /uuid/
       }
     }
 

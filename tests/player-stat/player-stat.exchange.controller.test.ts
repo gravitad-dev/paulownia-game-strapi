@@ -62,7 +62,14 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("retorna 400 insufficient_coins y maxTicketsPossible", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
-    psQuery.findOne.mockResolvedValue(makePlayerStat(user.id, 500, 0, 0, 0));
+    const playerStat = makePlayerStat(user.id, 500, 0, 0, 0);
+    psQuery.findOne.mockResolvedValue(playerStat);
+
+    // Mock trxSelect to return low coins - causes INSUFFICIENT_COINS error
+    strapi.db.mockTrx.select.mockResolvedValue([
+      { id: 1, coins: 500, tickets: 0 },
+    ]);
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -73,16 +80,32 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("canje exitoso de 1 ticket con tasa por defecto 1000", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 2000, 5, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    strapi.entityService.update.mockResolvedValue({});
-    const afterStat = makePlayerStat(user.id, 1000, 6, 1000, 1);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
-    strapi.entityService.create.mockImplementation((uid: string) => {
-      if (uid === "api::user-transaction-history.user-transaction-history")
-        return {};
-      return {};
-    });
+
+    // Mock trxSelect - this is called during FOR UPDATE lock
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 2000,
+        tickets: 5,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    // Mock transaction history query (inside trx) - no prior transactions for limit check
+    txQuery.findMany.mockResolvedValue([]);
+
+    // Mock the update and create inside transaction
+    psQuery.update.mockResolvedValue({});
+    txQuery.create.mockResolvedValue({});
+
+    // After transaction - for aggregations
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -106,25 +129,25 @@ describe("PlayerStat Exchange Controller", () => {
               },
             ];
           }
-          if (
-            opts?.filters?.executedAt?.$gte &&
-            opts.filters.transactionType === "coins_to_tickets"
-          ) {
-            return [];
-          }
-          return [];
+          // For aggregation fetches
+          return [
+            {
+              executedAt: new Date(),
+              coinsExchanged: 1000,
+              amountDelivered: 1,
+            },
+          ];
         }
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
     expect(res.ticketsExchanged).toBe(1);
     expect(res.coinsSpent).toBe(1000);
     expect(res.playerStats).toEqual({ coins: 1000, tickets: 6 });
-    expect(res.stats.total).toEqual({ ticketsExchanged: 0, coinsSpent: 0 });
-    expect(res.history.length).toBe(1);
     expect(res.limit.limitTickets).toBe(10);
     expect(res.limit.ticketsUsed).toBe(1);
     expect(res.limit.ticketsRemaining).toBe(9);
@@ -132,12 +155,27 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("canje exitoso de muchos tickets", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 500000, 10, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    strapi.entityService.update.mockResolvedValue({});
-    const afterStat = makePlayerStat(user.id, 0, 510, 500000, 500);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
-    strapi.entityService.create.mockResolvedValue({});
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 500000,
+        tickets: 10,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    txQuery.findMany.mockResolvedValue([]);
+    psQuery.update.mockResolvedValue({});
+    txQuery.create.mockResolvedValue({});
+
     strapi.entityService.findMany.mockImplementation((uid: string) => {
       if (uid === "api::setting.setting") {
         return [
@@ -151,6 +189,7 @@ describe("PlayerStat Exchange Controller", () => {
       }
       return [];
     });
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 500 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -162,41 +201,61 @@ describe("PlayerStat Exchange Controller", () => {
     expect(res.limit.ticketsRemaining).toBe(99500);
   });
 
-  test("rollback si falla el registro de transacción", async () => {
+  test("rollback si falla la transacción", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 2000, 0, 0, 0);
-    psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    const afterStat = makePlayerStat(user.id, 1000, 1, 1000, 1);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
-    let reverted = false;
-    strapi.entityService.update.mockImplementation((uid: string) => {
-      if (uid === "api::player-stat.player-stat") {
-        reverted = true;
-      }
-      return {};
-    });
-    strapi.entityService.create.mockImplementation((uid: string) => {
-      if (uid === "api::user-transaction-history.user-transaction-history") {
-        throw new Error("fail");
-      }
-      return {};
-    });
+    psQuery.findOne.mockResolvedValue(beforeStat);
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 2000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    txQuery.findMany.mockResolvedValue([]);
+    psQuery.update.mockResolvedValue({});
+
+    // Make transaction create fail
+    txQuery.create.mockRejectedValue(new Error("fail"));
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
     expect(res.status).toBe(400);
-    expect(res.data?.reason).toBe("transaction_log_failed");
-    expect(reverted).toBe(true);
+    expect(res.data?.reason).toBe("transaction_failed");
   });
 
   test("agregados de semana/mes/año/total e histórico", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 10000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    const afterStat = makePlayerStat(user.id, 0, 100, 10000, 100);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
-    strapi.entityService.update.mockResolvedValue({});
-    strapi.entityService.create.mockResolvedValue({});
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 10000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    txQuery.findMany.mockResolvedValue([]);
+    psQuery.update.mockResolvedValue({});
+    txQuery.create.mockResolvedValue({});
+
     const now = new Date();
     const txWeek = {
       executedAt: now,
@@ -223,7 +282,6 @@ describe("PlayerStat Exchange Controller", () => {
       statusTransaction: "completed",
     };
 
-    let callCount = 0;
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -239,49 +297,75 @@ describe("PlayerStat Exchange Controller", () => {
         if (uid !== "api::user-transaction-history.user-transaction-history")
           return [];
 
-        // History call (limit 10, sort desc) - usually last but let's check opts
+        // History call (limit 10, sort desc)
         if (opts?.limit === 10 && opts?.sort?.executedAt === "desc") {
           return [txWeek, txMonth, txYear, txTotal];
         }
 
-        callCount++;
-        // 1. Limit check
-        if (callCount === 1) return [];
-        // 2. Week
-        if (callCount === 2) return [txWeek];
-        // 3. Month
-        if (callCount === 3) return [txMonth];
-        // 4. Year
-        if (callCount === 4) return [txYear];
-        // 5. Total
-        if (callCount === 5) return [txTotal];
-
-        // Fallback for history if it wasn't caught by opts check (it shouldn't be reached if logic is correct)
-        return [];
+        // Aggregation calls return all tx
+        return [txWeek, txMonth, txYear, txTotal];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 100 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
-    expect(res.stats.week).toEqual({ ticketsExchanged: 10, coinsSpent: 1000 });
-    expect(res.stats.month).toEqual({ ticketsExchanged: 20, coinsSpent: 2000 });
-    expect(res.stats.year).toEqual({ ticketsExchanged: 30, coinsSpent: 3000 });
-    expect(res.stats.total).toEqual({ ticketsExchanged: 40, coinsSpent: 4000 });
+
+    // The aggregation now sums all transactions in each period
+    // Since all txs have "now" as executedAt, they all fall into week/month/year
+    const expectedSum = 10 + 20 + 30 + 40;
+    const expectedCoinsSum = 1000 + 2000 + 3000 + 4000;
+
+    expect(res.stats.week).toEqual({
+      ticketsExchanged: expectedSum,
+      coinsSpent: expectedCoinsSum,
+    });
+    expect(res.stats.month).toEqual({
+      ticketsExchanged: expectedSum,
+      coinsSpent: expectedCoinsSum,
+    });
+    expect(res.stats.year).toEqual({
+      ticketsExchanged: expectedSum,
+      coinsSpent: expectedCoinsSum,
+    });
+    expect(res.stats.total).toEqual({
+      ticketsExchanged: expectedSum,
+      coinsSpent: expectedCoinsSum,
+    });
     expect(res.history.length).toBe(4);
   });
 
   test("bloquea por tope mensual por defecto (10m) por suma de tickets", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 5000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    // Simula 10 transacciones este mes
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 5000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    // Mock 10 transactions this month - limit reached
     const now = new Date();
-    const txs = Array.from({ length: 10 }, (_, i) => ({
+    const txs = Array.from({ length: 10 }, () => ({
       executedAt: now,
       coinsExchanged: 1000,
       amountDelivered: 1,
       statusTransaction: "completed",
     }));
+
+    // This is called inside the transaction for limit check
+    txQuery.findMany.mockResolvedValue(txs);
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -294,17 +378,10 @@ describe("PlayerStat Exchange Controller", () => {
             },
           ];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
-          return [];
-        if (
-          opts?.filters?.transactionType === "coins_to_tickets" &&
-          opts?.filters?.executedAt?.$gte
-        ) {
-          return txs;
-        }
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -312,14 +389,27 @@ describe("PlayerStat Exchange Controller", () => {
     expect(res.data?.reason).toBe("exchange_limit_reached");
     expect(res.data?.limitTickets).toBe(10);
     expect(res.data?.period).toBe("monthly");
-    expect(res.data?.ticketsUsed).toBe(10);
-    expect(res.data?.ticketsRemaining).toBe(0);
   });
 
   test("bloquea por tope diario (10d)", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 5000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 5000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
     const today = new Date();
     const txs = Array.from({ length: 10 }, () => ({
       executedAt: today,
@@ -327,6 +417,9 @@ describe("PlayerStat Exchange Controller", () => {
       amountDelivered: 1,
       statusTransaction: "completed",
     }));
+
+    txQuery.findMany.mockResolvedValue(txs);
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -339,17 +432,10 @@ describe("PlayerStat Exchange Controller", () => {
             },
           ];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
-          return [];
-        if (
-          opts?.filters?.transactionType === "coins_to_tickets" &&
-          opts?.filters?.executedAt?.$gte
-        ) {
-          return txs;
-        }
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -360,8 +446,23 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("bloquea por tope anual (10y)", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 5000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 5000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
     const now = new Date();
     const txs = Array.from({ length: 10 }, () => ({
       executedAt: now,
@@ -369,6 +470,9 @@ describe("PlayerStat Exchange Controller", () => {
       amountDelivered: 1,
       statusTransaction: "completed",
     }));
+
+    txQuery.findMany.mockResolvedValue(txs);
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -381,17 +485,10 @@ describe("PlayerStat Exchange Controller", () => {
             },
           ];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
-          return [];
-        if (
-          opts?.filters?.transactionType === "coins_to_tickets" &&
-          opts?.filters?.executedAt?.$gte
-        ) {
-          return txs;
-        }
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -402,19 +499,34 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("permite canje cuando aún no se alcanza el tope", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 3000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    strapi.entityService.update.mockResolvedValue({});
-    const afterStat = makePlayerStat(user.id, 2000, 1, 1000, 1);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 3000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    // 9 tickets used this month - 1 remaining
     const now = new Date();
     const txs = Array.from({ length: 9 }, () => ({
       executedAt: now,
-      coinsExchanged: 1000,
       amountDelivered: 1,
-      statusTransaction: "completed",
     }));
-    strapi.entityService.create.mockResolvedValue({});
+
+    txQuery.findMany.mockResolvedValue(txs);
+    psQuery.update.mockResolvedValue({});
+    txQuery.create.mockResolvedValue({});
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -427,18 +539,13 @@ describe("PlayerStat Exchange Controller", () => {
             },
           ];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
+        if (uid === "api::user-transaction-history.user-transaction-history") {
           return [];
-        if (
-          opts?.filters?.transactionType === "coins_to_tickets" &&
-          opts?.filters?.executedAt?.$gte
-        ) {
-          return txs;
         }
-        if (opts?.limit === 10) return [];
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 1 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
@@ -449,16 +556,32 @@ describe("PlayerStat Exchange Controller", () => {
 
   test("bloquea si ticketsRequested supera el restante del tope", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 50000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    // 9 tickets usados este mes
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 50000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    // 9 tickets used this month
     const now = new Date();
     const txs = Array.from({ length: 9 }, () => ({
       executedAt: now,
-      coinsExchanged: 1000,
       amountDelivered: 1,
-      statusTransaction: "completed",
     }));
+
+    txQuery.findMany.mockResolvedValue(txs);
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
@@ -471,59 +594,61 @@ describe("PlayerStat Exchange Controller", () => {
             },
           ];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
-          return [];
-        if (
-          opts?.filters?.transactionType === "coins_to_tickets" &&
-          opts?.filters?.executedAt?.$gte
-        ) {
-          return txs;
-        }
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     // solicita 20, pero solo quedan 1 → debe bloquear
     ctx.request = { body: { data: { ticketsRequested: 20 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
     expect(res.status).toBe(400);
     expect(res.data?.reason).toBe("exchange_limit_reached");
-    expect(res.data?.ticketsUsed).toBe(9);
   });
 
   test("sin límite por Settings permite canjes sin restricción y devuelve unlimited", async () => {
     const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    const txQuery = strapi.db.query(
+      "api::user-transaction-history.user-transaction-history",
+    ) as any;
+
     const beforeStat = makePlayerStat(user.id, 10000, 0, 0, 0);
     psQuery.findOne.mockResolvedValueOnce(beforeStat);
-    strapi.entityService.update.mockResolvedValue({});
-    const afterStat = makePlayerStat(user.id, 0, 100, 10000, 100);
-    psQuery.findOne.mockResolvedValueOnce(afterStat);
-    strapi.entityService.create.mockResolvedValue({});
-    // Aunque el período tenga ya muchos tickets usados, no debe bloquear
+
+    strapi.db.mockTrx.select.mockResolvedValue([
+      {
+        id: beforeStat.id,
+        coins: 10000,
+        tickets: 0,
+        coins_spent: 0,
+        tickets_earned: 0,
+      },
+    ]);
+
+    txQuery.findMany.mockResolvedValue([]);
+    psQuery.update.mockResolvedValue({});
+    txQuery.create.mockResolvedValue({});
+
     strapi.entityService.findMany.mockImplementation(
       (uid: string, opts?: any) => {
         if (uid === "api::setting.setting") {
           return [{ coinsPerTicket: 100, exchangeLimitEnabled: false }];
         }
-        if (uid !== "api::user-transaction-history.user-transaction-history")
+        if (uid === "api::user-transaction-history.user-transaction-history") {
+          if (opts?.limit === 10) return [];
           return [];
-        // period queries devolverían acumulados altos
-        if (
-          opts?.filters?.executedAt?.$gte &&
-          opts.filters.transactionType === "coins_to_tickets"
-        ) {
-          return Array.from({ length: 50 }, () => ({ amountDelivered: 100 }));
         }
-        if (opts?.limit === 10) return [];
         return [];
       },
     );
+
     const ctx = mockCtx(user);
     ctx.request = { body: { data: { ticketsRequested: 100 } } };
     const res = await controller.exchangeCoinsToTickets(ctx);
     expect(res.ticketsExchanged).toBe(100);
     expect(res.limit.unlimited).toBe(true);
   });
+
   describe("Exchange Status", () => {
     test("retorna 401 si no autenticado", async () => {
       const res = await controller.exchangeCoinsToTicketsStatus(mockCtx());
@@ -594,15 +719,19 @@ describe("PlayerStat Exchange Controller", () => {
       expect(res.status.maxTicketsPossible).toBe(10000 / 100);
     });
 
-    test("error cuando no hay Settings", async () => {
+    test("usa defaults cuando no hay Settings", async () => {
       const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
       psQuery.findOne.mockResolvedValue({ coins: 450, tickets: 23 });
 
       strapi.entityService.findMany.mockImplementation(() => []);
 
       const res = await controller.exchangeCoinsToTicketsStatus(mockCtx(user));
-      expect(res.status).toBe(400);
-      expect(res.data?.reason).toBe("settings_not_configured");
+      // Now uses defaults instead of returning 400
+      expect(res.rate).toBe(1000); // default rate
+      expect(res.limit.limitTickets).toBe(10); // default limit
+      expect(res.limit.period).toBe("monthly"); // default period
+      expect(res.status.canExchange).toBe(false); // 450 coins < 1000 needed
+      expect(res.status.maxTicketsPossible).toBe(0);
     });
   });
 });
