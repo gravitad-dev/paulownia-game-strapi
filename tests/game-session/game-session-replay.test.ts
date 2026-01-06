@@ -1,7 +1,7 @@
 import { createStrapiMock } from "../helpers/strapi-mock";
 import { mockCtx } from "../helpers/ctx-mock";
 
-describe("Game Session Controller - Replay Logic", () => {
+describe("Controlador de Sesión de Juego - Lógica de Rejugabilidad", () => {
   let controller: any;
   let strapi: ReturnType<typeof createStrapiMock>;
   const user = { id: 1, username: "player" } as any;
@@ -15,7 +15,7 @@ describe("Game Session Controller - Replay Logic", () => {
     ).default;
   });
 
-  test("should award 0 coins and 0 score if level is already won", async () => {
+  test("debería otorgar 0 monedas y 0 puntos si la dificultad ya fue ganada anteriormente", async () => {
     const levelQuery = { findOne: jest.fn() };
     const playerStatQuery = { findOne: jest.fn(), update: jest.fn() };
     const userLevelQuery = { findOne: jest.fn(), update: jest.fn() };
@@ -47,12 +47,12 @@ describe("Game Session Controller - Replay Logic", () => {
     levelQuery.findOne.mockResolvedValue({
       id: 10,
       uuid: "LEVEL-UUID",
-      difficulty: "maestro",
+      difficulty: "aprendiz", // Dificultad base del nivel
     });
-    // Mock existing history (game in progress)
+    // Simular historial existente (partida en progreso)
     userGameHistoryQuery.findMany.mockResolvedValue([history]);
 
-    // Mock UserLevel ALREADY WON
+    // Simular que el usuario ya ganó "maestro" en este nivel
     userLevelQuery.findOne.mockResolvedValue({
       id: 30,
       levelStatus: "won",
@@ -75,11 +75,11 @@ describe("Game Session Controller - Replay Logic", () => {
 
     const res = await controller.end(ctx);
 
-    // Should be 0 because it's a replay of a won level
+    // Debería ser 0 porque rejugó "maestro" que ya estaba en wonDifficulties
     expect(res.data.coins).toBe(0);
     expect(res.data.score).toBe(0);
 
-    // Verify database updates used 0
+    // Verificar que las actualizaciones de la base de datos usaron 0
     expect(userGameHistoryQuery.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -90,7 +90,7 @@ describe("Game Session Controller - Replay Logic", () => {
     );
   });
 
-  test("should award normal coins and score if level is NOT already won", async () => {
+  test("debería otorgar monedas y puntos normales si la dificultad seleccionada NO ha sido ganada aún (aunque el nivel sea estado won)", async () => {
     const levelQuery = { findOne: jest.fn() };
     const playerStatQuery = { findOne: jest.fn(), update: jest.fn() };
     const userLevelQuery = { findOne: jest.fn(), update: jest.fn() };
@@ -122,14 +122,15 @@ describe("Game Session Controller - Replay Logic", () => {
     levelQuery.findOne.mockResolvedValue({
       id: 10,
       uuid: "LEVEL-UUID",
-      difficulty: "maestro",
+      difficulty: "aprendiz", // El nivel es base aprendiz
     });
     userGameHistoryQuery.findMany.mockResolvedValue([history]);
 
-    // Mock UserLevel AVAILABLE (not won yet)
+    // El usuario ya ganó "aprendiz" (por eso status es won), pero NO ha ganado "maestro"
     userLevelQuery.findOne.mockResolvedValue({
       id: 30,
-      levelStatus: "available",
+      levelStatus: "won",
+      wonDifficulties: ["aprendiz"],
     });
 
     playerStatQuery.findOne.mockResolvedValue({ id: 20, coins: 1000 });
@@ -148,8 +149,8 @@ describe("Game Session Controller - Replay Logic", () => {
 
     const res = await controller.end(ctx);
 
-    // Maestro gives 800 coins
-    expect(res.data.coins).toBe(800);
+    // Maestro otorga 200 monedas porque NO estaba en wonDifficulties
+    expect(res.data.coins).toBe(200);
     expect(res.data.score).toBeGreaterThan(0);
   });
 });

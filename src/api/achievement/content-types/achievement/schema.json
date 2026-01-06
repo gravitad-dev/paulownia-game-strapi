@@ -23,12 +23,7 @@
     "image": {
       "type": "media",
       "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
+      "allowedTypes": ["images", "files", "videos", "audios"]
     },
     "quantity": {
       "type": "biginteger"
@@ -43,11 +38,24 @@
         "dailyLogin",
         "xp",
         "score",
-        "time"
+        "time",
+        "difficultyMastery"
       ]
     },
     "rewardAmount": {
       "type": "integer"
+    },
+    "targetDifficulty": {
+      "type": "enumeration",
+      "enum": [
+        "all",
+        "aprendiz",
+        "novato",
+        "aventurero",
+        "veterano",
+        "maestro",
+        "leyenda"
+      ]
     },
     "visibleToUser": {
       "type": "boolean",
@@ -63,10 +71,7 @@
     },
     "rewardType": {
       "type": "enumeration",
-      "enum": [
-        "coins",
-        "tickets"
-      ]
+      "enum": ["coins", "tickets"]
     },
     "user_achievements": {
       "type": "relation",

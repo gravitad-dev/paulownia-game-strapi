@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### 2026-01-06
+
+#### Added - Difficulty Rewards & Unified Achievements
+
+feat(game-session): implement difficulty-based rewards and fix achievement progression
+
+- Implement dynamic coin rewards logic based on 6 difficulty tiers (100/150/200 coins).
+- Fix `difficultyMastery` achievement logic to correctly track progress per difficulty without resetting others.
+- Update `seed.ts` to include achievements for all 6 difficulties (added novato, veterano, leyenda) and use correct difficulty keys.
+- Update `achievement` schema to include full range of difficulty enums.
+- Refactor `myAchievements` and `claim` controllers to validate completion based on progress thresholds alongside database flags.
+
 ### 2025-12-18
 
 #### Added - Reward Claim Email Notifications

@@ -461,8 +461,19 @@ export interface ApiAchievementAchievement extends Struct.CollectionTypeSchema {
     quantity: Schema.Attribute.BigInteger;
     rewardAmount: Schema.Attribute.Integer;
     rewardType: Schema.Attribute.Enumeration<['coins', 'tickets']>;
+    targetDifficulty: Schema.Attribute.Enumeration<
+      [
+        'all',
+        'aprendiz',
+        'novato',
+        'aventurero',
+        'veterano',
+        'maestro',
+        'leyenda',
+      ]
+    >;
     targetType: Schema.Attribute.Enumeration<
-      ['gamesWon', 'dailyLogin', 'xp', 'score', 'time']
+      ['gamesWon', 'dailyLogin', 'xp', 'score', 'time', 'difficultyMastery']
     >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;

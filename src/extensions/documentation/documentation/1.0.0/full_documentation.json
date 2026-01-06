@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2025-12-26T23:10:37.809Z"
+    "x-generation-date": "2026-01-06T22:39:33.509Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -10670,11 +10670,24 @@
                   "dailyLogin",
                   "xp",
                   "score",
-                  "time"
+                  "time",
+                  "difficultyMastery"
                 ]
               },
               "rewardAmount": {
                 "type": "integer"
+              },
+              "targetDifficulty": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "aprendiz",
+                  "novato",
+                  "aventurero",
+                  "veterano",
+                  "maestro",
+                  "leyenda"
+                ]
               },
               "visibleToUser": {
                 "type": "boolean"
@@ -11394,11 +11407,24 @@
               "dailyLogin",
               "xp",
               "score",
-              "time"
+              "time",
+              "difficultyMastery"
             ]
           },
           "rewardAmount": {
             "type": "integer"
+          },
+          "targetDifficulty": {
+            "type": "string",
+            "enum": [
+              "all",
+              "aprendiz",
+              "novato",
+              "aventurero",
+              "veterano",
+              "maestro",
+              "leyenda"
+            ]
           },
           "visibleToUser": {
             "type": "boolean"
@@ -14601,11 +14627,24 @@
                         "dailyLogin",
                         "xp",
                         "score",
-                        "time"
+                        "time",
+                        "difficultyMastery"
                       ]
                     },
                     "rewardAmount": {
                       "type": "integer"
+                    },
+                    "targetDifficulty": {
+                      "type": "string",
+                      "enum": [
+                        "all",
+                        "aprendiz",
+                        "novato",
+                        "aventurero",
+                        "veterano",
+                        "maestro",
+                        "leyenda"
+                      ]
                     },
                     "visibleToUser": {
                       "type": "boolean"
@@ -16899,11 +16938,24 @@
                                   "dailyLogin",
                                   "xp",
                                   "score",
-                                  "time"
+                                  "time",
+                                  "difficultyMastery"
                                 ]
                               },
                               "rewardAmount": {
                                 "type": "integer"
+                              },
+                              "targetDifficulty": {
+                                "type": "string",
+                                "enum": [
+                                  "all",
+                                  "aprendiz",
+                                  "novato",
+                                  "aventurero",
+                                  "veterano",
+                                  "maestro",
+                                  "leyenda"
+                                ]
                               },
                               "visibleToUser": {
                                 "type": "boolean"
@@ -22317,11 +22369,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -26381,11 +26446,24 @@
                                   "dailyLogin",
                                   "xp",
                                   "score",
-                                  "time"
+                                  "time",
+                                  "difficultyMastery"
                                 ]
                               },
                               "rewardAmount": {
                                 "type": "integer"
+                              },
+                              "targetDifficulty": {
+                                "type": "string",
+                                "enum": [
+                                  "all",
+                                  "aprendiz",
+                                  "novato",
+                                  "aventurero",
+                                  "veterano",
+                                  "maestro",
+                                  "leyenda"
+                                ]
                               },
                               "visibleToUser": {
                                 "type": "boolean"
@@ -30639,11 +30717,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -34685,11 +34776,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -38817,11 +38921,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -42724,11 +42841,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -47852,11 +47982,24 @@
                                   "dailyLogin",
                                   "xp",
                                   "score",
-                                  "time"
+                                  "time",
+                                  "difficultyMastery"
                                 ]
                               },
                               "rewardAmount": {
                                 "type": "integer"
+                              },
+                              "targetDifficulty": {
+                                "type": "string",
+                                "enum": [
+                                  "all",
+                                  "aprendiz",
+                                  "novato",
+                                  "aventurero",
+                                  "veterano",
+                                  "maestro",
+                                  "leyenda"
+                                ]
                               },
                               "visibleToUser": {
                                 "type": "boolean"
@@ -51737,11 +51880,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -56359,11 +56515,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -61373,11 +61542,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -65385,11 +65567,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -69400,11 +69595,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -73463,11 +73671,24 @@
                                       "dailyLogin",
                                       "xp",
                                       "score",
-                                      "time"
+                                      "time",
+                                      "difficultyMastery"
                                     ]
                                   },
                                   "rewardAmount": {
                                     "type": "integer"
+                                  },
+                                  "targetDifficulty": {
+                                    "type": "string",
+                                    "enum": [
+                                      "all",
+                                      "aprendiz",
+                                      "novato",
+                                      "aventurero",
+                                      "veterano",
+                                      "maestro",
+                                      "leyenda"
+                                    ]
                                   },
                                   "visibleToUser": {
                                     "type": "boolean"
@@ -77477,11 +77698,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -81460,11 +81694,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
@@ -85510,11 +85757,24 @@
                             "dailyLogin",
                             "xp",
                             "score",
-                            "time"
+                            "time",
+                            "difficultyMastery"
                           ]
                         },
                         "rewardAmount": {
                           "type": "integer"
+                        },
+                        "targetDifficulty": {
+                          "type": "string",
+                          "enum": [
+                            "all",
+                            "aprendiz",
+                            "novato",
+                            "aventurero",
+                            "veterano",
+                            "maestro",
+                            "leyenda"
+                          ]
                         },
                         "visibleToUser": {
                           "type": "boolean"
