@@ -19,12 +19,12 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },
   "dependencies": {
-    "@strapi/plugin-cloud": "5.31.0",
-    "@strapi/plugin-documentation": "^5.33.0",
-    "@strapi/plugin-users-permissions": "5.31.0",
-    "@strapi/provider-email-nodemailer": "^5.31.3",
-    "@strapi/provider-upload-cloudinary": "^5.33.0",
-    "@strapi/strapi": "5.31.0",
+    "@strapi/plugin-cloud": "5.33.0",
+    "@strapi/plugin-documentation": "5.33.0",
+    "@strapi/plugin-users-permissions": "5.33.0",
+    "@strapi/provider-email-nodemailer": "5.33.0",
+    "@strapi/provider-upload-cloudinary": "5.33.0",
+    "@strapi/strapi": "5.33.0",
     "chart.js": "^4.5.1",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
