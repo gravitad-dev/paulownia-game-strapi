@@ -473,7 +473,15 @@ export interface ApiAchievementAchievement extends Struct.CollectionTypeSchema {
       ]
     >;
     targetType: Schema.Attribute.Enumeration<
-      ['gamesWon', 'dailyLogin', 'xp', 'score', 'time', 'difficultyMastery']
+      [
+        'gamesWon',
+        'dailyLogin',
+        'xp',
+        'score',
+        'time',
+        'difficultyMastery',
+        'levelFullMastery',
+      ]
     >;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;

@@ -82,6 +82,21 @@ const updateAchievementProgress = async (
 
   if (!achievements || achievements.length === 0) return;
 
+  const FULL_DIFFICULTIES = [
+    "aprendiz",
+    "novato",
+    "aventurero",
+    "veterano",
+    "maestro",
+    "leyenda",
+  ];
+
+  const normalizeDifficulty = (value: unknown): string =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+
   for (const achievement of achievements as any[]) {
     let currentValue = 0;
     const targetType = achievement.targetType;
@@ -108,6 +123,23 @@ const updateAchievementProgress = async (
         // Si no coincide la dificultad, no tocamos este logro
         continue;
       }
+    } else if (targetType === "levelFullMastery") {
+      const userLevels = await strapi.db.query(USER_LEVEL_UID).findMany({
+        where: { users_permissions_user: userId },
+      });
+
+      const fullyMasteredLevels = userLevels.filter((ul: any) => {
+        const won: string[] = Array.isArray(ul.wonDifficulties)
+          ? ul.wonDifficulties
+          : [];
+
+        const wonSet = new Set(won.map((d) => normalizeDifficulty(d)));
+        return FULL_DIFFICULTIES.every((diff) =>
+          wonSet.has(normalizeDifficulty(diff)),
+        );
+      });
+
+      currentValue = fullyMasteredLevels.length;
     } else {
       continue;
     }

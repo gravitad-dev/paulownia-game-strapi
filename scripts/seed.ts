@@ -518,6 +518,14 @@ async function seedDatabase(strapi: any) {
       rewardAmount: 5000,
     },
     {
+      title: "Maestría Completa",
+      description: "Gana todas las dificultades de un nivel",
+      targetType: "levelFullMastery",
+      goalAmount: 1,
+      rewardType: "coins",
+      rewardAmount: 2000,
+    },
+    {
       title: "Dedicación",
       description: "Juega durante 30 minutos (1800 seg)",
       targetType: "time",

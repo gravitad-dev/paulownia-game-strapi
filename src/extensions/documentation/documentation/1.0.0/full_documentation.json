@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-01-06T22:39:33.509Z"
+    "x-generation-date": "2026-01-07T15:09:52.088Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -3285,6 +3285,87 @@
         "operationId": "get/notifications"
       }
     },
+    "/notifications/mark-all-read": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Notification"
+        ],
+        "parameters": [],
+        "operationId": "post/notifications/mark-all-read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/notifications/{id}/mark-read": {
       "post": {
         "responses": {
@@ -3365,87 +3446,6 @@
           }
         ],
         "operationId": "post/notifications/{id}/mark-read",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NotificationRequest"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/notifications/mark-all-read": {
-      "post": {
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotificationResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "Notification"
-        ],
-        "parameters": [],
-        "operationId": "post/notifications/mark-all-read",
         "requestBody": {
           "required": true,
           "content": {
@@ -10671,7 +10671,8 @@
                   "xp",
                   "score",
                   "time",
-                  "difficultyMastery"
+                  "difficultyMastery",
+                  "levelFullMastery"
                 ]
               },
               "rewardAmount": {
@@ -11408,7 +11409,8 @@
               "xp",
               "score",
               "time",
-              "difficultyMastery"
+              "difficultyMastery",
+              "levelFullMastery"
             ]
           },
           "rewardAmount": {
@@ -14628,7 +14630,8 @@
                         "xp",
                         "score",
                         "time",
-                        "difficultyMastery"
+                        "difficultyMastery",
+                        "levelFullMastery"
                       ]
                     },
                     "rewardAmount": {
@@ -16939,7 +16942,8 @@
                                   "xp",
                                   "score",
                                   "time",
-                                  "difficultyMastery"
+                                  "difficultyMastery",
+                                  "levelFullMastery"
                                 ]
                               },
                               "rewardAmount": {
@@ -22370,7 +22374,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -26447,7 +26452,8 @@
                                   "xp",
                                   "score",
                                   "time",
-                                  "difficultyMastery"
+                                  "difficultyMastery",
+                                  "levelFullMastery"
                                 ]
                               },
                               "rewardAmount": {
@@ -30718,7 +30724,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -34777,7 +34784,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -38922,7 +38930,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -42842,7 +42851,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -47983,7 +47993,8 @@
                                   "xp",
                                   "score",
                                   "time",
-                                  "difficultyMastery"
+                                  "difficultyMastery",
+                                  "levelFullMastery"
                                 ]
                               },
                               "rewardAmount": {
@@ -51881,7 +51892,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -56516,7 +56528,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -61543,7 +61556,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -65568,7 +65582,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -69596,7 +69611,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -73672,7 +73688,8 @@
                                       "xp",
                                       "score",
                                       "time",
-                                      "difficultyMastery"
+                                      "difficultyMastery",
+                                      "levelFullMastery"
                                     ]
                                   },
                                   "rewardAmount": {
@@ -77699,7 +77716,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -81695,7 +81713,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {
@@ -85758,7 +85777,8 @@
                             "xp",
                             "score",
                             "time",
-                            "difficultyMastery"
+                            "difficultyMastery",
+                            "levelFullMastery"
                           ]
                         },
                         "rewardAmount": {

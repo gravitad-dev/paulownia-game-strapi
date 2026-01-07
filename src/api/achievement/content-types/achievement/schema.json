@@ -39,7 +39,8 @@
         "xp",
         "score",
         "time",
-        "difficultyMastery"
+        "difficultyMastery",
+        "levelFullMastery"
       ]
     },
     "rewardAmount": {
