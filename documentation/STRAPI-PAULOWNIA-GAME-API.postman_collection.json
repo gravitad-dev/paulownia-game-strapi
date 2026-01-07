@@ -606,7 +606,7 @@
                     }
                   ]
                 },
-                "description": "Obtiene un player stat por UUID."
+                "description": "Obtiene un achievement por UUID."
               },
               "response": []
             },
@@ -635,7 +635,7 @@
                     }
                   ]
                 },
-                "description": "Actualiza un player stat por UUID."
+                "description": "Actualiza un achievement por UUID."
               },
               "response": []
             },
@@ -4375,7 +4375,7 @@
                     {
                       "key": "targetType",
                       "value": "score",
-                      "description": "Filtra por tipo de objetivo: gamesWon, dailyLogin, xp, score, time",
+                      "description": "Filtra por tipo de objetivo: gamesWon, dailyLogin, xp, score, time, difficultyMastery, levelFullMastery",
                       "disabled": true
                     },
                     {
@@ -4386,7 +4386,7 @@
                     }
                   ]
                 },
-                "description": "Obtiene todos los achievements activos y visibles con su estado para el usuario autenticado.\n\n## Estados posibles:\n\n- **locked**: No conseguido (currentProgress < goalAmount)\n    \n- **completed**: Conseguido pero no reclamado (completed: true, claimed: false)\n    \n- **claimed**: Conseguido y reclamado (completed: true, claimed: true)\n    \n\n## Query Parameters:\n\n### Filtros (opcionales):\n\n- `status`: Filtra por estado (locked, completed, claimed)\n    \n- `targetType`: Filtra por tipo de objetivo (gamesWon, dailyLogin, xp, score, time)\n    \n- `rewardType`: Filtra por tipo de recompensa (coins, tickets)\n    \n\n### Ordenamiento (opcional):\n\n- `sort`: Ordena resultados por campo:orden\n    - Campos disponibles: title, goalAmount, rewardAmount, obtainedAt\n        \n    - Orden: asc (ascendente), desc (descendente)\n        \n    - Ejemplo: `sort=goalAmount:asc`\n        \n\n### Paginación:\n\n- `pagination[page]`: Número de página (default: 1)\n    \n- `pagination[pageSize]`: Tamaño de página (1-100, default: 25)\n    \n\n## Ejemplos de uso:\n\n### Obtener achievements completados pero no reclamados:\n\n```\nGET /api/achievements/my-achievements?status=completed\n\n ```\n\n### Obtener achievements de tipo score, ordenados por goalAmount:\n\n```\nGET /api/achievements/my-achievements?targetType=score&sort=goalAmount:asc\n\n ```\n\n### Paginación (10 por página, página 2):\n\n```\nGET /api/achievements/my-achievements?pagination[page]=2&pagination[pageSize]=10\n\n ```\n\n### Combinación de filtros:\n\n```\nGET /api/achievements/my-achievements?status=locked&rewardType=coins&sort=rewardAmount:desc&pagination[pageSize]=20\n\n ```\n\n## Respuesta:\n\n``` json\n{\n  \"achievements\": [...],\n  \"playerStats\": {\n    \"coins\": 1500,\n    \"tickets\": 10\n  },\n  \"meta\": {\n    \"pagination\": {\n      \"page\": 1,\n      \"pageSize\": 25,\n      \"pageCount\": 3,\n      \"total\": 65\n    }\n  }\n}\n\n ```\n\nStartFragment\n\nrefleja la cantidad exacta que llevas acumulada para ese objetivo. Por ejemplo:\n\n- goalAmount: 3000 (puntos de score)\n    \n- 1124 (puntos actuales)\n    \n\nEl campo **currentProgress** refleja la cantidad exacta que llevas acumulada para ese objetivo. Por ejemplo:\n\n- goalAmount: 3000 (puntos de score)\n    \n- 1124 (puntos actuales)\n    \n\nEndFragment"
+                "description": "Obtiene todos los achievements activos y visibles con su estado para el usuario autenticado.\n\n## Estados posibles:\n\n- **locked**: No conseguido (currentProgress < goalAmount)\n    \n- **completed**: Conseguido pero no reclamado (completed: true, claimed: false)\n    \n- **claimed**: Conseguido y reclamado (completed: true, claimed: true)\n    \n\n## Query Parameters:\n\n### Filtros (opcionales):\n\n- `status`: Filtra por estado (locked, completed, claimed)\n    \n- `targetType`: Filtra por tipo de objetivo (gamesWon, dailyLogin, xp, score, time, difficultyMastery, levelFullMastery)\n    \n- `rewardType`: Filtra por tipo de recompensa (coins, tickets)\n    \n\n### Otros campos en la respuesta:\n\n- `targetDifficulty`: Para logros de tipo `difficultyMastery`, indica la dificultad requerida (aprendiz, novato, aventurero, veterano, maestro, leyenda).\n    \n\n### Ordenamiento (opcional):\n\n- `sort`: Ordena resultados por campo:orden\n    - Campos disponibles: title, goalAmount, rewardAmount, obtainedAt\n        \n    - Orden: asc (ascendente), desc (descendente)\n        \n    - Ejemplo: `sort=goalAmount:asc`\n        \n\n### Paginación:\n\n- `pagination[page]`: Número de página (default: 1)\n    \n- `pagination[pageSize]`: Tamaño de página (1-100, default: 25)\n    \n\n## Ejemplos de uso:\n\n### Obtener achievements completados pero no reclamados:\n\n```\nGET /api/achievements/my-achievements?status=completed\n\n ```\n\n### Obtener achievements de tipo score, ordenados por goalAmount:\n\n```\nGET /api/achievements/my-achievements?targetType=score&sort=goalAmount:asc\n\n ```\n\n### Paginación (10 por página, página 2):\n\n```\nGET /api/achievements/my-achievements?pagination[page]=2&pagination[pageSize]=10\n\n ```\n\n### Combinación de filtros:\n\n```\nGET /api/achievements/my-achievements?status=locked&rewardType=coins&sort=rewardAmount:desc&pagination[pageSize]=20\n\n ```\n\n## Respuesta:\n\n``` json\n{\n  \"achievements\": [...],\n  \"playerStats\": {\n    \"coins\": 1500,\n    \"tickets\": 10\n  },\n  \"meta\": {\n    \"pagination\": {\n      \"page\": 1,\n      \"pageSize\": 25,\n      \"pageCount\": 3,\n      \"total\": 65\n    }\n  }\n}\n\n ```\n\nStartFragment\n\nrefleja la cantidad exacta que llevas acumulada para ese objetivo. Por ejemplo:\n\n- goalAmount: 3000 (puntos de score)\n    \n- 1124 (puntos actuales)\n    \n\nEl campo **currentProgress** refleja la cantidad exacta que llevas acumulada para ese objetivo. Por ejemplo:\n\n- goalAmount: 3000 (puntos de score)\n    \n- 1124 (puntos actuales)\n    \n\nEndFragment"
               },
               "response": []
             },
@@ -4817,7 +4817,7 @@
                   "host": ["{{STRAPI_URL_LOCAL}}"],
                   "path": ["api", "game", "start"]
                 },
-                "description": "Inicia una partida y devuelve un hash único.\n\nCampos requeridos:\n- levelUuid\n- difficulty\n- startAt (ISO)\n- seed\n\nRespuesta:\n- hash (string)\n- gridSize (6x6x6 | 8x8x8)\n- startedAt\n- gameHistoryId"
+                "description": "Inicia una partida y devuelve un hash único.\n\nCampos requeridos:\n- levelUuid\n- difficulty (aprendiz, novato, aventurero, veterano, maestro, leyenda)\n- startAt (ISO)\n- seed\n\nRespuesta:\n- hash (string)\n- gridSize (6x6x6 | 8x8x8)\n- startedAt\n- gameHistoryId"
               },
               "response": []
             },
@@ -4840,7 +4840,7 @@
                   "host": ["{{STRAPI_URL_LOCAL}}"],
                   "path": ["api", "game", "end"]
                 },
-                "description": "Finaliza una partida y actualiza estadísticas.\n\nCampos requeridos:\n- levelUuid\n- difficulty\n- endAt (ISO)\n- hash\n- status (won | lost)\n\nOpcional:\n- bonusPoints (número)\n\nIdempotencia:\n- Si el history ya está completado para el mismo hash, responde `alreadyCompleted: true` con los datos previos.\n\nRespuesta:\n- status, score, duration, completedAt, levelStatus"
+                "description": "Finaliza una partida y actualiza estadísticas.\n\nCampos requeridos:\n- levelUuid\n- difficulty (aprendiz, novato, aventurero, veterano, maestro, leyenda)\n- endAt (ISO)\n- hash\n- status (won | lost)\n\nOpcional:\n- bonusPoints (número)\n\nIdempotencia:\n- Si el history ya está completado para el mismo hash, responde `alreadyCompleted: true` con los datos previos.\n\nRespuesta:\n- status, score, duration, completedAt, levelStatus"
               },
               "response": []
             }

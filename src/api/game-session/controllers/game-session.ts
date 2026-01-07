@@ -5,17 +5,18 @@ const USER_SESSION_UID = "api::user-session.user-session" as any;
 const USER_GAME_HISTORY_UID = "api::user-game-history.user-game-history";
 const LEVEL_UID = "api::level.level";
 const USER_LEVEL_UID = "api::user-level.user-level";
+const ACHIEVEMENT_UID = "api::achievement.achievement";
+const USER_ACHIEVEMENT_UID = "api::user-achievement.user-achievement";
 
 // =============== COINS REWARDS BY DIFFICULTY ===============
-// Maximum 1000 coins for highest difficulty (leyenda), scales down from there
-// These constants can be adjusted easily in the future
+
 const COINS_REWARDS_BY_DIFFICULTY: Record<string, number> = {
-  aprendiz: 100, // Beginner - easiest
-  novato: 200, // Novice
-  aventurero: 400, // Adventurer
-  veterano: 600, // Veteran
-  maestro: 800, // Master
-  leyenda: 1000, // Legend - hardest, maximum reward
+  aprendiz: 100,
+  novato: 100,
+  aventurero: 150,
+  veterano: 150,
+  maestro: 200,
+  leyenda: 200,
 };
 
 // Default coins if difficulty is not recognized
@@ -65,6 +66,117 @@ const makeHash = (
   return crypto.createHash("sha256").update(payload).digest("hex");
 };
 
+const updateAchievementProgress = async (
+  userId: number,
+  playerStats: {
+    gamesWon: number;
+    score: number;
+    totalPlayTime: number;
+    xp: number;
+  },
+  wonDifficulty: string | null,
+) => {
+  const achievements = await strapi.entityService.findMany(ACHIEVEMENT_UID, {
+    filters: { isActive: true },
+  });
+
+  if (!achievements || achievements.length === 0) return;
+
+  const FULL_DIFFICULTIES = [
+    "aprendiz",
+    "novato",
+    "aventurero",
+    "veterano",
+    "maestro",
+    "leyenda",
+  ];
+
+  const normalizeDifficulty = (value: unknown): string =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, " ");
+
+  for (const achievement of achievements as any[]) {
+    let currentValue = 0;
+    const targetType = achievement.targetType;
+
+    if (targetType === "gamesWon") {
+      currentValue = playerStats.gamesWon;
+    } else if (targetType === "score") {
+      currentValue = playerStats.score;
+    } else if (targetType === "time") {
+      currentValue = playerStats.totalPlayTime;
+    } else if (targetType === "xp") {
+      currentValue = playerStats.xp;
+    } else if (targetType === "difficultyMastery" && wonDifficulty) {
+      const targetDiff = achievement.targetDifficulty || "all";
+      if (targetDiff === "all" || targetDiff === wonDifficulty) {
+        const userLevels = await strapi.db.query(USER_LEVEL_UID).findMany({
+          where: { users_permissions_user: userId },
+        });
+        const levelsWithDifficulty = userLevels.filter((ul: any) =>
+          (ul.wonDifficulties || []).includes(wonDifficulty),
+        );
+        currentValue = levelsWithDifficulty.length;
+      } else {
+        // Si no coincide la dificultad, no tocamos este logro
+        continue;
+      }
+    } else if (targetType === "levelFullMastery") {
+      const userLevels = await strapi.db.query(USER_LEVEL_UID).findMany({
+        where: { users_permissions_user: userId },
+      });
+
+      const fullyMasteredLevels = userLevels.filter((ul: any) => {
+        const won: string[] = Array.isArray(ul.wonDifficulties)
+          ? ul.wonDifficulties
+          : [];
+
+        const wonSet = new Set(won.map((d) => normalizeDifficulty(d)));
+        return FULL_DIFFICULTIES.every((diff) =>
+          wonSet.has(normalizeDifficulty(diff)),
+        );
+      });
+
+      currentValue = fullyMasteredLevels.length;
+    } else {
+      continue;
+    }
+
+    const goalAmount = achievement.goalAmount || 0;
+    const isCompleted = currentValue >= goalAmount;
+
+    let userAchievement = await strapi.db.query(USER_ACHIEVEMENT_UID).findOne({
+      where: { users_permissions_user: userId, achievement: achievement.id },
+    });
+
+    if (userAchievement) {
+      if (userAchievement.completed) continue;
+
+      await strapi.db.query(USER_ACHIEVEMENT_UID).update({
+        where: { id: userAchievement.id },
+        data: {
+          currentProgress: currentValue,
+          completed: isCompleted,
+          obtainedAt: isCompleted ? new Date() : null,
+        },
+      });
+    } else {
+      await strapi.db.query(USER_ACHIEVEMENT_UID).create({
+        data: {
+          users_permissions_user: userId,
+          achievement: achievement.id,
+          currentProgress: currentValue,
+          completed: isCompleted,
+          claimed: false,
+          obtainedAt: isCompleted ? new Date() : null,
+        },
+      });
+    }
+  }
+};
+
 export default {
   async start(ctx: any) {
     const user = ctx.state.user;
@@ -72,8 +184,12 @@ export default {
       return ctx.unauthorized("Unauthorized", { reason: "unauthorized" });
     }
 
-    const { levelUuid, startAt, seed } = ctx.request.body || {};
-    // Ignore body.difficulty for security (Difficulty Forgery Fix)
+    const {
+      levelUuid,
+      startAt,
+      seed,
+      difficulty: requestedDifficulty,
+    } = ctx.request.body || {};
 
     if (!levelUuid || !startAt || !seed) {
       return ctx.badRequest("Missing required fields", {
@@ -82,7 +198,7 @@ export default {
       });
     }
 
-    // 1. Load Level FIRST to enforce server-side difficulty
+    // 1. Load Level
     const level = await strapi.db
       .query(LEVEL_UID)
       .findOne({ where: { uuid: levelUuid } });
@@ -91,8 +207,13 @@ export default {
       return ctx.notFound("Level not found", { reason: "level_not_found" });
     }
 
-    // 2. Use REAL difficulty
-    const difficulty = level.difficulty || "easy";
+    // 2. Use requested difficulty or level default
+    // Validamos que la dificultad esté en nuestro mapa de recompensas
+    const difficulty =
+      requestedDifficulty && COINS_REWARDS_BY_DIFFICULTY[requestedDifficulty]
+        ? requestedDifficulty
+        : level.difficulty || "aprendiz";
+
     const gridSize = difficultyToGrid(difficulty);
 
     const salt = String(
@@ -315,7 +436,7 @@ export default {
     );
 
     // FIX: Use stored difficulty from history (Trusted by Server)
-    const storedDifficulty = target.history?.difficulty || "easy";
+    const storedDifficulty = target.history?.difficulty || "aprendiz";
 
     const gridSize = difficultyToGrid(storedDifficulty);
     const base = gridSize === "8x8x8" ? 5120 : 2160;
@@ -405,6 +526,20 @@ export default {
       await strapi.entityService.update(PLAYER_STAT_UID, ps.id, {
         data: dataToUpdate,
       });
+    }
+
+    if (ps) {
+      const updatedStats = {
+        gamesWon: (ps.gamesWon || 0) + (won ? 1 : 0),
+        score: (ps.score || 0) + score,
+        totalPlayTime: (ps.totalPlayTime || 0) + durationSeconds,
+        xp: ps.xp || 0,
+      };
+      await updateAchievementProgress(
+        user.id,
+        updatedStats,
+        won && !alreadyWonThisDifficulty ? storedDifficulty : null,
+      );
     }
 
     const session = await strapi.db.query(USER_SESSION_UID).findOne({

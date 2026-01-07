@@ -196,14 +196,14 @@ async function seedDatabase(strapi: any) {
       let lastPlayedAt = null;
       let lastLoginAt = null;
 
-      if (i === 0) {
+      if (i === 1) {
         // user1: Racha activa de 3 días
         currentStreak = 3;
         longestStreak = 5;
         lastStreakDate = new Date().toISOString().split("T")[0]; // Hoy
         lastPlayedAt = new Date();
         lastLoginAt = new Date();
-      } else if (i === 1) {
+      } else if (i === 2) {
         // user2: Racha rota (jugó hace 3 días)
         currentStreak = 0;
         longestStreak = 7;
@@ -212,14 +212,14 @@ async function seedDatabase(strapi: any) {
         lastStreakDate = threeDaysAgo.toISOString().split("T")[0];
         lastPlayedAt = threeDaysAgo;
         lastLoginAt = threeDaysAgo;
-      } else if (i === 2) {
+      } else if (i === 3) {
         // user3: Nueva racha de 1 día
         currentStreak = 1;
         longestStreak = 1;
         lastStreakDate = new Date().toISOString().split("T")[0];
         lastPlayedAt = new Date();
         lastLoginAt = new Date();
-      } else if (i === 3) {
+      } else if (i === 4) {
         // user4: Racha larga activa
         currentStreak = 12;
         longestStreak = 12;
@@ -408,7 +408,7 @@ async function seedDatabase(strapi: any) {
   console.log(`🏆 Creando logros definidos...`);
   const achievementConfigs = [
     {
-      title: "Primera Victoria",
+      title: "Primer Paso",
       description: "Gana tu primera partida",
       targetType: "gamesWon",
       goalAmount: 1,
@@ -416,7 +416,7 @@ async function seedDatabase(strapi: any) {
       rewardAmount: 100,
     },
     {
-      title: "5 Victorias",
+      title: "Jugador Asiduo",
       description: "Gana 5 partidas",
       targetType: "gamesWon",
       goalAmount: 5,
@@ -424,28 +424,114 @@ async function seedDatabase(strapi: any) {
       rewardAmount: 2,
     },
     {
-      title: "Maestro del Score",
-      description: "Alcanza 1000 puntos en total",
+      title: "Veterano del Reino",
+      description: "Gana 20 partidas",
+      targetType: "gamesWon",
+      goalAmount: 20,
+      rewardType: "coins",
+      rewardAmount: 1000,
+    },
+    {
+      title: "Leyenda Victoriosa",
+      description: "Gana 50 partidas",
+      targetType: "gamesWon",
+      goalAmount: 50,
+      rewardType: "tickets",
+      rewardAmount: 10,
+    },
+    {
+      title: "Acumulador de Puntos",
+      description: "Alcanza 5,000 puntos en total",
       targetType: "score",
-      goalAmount: 1000,
+      goalAmount: 5000,
       rewardType: "coins",
       rewardAmount: 500,
     },
     {
-      title: "Experiencia Acumulada",
-      description: "Obtén 500 puntos de experiencia",
-      targetType: "xp",
-      goalAmount: 500,
+      title: "Maestro del Score",
+      description: "Alcanza 25,000 puntos en total",
+      targetType: "score",
+      goalAmount: 25000,
       rewardType: "tickets",
-      rewardAmount: 1,
+      rewardAmount: 5,
     },
     {
-      title: "Dedicación Total",
-      description: "Juega durante 1 hora (3600 seg)",
-      targetType: "time",
-      goalAmount: 3600,
+      title: "Millonario de Puntos",
+      description: "Alcanza 100,000 puntos en total",
+      targetType: "score",
+      goalAmount: 100000,
       rewardType: "coins",
-      rewardAmount: 200,
+      rewardAmount: 5000,
+    },
+    {
+      title: "Dominio Aprendiz",
+      description: "Gana 5 niveles en dificultad Aprendiz",
+      targetType: "difficultyMastery",
+      targetDifficulty: "aprendiz",
+      goalAmount: 5,
+      rewardType: "coins",
+      rewardAmount: 1000,
+    },
+    {
+      title: "Novato Experto",
+      description: "Gana 5 niveles en dificultad Novato",
+      targetType: "difficultyMastery",
+      targetDifficulty: "novato",
+      goalAmount: 5,
+      rewardType: "coins",
+      rewardAmount: 1200,
+    },
+    {
+      title: "Aventurero Experto",
+      description: "Gana 5 niveles en dificultad Aventurero",
+      targetType: "difficultyMastery",
+      targetDifficulty: "aventurero",
+      goalAmount: 5,
+      rewardType: "tickets",
+      rewardAmount: 5,
+    },
+    {
+      title: "Veterano Invicto",
+      description: "Gana 5 niveles en dificultad Veterano",
+      targetType: "difficultyMastery",
+      targetDifficulty: "veterano",
+      goalAmount: 5,
+      rewardType: "tickets",
+      rewardAmount: 8,
+    },
+    {
+      title: "Maestría Total",
+      description: "Gana 5 niveles en dificultad Maestro",
+      targetType: "difficultyMastery",
+      targetDifficulty: "maestro",
+      goalAmount: 5,
+      rewardType: "coins",
+      rewardAmount: 2500,
+    },
+    {
+      title: "Leyenda Suprema",
+      description: "Gana 5 niveles en dificultad Leyenda",
+      targetType: "difficultyMastery",
+      targetDifficulty: "leyenda",
+      goalAmount: 5,
+      rewardType: "coins",
+      rewardAmount: 5000,
+    },
+    {
+      title: "Maestría Completa",
+      description: "Gana todas las dificultades de un nivel",
+      targetType: "levelFullMastery",
+      goalAmount: 1,
+      rewardType: "coins",
+      rewardAmount: 2000,
+    },
+    {
+      title: "Dedicación",
+      description: "Juega durante 30 minutos (1800 seg)",
+      targetType: "time",
+      goalAmount: 1800,
+      rewardType: "coins",
+      rewardAmount: 300,
     },
   ];
 
@@ -724,7 +810,7 @@ async function seedDatabase(strapi: any) {
         } else if (j === 2) {
           completed = true;
           claimed = false;
-          currentProgress = achievement.goalAmount + 50;
+          currentProgress = achievement.goalAmount;
           obtainedAt = new Date();
         } else if (j === 3) {
           currentProgress = Math.floor(achievement.goalAmount * 0.5);
@@ -747,7 +833,7 @@ async function seedDatabase(strapi: any) {
           currentProgress = achievement.goalAmount;
           obtainedAt = new Date();
         } else {
-          currentProgress = Math.floor(achievement.goalAmount * 0.99);
+          currentProgress = Math.floor(achievement.goalAmount * 0.75);
         }
       }
 
@@ -990,86 +1076,50 @@ async function seedDatabase(strapi: any) {
       where: { email: "synergiart.websupp@gmail.com" },
     });
 
-  if (gravitadUser && achievements.length > 0) {
-    // Crear user-achievements para gravitad con estados específicos para testing
-    // Orden esperado: 0:FirstWin, 1:5Wins, 2:Score, 3:XP, 4:Time
-
-    const states = [
-      {
-        // 0: Primera Victoria -> Claimed
-        completed: true,
-        claimed: true,
-        progressFactor: 1.0, // 100%
+  if (gravitadUser) {
+    // Asegurar que gravitad tiene player-stat en 0
+    await strapi.entityService.create("api::player-stat.player-stat", {
+      data: {
+        users_permissions_user: gravitadUser.documentId,
+        score: 0,
+        highestScore: 0,
+        coins: 0,
+        tickets: 0,
+        xp: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        totalPlayTime: 0,
+        currentStreak: 0,
+        publishedAt: new Date(),
       },
-      {
-        // 1: 5 Victorias -> Available (Completed, Not Claimed)
-        completed: true,
-        claimed: false,
-        progressFactor: 1.2, // 120%
-      },
-      {
-        // 2: Score -> Locked (In Progress)
-        completed: false,
-        claimed: false,
-        progressFactor: 0.5, // 50%
-      },
-      {
-        // 3: XP -> Locked (Started)
-        completed: false,
-        claimed: false,
-        progressFactor: 0.1, // 10%
-      },
-      {
-        // 4: Time -> Available (Exactly on goal)
-        completed: true,
-        claimed: false,
-        progressFactor: 1.0, // 100%
-      },
-    ];
+    });
 
-    for (let j = 0; j < achievements.length; j++) {
-      const achievement = achievements[j];
-      const state = states[j] || {
-        completed: false,
-        claimed: false,
-        progressFactor: 0,
-      };
+    if (achievements.length > 0) {
+      // Crear user-achievements para gravitad con estados específicos para testing
+      // Orden esperado: 0:FirstWin, 1:5Wins, 2:Score, 3:XP, 4:Time
 
-      const currentProgress = Math.floor(
-        achievement.goalAmount * state.progressFactor,
-      );
+      // Inicializar todos los logros en 0 para un estado limpio
+      for (let j = 0; j < achievements.length; j++) {
+        const achievement = achievements[j];
 
-      let obtainedAt = null;
-      let claimedAt = null;
-
-      if (state.completed) {
-        obtainedAt = new Date();
-        obtainedAt.setDate(obtainedAt.getDate() - 2); // Hace 2 días
-      }
-
-      if (state.claimed) {
-        claimedAt = new Date(); // Hoy
-      }
-
-      await strapi.entityService.create(
-        "api::user-achievement.user-achievement",
-        {
-          data: {
-            users_permissions_user: gravitadUser.documentId,
-            achievement: achievement.documentId,
-            completed: state.completed,
-            claimed: state.claimed,
-            currentProgress,
-            obtainedAt,
-            claimedAt,
+        await strapi.entityService.create(
+          "api::user-achievement.user-achievement",
+          {
+            data: {
+              users_permissions_user: gravitadUser.documentId,
+              achievement: achievement.documentId,
+              completed: false,
+              claimed: false,
+              currentProgress: 0,
+              obtainedAt: null,
+              claimedAt: null,
+            },
           },
-        },
-      );
+        );
+      }
     }
-    console.log(
-      `✅ Creados ${achievements.length} user-achievements para gravitad con estados de prueba`,
-    );
-  } else if (!gravitadUser) {
+  } else {
     console.log(
       "⚠️ Usuario gravitad no encontrado, no se crearon achievements",
     );

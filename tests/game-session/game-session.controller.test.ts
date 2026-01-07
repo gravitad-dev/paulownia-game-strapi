@@ -246,7 +246,7 @@ describe("Game Session Controller", () => {
       expect(res.data.duration).toBeGreaterThan(0);
       expect(res.data.score).toBeGreaterThan(0);
       // Maestro difficulty should give 800 coins on win
-      expect(res.data.coins).toBe(800);
+      expect(res.data.coins).toBe(200);
 
       // Verify wonDifficulties was updated
       const updateCall = userLevelQuery.update.mock.calls[0];
@@ -353,7 +353,7 @@ describe("Game Session Controller", () => {
       });
       userGameHistoryQuery.findMany.mockResolvedValue([history]);
       userGameHistoryQuery.update.mockResolvedValue({});
-      // User won "aprendiz" but not "maestro"
+      // User won "aprendiz" but not "hard"
       userLevelQuery.findOne.mockResolvedValue({
         id: 30,
         levelStatus: "won",
@@ -389,7 +389,7 @@ describe("Game Session Controller", () => {
 
       const res = await controller.end(ctx);
       expect(res.data.score).toBeGreaterThan(0);
-      expect(res.data.coins).toBe(800); // Maestro coins
+      expect(res.data.coins).toBe(200); // Maestro coins
 
       // Verify wonDifficulties is updated with new difficulty
       const updateCall = userLevelQuery.update.mock.calls[0];
@@ -450,6 +450,239 @@ describe("Game Session Controller", () => {
       const res = await controller.end(ctx);
       expect(res.data.alreadyCompleted).toBe(true);
       expect(res.data.score).toBe(200);
+    });
+  });
+
+  describe("achievement progress", () => {
+    test("actualiza progreso de gamesWon achievement al ganar", async () => {
+      const levelQuery = strapi.db.query("api::level.level");
+      const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
+      const userLevelQuery = strapi.db.query("api::user-level.user-level");
+      const userGameHistoryQuery = strapi.db.query(
+        "api::user-game-history.user-game-history",
+      );
+      const userSessionQuery = strapi.db.query(
+        "api::user-session.user-session",
+      );
+
+      const achievementQuery = {
+        findOne: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+      };
+      const userAchievementQuery = {
+        findOne: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+      };
+
+      strapi.db.query.mockImplementation((uid: string) => {
+        if (uid === "api::level.level") return levelQuery;
+        if (uid === "api::player-stat.player-stat") return playerStatQuery;
+        if (uid === "api::user-level.user-level") return userLevelQuery;
+        if (uid === "api::user-game-history.user-game-history")
+          return userGameHistoryQuery;
+        if (uid === "api::user-session.user-session") return userSessionQuery;
+        if (uid === "api::achievement.achievement") return achievementQuery;
+        if (uid === "api::user-achievement.user-achievement")
+          return userAchievementQuery;
+        return {
+          findOne: jest.fn(),
+          findMany: jest.fn(),
+          create: jest.fn(),
+          update: jest.fn(),
+        };
+      });
+
+      const startAt = new Date(Date.now() - 120000).toISOString();
+      const history = {
+        id: 40,
+        history: {
+          hash: "H123",
+          startAt,
+          difficulty: "aprendiz",
+          gridSize: "6x6x6",
+        },
+        completed: false,
+      };
+
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "aprendiz",
+      });
+      userGameHistoryQuery.findMany.mockResolvedValue([history]);
+      userGameHistoryQuery.update.mockResolvedValue({});
+      userLevelQuery.findOne.mockResolvedValue({ id: 30, wonDifficulties: [] });
+      userLevelQuery.update.mockResolvedValue({});
+      playerStatQuery.findOne.mockResolvedValue({
+        id: 20,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        score: 0,
+        totalPlayTime: 0,
+        xp: 0,
+      });
+      userSessionQuery.findOne.mockResolvedValue(null);
+
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::achievement.achievement") {
+          return [
+            {
+              id: 1,
+              targetType: "gamesWon",
+              goalAmount: 1,
+              isActive: true,
+            },
+          ];
+        }
+        return [];
+      });
+      userAchievementQuery.findOne.mockResolvedValue(null);
+      userAchievementQuery.create.mockResolvedValue({ id: 100 });
+
+      const ctx = mockCtx(user) as any;
+      ctx.request = {
+        body: {
+          levelUuid: "LEVEL-UUID",
+          difficulty: "aprendiz",
+          endAt: new Date().toISOString(),
+          hash: "H123",
+          bonusPoints: 0,
+          status: "won",
+        },
+      };
+
+      await controller.end(ctx);
+
+      expect(userAchievementQuery.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            users_permissions_user: user.id,
+            achievement: 1,
+            currentProgress: 1,
+            completed: true,
+          }),
+        }),
+      );
+    });
+
+    test("actualiza progreso de score achievement sin completarlo", async () => {
+      const levelQuery = strapi.db.query("api::level.level");
+      const playerStatQuery = strapi.db.query("api::player-stat.player-stat");
+      const userLevelQuery = strapi.db.query("api::user-level.user-level");
+      const userGameHistoryQuery = strapi.db.query(
+        "api::user-game-history.user-game-history",
+      );
+      const userSessionQuery = strapi.db.query(
+        "api::user-session.user-session",
+      );
+
+      const achievementQuery = {
+        findOne: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+      };
+      const userAchievementQuery = {
+        findOne: jest.fn(),
+        findMany: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+      };
+
+      strapi.db.query.mockImplementation((uid: string) => {
+        if (uid === "api::level.level") return levelQuery;
+        if (uid === "api::player-stat.player-stat") return playerStatQuery;
+        if (uid === "api::user-level.user-level") return userLevelQuery;
+        if (uid === "api::user-game-history.user-game-history")
+          return userGameHistoryQuery;
+        if (uid === "api::user-session.user-session") return userSessionQuery;
+        if (uid === "api::achievement.achievement") return achievementQuery;
+        if (uid === "api::user-achievement.user-achievement")
+          return userAchievementQuery;
+        return {
+          findOne: jest.fn(),
+          findMany: jest.fn(),
+          create: jest.fn(),
+          update: jest.fn(),
+        };
+      });
+
+      const startAt = new Date(Date.now() - 120000).toISOString();
+      const history = {
+        id: 40,
+        history: {
+          hash: "H123",
+          startAt,
+          difficulty: "aprendiz",
+          gridSize: "6x6x6",
+        },
+        completed: false,
+      };
+
+      levelQuery.findOne.mockResolvedValue({
+        id: 10,
+        uuid: "LEVEL-UUID",
+        difficulty: "aprendiz",
+      });
+      userGameHistoryQuery.findMany.mockResolvedValue([history]);
+      userGameHistoryQuery.update.mockResolvedValue({});
+      userLevelQuery.findOne.mockResolvedValue({ id: 30, wonDifficulties: [] });
+      userLevelQuery.update.mockResolvedValue({});
+      playerStatQuery.findOne.mockResolvedValue({
+        id: 20,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        score: 500,
+        totalPlayTime: 0,
+        xp: 0,
+      });
+      userSessionQuery.findOne.mockResolvedValue(null);
+
+      strapi.entityService.findMany.mockImplementation((uid: string) => {
+        if (uid === "api::achievement.achievement") {
+          return [
+            {
+              id: 2,
+              targetType: "score",
+              goalAmount: 10000,
+              isActive: true,
+            },
+          ];
+        }
+        return [];
+      });
+      userAchievementQuery.findOne.mockResolvedValue(null);
+      userAchievementQuery.create.mockResolvedValue({ id: 101 });
+
+      const ctx = mockCtx(user) as any;
+      ctx.request = {
+        body: {
+          levelUuid: "LEVEL-UUID",
+          difficulty: "aprendiz",
+          endAt: new Date().toISOString(),
+          hash: "H123",
+          bonusPoints: 0,
+          status: "won",
+        },
+      };
+
+      await controller.end(ctx);
+
+      expect(userAchievementQuery.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            users_permissions_user: user.id,
+            achievement: 2,
+            completed: false,
+          }),
+        }),
+      );
     });
   });
 });

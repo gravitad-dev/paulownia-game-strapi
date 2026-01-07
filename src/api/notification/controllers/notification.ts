@@ -131,11 +131,26 @@ export default {
 
       const userId = ctx.state.user.id;
 
-      // Update all unread notifications
-      await strapi.db.query("api::notification.notification").updateMany({
-        where: { user: userId, read: false },
-        data: { read: true, readAt: new Date() },
-      });
+      // First get IDs of unread notifications for this user
+      const unreadNotifications = await strapi.db
+        .query("api::notification.notification")
+        .findMany({
+          where: { user: userId, read: false },
+          select: ["id"],
+        });
+
+      if (unreadNotifications.length > 0) {
+        const ids = unreadNotifications.map((n) => n.id);
+
+        // Update them in bulk using their IDs
+        await strapi.db.query("api::notification.notification").updateMany({
+          where: { id: { $in: ids } },
+          data: {
+            read: true,
+            readAt: new Date(),
+          },
+        });
+      }
 
       const totalCount = await strapi.db
         .query("api::notification.notification")
