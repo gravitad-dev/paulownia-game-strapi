@@ -27,7 +27,6 @@ export default factories.createCoreController(
         Math.max(1, parseInt((pagination as any).pageSize) || 25),
       );
 
-      // 2. Build filters for achievements
       const achievementFilters: any = {
         isActive: true,
         visibleToUser: true,
@@ -41,7 +40,6 @@ export default factories.createCoreController(
         achievementFilters.rewardType = rewardType;
       }
 
-      // 3. Get achievements with filters
       const allAchievements = await strapi.entityService.findMany(
         "api::achievement.achievement",
         {
@@ -50,7 +48,6 @@ export default factories.createCoreController(
         },
       );
 
-      // 4. Get user's achievement progress
       const userAchievements = await strapi.entityService.findMany(
         "api::user-achievement.user-achievement",
         {
@@ -61,7 +58,6 @@ export default factories.createCoreController(
         },
       );
 
-      // 5. Create a map for quick lookup
       const userAchievementMap = new Map();
       (userAchievements || []).forEach((ua: any) => {
         if (ua.achievement) {
@@ -69,7 +65,6 @@ export default factories.createCoreController(
         }
       });
 
-      // 6. Map achievements with their status
       let achievementsList = allAchievements.map((achievement: any) => {
         const userAchievement = userAchievementMap.get(achievement.id);
 
@@ -85,10 +80,7 @@ export default factories.createCoreController(
 
           if (userAchievement.claimed) {
             achievementStatus = "claimed";
-          } else if (
-            userAchievement.completed ||
-            currentProgress >= achievement.goalAmount
-          ) {
+          } else if (currentProgress >= achievement.goalAmount) {
             achievementStatus = "completed";
           }
         }
@@ -102,14 +94,12 @@ export default factories.createCoreController(
         };
       });
 
-      // 7. Filter by status if provided
       if (status) {
         achievementsList = achievementsList.filter(
           (a: any) => a.status === status,
         );
       }
 
-      // 8. Apply sorting
       if (sort) {
         const [field, order] = (sort as string).split(":");
         achievementsList.sort((a: any, b: any) => {
@@ -127,7 +117,6 @@ export default factories.createCoreController(
         });
       }
 
-      // 9. Calculate pagination
       const total = achievementsList.length;
       const pageCount = Math.ceil(total / pageSize);
       const start = (page - 1) * pageSize;
@@ -135,7 +124,6 @@ export default factories.createCoreController(
 
       const paginatedAchievements = achievementsList.slice(start, end);
 
-      // 10. Get player stats
       const playerStat = await strapi.db
         .query("api::player-stat.player-stat")
         .findOne({
@@ -189,7 +177,6 @@ export default factories.createCoreController(
 
       const achievement = achievements[0] as any;
 
-      // Find user's achievement progress by achievement UUID
       const userAchievements = await strapi.entityService.findMany(
         "api::user-achievement.user-achievement",
         {
@@ -209,10 +196,8 @@ export default factories.createCoreController(
         });
       }
 
-      // Check if ANY of the user achievements is completed (by flag or by progress)
       const isCompleted = userAchievements.some(
-        (ua: any) =>
-          ua.completed || (ua.currentProgress || 0) >= achievement.goalAmount,
+        (ua: any) => (ua.currentProgress || 0) >= achievement.goalAmount,
       );
       if (!isCompleted) {
         return ctx.badRequest("Achievement is not completed", {
@@ -220,7 +205,6 @@ export default factories.createCoreController(
         });
       }
 
-      // Check if ANY is already claimed
       const isClaimed = userAchievements.some((ua: any) => ua.claimed);
       if (isClaimed) {
         return ctx.badRequest("Achievement already claimed", {
@@ -228,7 +212,6 @@ export default factories.createCoreController(
         });
       }
 
-      // Get current player stats
       const playerStat = await strapi.db
         .query("api::player-stat.player-stat")
         .findOne({
@@ -238,7 +221,6 @@ export default factories.createCoreController(
       const prevPlayerStat = playerStat ? { ...playerStat } : null;
       let createdPlayerStatId: number | null = null;
 
-      // Update or create player stats
       if (playerStat) {
         const updateData: any = {};
         if (achievement.rewardType === "coins") {
@@ -262,7 +244,6 @@ export default factories.createCoreController(
           );
         }
       } else {
-        // Create player stat if it doesn't exist
         const createData: any = {
           users_permissions_user: user.id,
           coins: 0,
@@ -286,7 +267,6 @@ export default factories.createCoreController(
         createdPlayerStatId = (createdPs as any)?.id ?? null;
       }
 
-      // Update ALL user achievements to claimed (handling duplicates)
       const claimedAt = new Date();
       await Promise.all(
         userAchievements.map((ua: any) =>
@@ -303,7 +283,6 @@ export default factories.createCoreController(
         ),
       );
 
-      // Log transaction (must succeed)
       try {
         await strapi.entityService.create(
           "api::user-transaction-history.user-transaction-history",
@@ -319,7 +298,6 @@ export default factories.createCoreController(
           },
         );
       } catch (e) {
-        // Rollback on transaction log failure
         try {
           // Revert ALL user achievements
           await Promise.all(
@@ -337,7 +315,6 @@ export default factories.createCoreController(
             ),
           );
 
-          // Revert player stat
           if (prevPlayerStat && playerStat?.id) {
             await strapi.entityService.update(
               "api::player-stat.player-stat",
@@ -364,7 +341,6 @@ export default factories.createCoreController(
         }
       }
 
-      // Get updated player stats
       const updatedPlayerStat = await strapi.db
         .query("api::player-stat.player-stat")
         .findOne({
