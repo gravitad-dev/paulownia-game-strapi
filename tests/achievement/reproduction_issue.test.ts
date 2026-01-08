@@ -1,0 +1,108 @@
+import { createStrapiMock } from "../helpers/strapi-mock";
+import { mockCtx } from "../helpers/ctx-mock";
+import { makeAchievement, makeUserAchievement } from "../helpers/factory";
+
+jest.mock("@strapi/strapi", () => ({
+  factories: {
+    createCoreController: (_uid: string, builder: any) =>
+      builder({ strapi: (global as any).strapi }),
+  },
+}));
+
+jest.mock("../../src/helpers/uuidApi", () => ({
+  getUuidControllerMethods: () => ({}),
+}));
+
+describe("Achievement Controller - Regresión Meta Modificada", () => {
+  let controller: any;
+  let strapi: ReturnType<typeof createStrapiMock>;
+  const user = { id: 1 };
+
+  beforeEach(async () => {
+    strapi = createStrapiMock();
+    (global as any).strapi = strapi;
+    jest.resetModules();
+    controller = (
+      await import("../../src/api/achievement/controllers/achievement")
+    ).default;
+  });
+
+  test("un logro NO debe aparecer como completado si el progreso es menor a la meta actual, aunque la DB diga completed: true", async () => {
+    const achievementWithNewGoal = makeAchievement(
+      6,
+      "Logro 6",
+      "gamesWon",
+      90,
+      "tickets",
+      10,
+    );
+    achievementWithNewGoal.uuid = "achievement-6";
+
+    const userAchievementOutdated = makeUserAchievement(
+      user.id,
+      achievementWithNewGoal,
+      {
+        completed: true,
+        claimed: false,
+        currentProgress: 52,
+      },
+    );
+
+    strapi.entityService.findMany.mockImplementation((uid: string) => {
+      if (uid === "api::achievement.achievement")
+        return [achievementWithNewGoal];
+      if (uid === "api::user-achievement.user-achievement")
+        return [userAchievementOutdated];
+      return [];
+    });
+
+    const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    psQuery.findOne.mockResolvedValue({ coins: 0, tickets: 0 });
+
+    const res = await controller.myAchievements(mockCtx(user));
+
+    const log6 = res.achievements.find((a: any) => a.uuid === "achievement-6");
+
+    expect(log6.status).toBe("locked");
+    expect(log6.currentProgress).toBe(52);
+    expect(log6.goalAmount).toBe(90);
+  });
+
+  test("NO se debe permitir reclamar un logro si el progreso es insuficiente, aunque est\u00E9 marcado como completed en la DB", async () => {
+    const achievementWithNewGoal = makeAchievement(
+      6,
+      "Logro 6",
+      "gamesWon",
+      90,
+      "tickets",
+      10,
+    );
+    achievementWithNewGoal.uuid = "achievement-6";
+
+    const userAchievementOutdated = makeUserAchievement(
+      user.id,
+      achievementWithNewGoal,
+      {
+        completed: true,
+        claimed: false,
+        currentProgress: 52,
+      },
+    );
+
+    strapi.entityService.findMany.mockImplementation((uid: string) => {
+      if (uid === "api::achievement.achievement")
+        return [achievementWithNewGoal];
+      if (uid === "api::user-achievement.user-achievement")
+        return [userAchievementOutdated];
+      return [];
+    });
+
+    const ctx = mockCtx(user);
+    ctx.request.body = { uuid: "achievement-6" };
+
+    const res: any = await controller.claim(ctx);
+
+    expect(res.status).toBe(400);
+    expect(res.data?.reason).toBe("achievement_not_completed");
+  });
+});
