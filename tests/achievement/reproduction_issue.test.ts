@@ -105,4 +105,50 @@ describe("Achievement Controller - Regresión Meta Modificada", () => {
     expect(res.status).toBe(400);
     expect(res.data?.reason).toBe("achievement_not_completed");
   });
+
+  test("debe validar correctamente distintos tipos de logros (score, time, xp) contra sus metas tras un cambio", async () => {
+    const achievements = [
+      makeAchievement(10, "Gran Puntuación", "score", 10000, "coins", 100),
+      makeAchievement(11, "Maratón", "time", 3600, "tickets", 50),
+      makeAchievement(12, "Nivel de Maestro", "xp", 5000, "coins", 200),
+    ];
+    (achievements[0] as any).uuid = "ach-score";
+    (achievements[1] as any).uuid = "ach-time";
+    (achievements[2] as any).uuid = "ach-xp";
+
+    const userAchievements = [
+      makeUserAchievement(user.id, achievements[0], {
+        completed: true,
+        currentProgress: 8000,
+      }),
+      makeUserAchievement(user.id, achievements[1], {
+        completed: true,
+        currentProgress: 1800,
+      }),
+      makeUserAchievement(user.id, achievements[2], {
+        completed: true,
+        currentProgress: 4999,
+      }),
+    ];
+
+    strapi.entityService.findMany.mockImplementation((uid: string) => {
+      if (uid === "api::achievement.achievement") return achievements;
+      if (uid === "api::user-achievement.user-achievement")
+        return userAchievements;
+      return [];
+    });
+
+    const psQuery = strapi.db.query("api::player-stat.player-stat") as any;
+    psQuery.findOne.mockResolvedValue({ coins: 0, tickets: 0 });
+
+    const res = await controller.myAchievements(mockCtx(user));
+
+    const scoreAch = res.achievements.find((a: any) => a.uuid === "ach-score");
+    const timeAch = res.achievements.find((a: any) => a.uuid === "ach-time");
+    const xpAch = res.achievements.find((a: any) => a.uuid === "ach-xp");
+
+    expect(scoreAch.status).toBe("locked");
+    expect(timeAch.status).toBe("locked");
+    expect(xpAch.status).toBe("locked");
+  });
 });
