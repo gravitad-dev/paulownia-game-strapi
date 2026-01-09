@@ -28,7 +28,6 @@ export default factories.createCoreController(
       );
 
       const achievementFilters: any = {
-        isActive: true,
         visibleToUser: true,
       };
 
@@ -176,6 +175,12 @@ export default factories.createCoreController(
       }
 
       const achievement = achievements[0] as any;
+
+      if (!achievement.isActive) {
+        return ctx.badRequest("Achievement is not active", {
+          reason: "achievement_not_active",
+        });
+      }
 
       const userAchievements = await strapi.entityService.findMany(
         "api::user-achievement.user-achievement",
