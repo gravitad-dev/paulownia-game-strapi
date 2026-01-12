@@ -1430,6 +1430,7 @@ export interface ApiUserGameHistoryUserGameHistory
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    difficulty: Schema.Attribute.String;
     duration: Schema.Attribute.Integer;
     history: Schema.Attribute.JSON & Schema.Attribute.Private;
     level: Schema.Attribute.Relation<'manyToOne', 'api::level.level'>;
@@ -1450,6 +1451,7 @@ export interface ApiUserGameHistoryUserGameHistory
       'plugin::users-permissions.user'
     >;
     uuid: Schema.Attribute.UID;
+    won: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
   };
 }
 

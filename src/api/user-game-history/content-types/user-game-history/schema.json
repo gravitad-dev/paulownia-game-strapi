@@ -50,6 +50,13 @@
       "type": "json",
       "private": true,
       "required": false
+    },
+    "difficulty": {
+      "type": "string"
+    },
+    "won": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
