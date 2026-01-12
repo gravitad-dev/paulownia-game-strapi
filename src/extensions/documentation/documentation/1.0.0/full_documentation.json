@@ -14,7 +14,7 @@
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "x-generation-date": "2026-01-09T18:34:57.922Z"
+    "x-generation-date": "2026-01-12T17:05:51.863Z"
   },
   "x-strapi-config": {
     "plugins": [
@@ -14094,6 +14094,12 @@
                             "type": "string"
                           },
                           "history": {},
+                          "difficulty": {
+                            "type": "string"
+                          },
+                          "won": {
+                            "type": "boolean"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -18798,6 +18804,12 @@
                             "type": "string"
                           },
                           "history": {},
+                          "difficulty": {
+                            "type": "string"
+                          },
+                          "won": {
+                            "type": "boolean"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -24230,6 +24242,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -28616,6 +28634,12 @@
                   "type": "string"
                 },
                 "history": {},
+                "difficulty": {
+                  "type": "string"
+                },
+                "won": {
+                  "type": "boolean"
+                },
                 "createdAt": {
                   "type": "string",
                   "format": "date-time"
@@ -32580,6 +32604,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -36640,6 +36670,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -40786,6 +40822,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -44707,6 +44749,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -48693,6 +48741,12 @@
                             "type": "string"
                           },
                           "history": {},
+                          "difficulty": {
+                            "type": "string"
+                          },
+                          "won": {
+                            "type": "boolean"
+                          },
                           "createdAt": {
                             "type": "string",
                             "format": "date-time"
@@ -53748,6 +53802,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -58384,6 +58444,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -63412,6 +63478,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -67438,6 +67510,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -67947,6 +68025,12 @@
                 "type": "string"
               },
               "history": {},
+              "difficulty": {
+                "type": "string"
+              },
+              "won": {
+                "type": "boolean"
+              },
               "locale": {
                 "type": "string"
               },
@@ -71467,6 +71551,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -71871,6 +71961,12 @@
             "type": "string"
           },
           "history": {},
+          "difficulty": {
+            "type": "string"
+          },
+          "won": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -75482,6 +75578,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -79572,6 +79674,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -83569,6 +83677,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -87633,6 +87747,12 @@
                       "type": "string"
                     },
                     "history": {},
+                    "difficulty": {
+                      "type": "string"
+                    },
+                    "won": {
+                      "type": "boolean"
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"

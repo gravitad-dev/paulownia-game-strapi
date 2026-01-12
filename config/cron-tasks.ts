@@ -436,6 +436,35 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
     }
   };
 
+  const cleanupOldSessions = async ({ strapi }: { strapi: any }) => {
+    console.log("🧹 Running old user sessions cleanup...");
+    try {
+      const daysToKeep = 90;
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() - daysToKeep);
+
+      const deleted = await strapi.db
+        .query("api::user-session.user-session")
+        .deleteMany({
+          where: {
+            startedAt: {
+              $lt: expirationDate.toISOString(),
+            },
+          },
+        });
+
+      if (deleted.count > 0) {
+        console.log(
+          `✅ Deleted ${deleted.count} user sessions older than ${daysToKeep} days.`,
+        );
+      } else {
+        console.log("✨ No old user sessions to clean up.");
+      }
+    } catch (error) {
+      console.error("❌ Error cleaning up old user sessions:", error);
+    }
+  };
+
   // Tarea de limpieza de notificaciones antiguas (Run weekly, Sunday at 3:30 AM)
   const notificationsCleanupConfig = env(
     "CRON_NOTIFICATIONS_CLEANUP_SCHEDULE",
@@ -445,6 +474,16 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
     `Notifications Cleanup Cron configured with schedule: ${notificationsCleanupConfig}`,
   );
   tasks[notificationsCleanupConfig] = cleanupOldNotifications;
+
+  // Tarea de limpieza de sesiones antiguas (Run daily at 5:00 AM)
+  const sessionsCleanupConfig = env(
+    "CRON_SESSIONS_CLEANUP_SCHEDULE",
+    "0 5 * * *",
+  );
+  console.log(
+    `User Sessions Cleanup Cron configured with schedule: ${sessionsCleanupConfig}`,
+  );
+  tasks[sessionsCleanupConfig] = cleanupOldSessions;
 
   // Tarea de limpieza de imágenes huérfanas
   const cleanupConfig = env("CRON_CLEANUP_SCHEDULE", "0 4 * * 0"); // Default: weekly, Sunday 4 AM
