@@ -46,12 +46,20 @@ export default ({ env }: { env: (key: string, def?: any) => any }) => {
       const players = await strapi.entityService.findMany(
         "api::player-stat.player-stat",
         {
+          filters: {
+            users_permissions_user: {
+              role: {
+                type: { $ne: "admin" },
+              },
+            },
+          },
           sort: { highestScore: "desc" },
           limit: 100,
           populate: {
             users_permissions_user: {
               populate: {
                 avatar: true,
+                role: true,
               },
             },
           },
