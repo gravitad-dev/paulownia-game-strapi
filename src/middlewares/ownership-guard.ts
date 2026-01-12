@@ -3,6 +3,7 @@ import type { Context } from "koa";
 export default (_config: any, { strapi }: { strapi: any }) => {
   return async (ctx: Context, next: () => Promise<void>) => {
     const path = ctx.request.path;
+    const method = ctx.method.toUpperCase();
 
     if (!path.startsWith("/api") || path.startsWith("/api/upload")) {
       return next();
@@ -44,17 +45,32 @@ export default (_config: any, { strapi }: { strapi: any }) => {
     }
 
     if (path.startsWith("/api/users")) {
+      const parts = path.split("/");
       let paramId = (ctx.params as any)?.id;
-      if (!paramId) {
-        const parts = path.split("/");
-        if (parts.length >= 4) paramId = parts[3];
+      if (!paramId && parts.length >= 4) {
+        paramId = parts[3];
       }
+
       if (paramId === "me" || path.endsWith("/me")) {
         return next();
       }
+
+      // If it's a specific user ID, check ownership
       if (paramId && String(paramId) !== String(user.id)) {
         return (ctx as any).forbidden("No autorizado");
       }
+
+      // If it's a list (GET /api/users), restrict to self
+      if (!paramId && method === "GET") {
+        ctx.query = {
+          ...(ctx.query || {}),
+          filters: {
+            ...((ctx.query as any)?.filters || {}),
+            id: { $eq: user.id },
+          },
+        };
+      }
+
       return next();
     }
 
@@ -90,7 +106,6 @@ export default (_config: any, { strapi }: { strapi: any }) => {
       return next();
     }
 
-    const method = ctx.method.toUpperCase();
     let docIdParam =
       (ctx.params as any)?.id || (ctx.params as any)?.documentId || null;
     let uuidParam = (ctx.params as any)?.uuid || null;
